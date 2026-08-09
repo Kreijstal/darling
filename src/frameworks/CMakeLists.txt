@@ -135,6 +135,14 @@ if (COMPONENT_gui_stubs)
 	add_subdirectory(Vision)
 endif()
 
+# Generated link/load skeletons for public macOS SDK frameworks that do not
+# otherwise exist in Darling. This is deliberately opt-in because the targets
+# expose API shape but do not implement framework behavior.
+if (COMPONENT_public_sdk_stubs)
+	set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "public_sdk_stubs")
+	add_subdirectory(public-sdk-stubs)
+endif()
+
 # Xcode also needs WebKit, even on the CLI! it may be a weak dependency (i didn't check that),
 # but what we do is we build our stub if the `webkit` component isn't enabled.
 #

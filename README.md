@@ -55,6 +55,23 @@ For a list of community packages, see the [Community Packages](https://docs.darl
 
 For build instructions, visit [Darling Docs](https://docs.darlinghq.org/build-instructions.html).
 
+### Public SDK skeletons
+
+The optional `public_sdk_stubs` component supplies generated link/load
+skeletons for public macOS SDK framework providers that Darling does not
+already provide. Header declarations classify public APIs and the associated
+TBD exports retain Swift and other opaque ABI symbols. These targets expose API
+shape only; they are intended to turn
+missing-image and missing-symbol failures into precise behavioral implementation
+work, not to claim that the frameworks function.
+
+The checked-in macOS 26.5 generation contains 201 otherwise-absent runtime
+providers (including private providers that carry public framework APIs).
+Its input hashes, coverage counts, omissions, and ABI approximations are recorded
+in `src/frameworks/public-sdk-stubs/manifest.json`. Regenerate it with
+`tools/generate-public-sdk-skeleton.py` and catalogs produced by the
+`darling-testsuite` SDK harvest.
+
 ## Usage
 
 ### Prefixes

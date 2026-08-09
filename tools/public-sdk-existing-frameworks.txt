@@ -1,0 +1,24 @@
+# Frameworks supplied by Darling submodules whose CMake files are not present
+# until the submodules are initialized. Keep this list sorted.
+AppKit
+CFNetwork
+Cocoa
+CoreData
+CoreFoundation
+CoreGraphics
+CoreText
+Foundation
+GLUT
+GSS
+IOKit
+ImageIO
+JavaScriptCore
+Kerberos
+Metal
+MetalKit
+MetalPerformanceShaders
+OpenGL
+PCSC
+QuartzCore
+Security
+SystemConfiguration

@@ -16,6 +16,8 @@ function(darling_parse_components_get_deps COMPONENT)
 		set(COMPONENT_DEPS gui dev_gui_frameworks_common PARENT_SCOPE)
 	elseif ("${COMPONENT}" STREQUAL "gui_stubs")
 		set(COMPONENT_DEPS gui dev_gui_stubs_common PARENT_SCOPE)
+	elseif ("${COMPONENT}" STREQUAL "public_sdk_stubs")
+		set(COMPONENT_DEPS gui_stubs PARENT_SCOPE)
 	elseif ("${COMPONENT}" STREQUAL "dev_gui_common")
 		set(COMPONENT_DEPS system PARENT_SCOPE)
 	elseif (("${COMPONENT}" STREQUAL "dev_gui_frameworks_common") OR ("${COMPONENT}" STREQUAL "dev_gui_stubs_common"))
@@ -77,7 +79,7 @@ function(darling_parse_components DARLING_RAW_COMPONENTS)
 	set(COMPONENT_core ON PARENT_SCOPE)
 
 	# first, set every component off
-	foreach(COMPONENT IN ITEMS system python ruby perl cli cli_dev cli_extra gui gui_frameworks gui_stubs jsc webkit dev_gui_common dev_gui_frameworks_common dev_gui_stubs_common)
+	foreach(COMPONENT IN ITEMS system python ruby perl cli cli_dev cli_extra gui gui_frameworks gui_stubs public_sdk_stubs jsc webkit dev_gui_common dev_gui_frameworks_common dev_gui_stubs_common)
 		set("COMPONENT_${COMPONENT}" OFF PARENT_SCOPE)
 	endforeach()
 
