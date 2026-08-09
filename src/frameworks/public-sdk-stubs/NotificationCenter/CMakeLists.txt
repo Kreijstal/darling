@@ -1,0 +1,19 @@
+project(PublicSDKSkeleton_NotificationCenter)
+
+set(DYLIB_COMPAT_VERSION "1.0.0")
+set(DYLIB_CURRENT_VERSION "1.0.0")
+
+add_framework(NotificationCenter
+	FAT
+	CURRENT_VERSION
+	VERSION A
+	PARENT_DIR /System/Library/Frameworks
+	TARGET_NAME PublicSDKSkeleton_NotificationCenter__System_Library_Frameworks_NotificationCenter_framework_Versions_A_NotificationCenter
+	SOURCES
+		TodayExtensionObjects.m
+		TodayExtensionRuntime.c
+	DEPENDENCIES
+		system
+		objc
+		Foundation
+)

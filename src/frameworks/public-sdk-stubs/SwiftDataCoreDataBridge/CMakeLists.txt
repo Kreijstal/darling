@@ -1,0 +1,18 @@
+project(PublicSDKSkeleton__SwiftData_CoreData)
+
+set(DYLIB_COMPAT_VERSION "1.0.0")
+set(DYLIB_CURRENT_VERSION "1.0.0")
+
+add_framework(_SwiftData_CoreData
+	FAT
+	CURRENT_VERSION
+	VERSION A
+	PARENT_DIR /System/Library/Frameworks
+	TARGET_NAME PublicSDKSkeleton__SwiftData_CoreData__System_Library_Frameworks__SwiftData_CoreData_framework_Versions_A__SwiftData_CoreData
+	SOURCES
+		PersistentModelCoreDataBridge.c
+	DEPENDENCIES
+		system
+		objc
+		Foundation
+)

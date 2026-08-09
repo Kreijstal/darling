@@ -1,0 +1,23 @@
+project(PublicSDKSkeleton_NearbyInteraction)
+
+set(DYLIB_COMPAT_VERSION "1.0.0")
+set(DYLIB_CURRENT_VERSION "1.0.0")
+
+add_framework(NearbyInteraction
+	FAT
+	CURRENT_VERSION
+	VERSION A
+	PARENT_DIR /System/Library/Frameworks
+	TARGET_NAME PublicSDKSkeleton_NearbyInteraction__System_Library_Frameworks_NearbyInteraction_framework_Versions_A_NearbyInteraction
+	SOURCES
+		NearbySessionObjects.m
+		NearbySessionFunctions.c
+		NearbySessionConstants.c
+		NearbySessionSwiftABI.c
+		NearbySessionCxxABI.c
+		NearbySessionRuntime.c
+	DEPENDENCIES
+		system
+		objc
+		Foundation
+)

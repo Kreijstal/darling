@@ -1,0 +1,21 @@
+project(PublicSDKSkeleton_BrowserEngineCore)
+
+set(DYLIB_COMPAT_VERSION "1.0.0")
+set(DYLIB_CURRENT_VERSION "1.0.0")
+
+add_framework(BrowserEngineCore
+	FAT
+	CURRENT_VERSION
+	VERSION A
+	PARENT_DIR /System/Library/Frameworks
+	TARGET_NAME PublicSDKSkeleton_BrowserEngineCore__System_Library_Frameworks_BrowserEngineCore_framework_Versions_A_BrowserEngineCore
+	SOURCES
+		BrowserEngineObjects.m
+		BrowserEngineFunctions.c
+		BrowserEngineSwiftABI.c
+		BrowserEngineRuntime.c
+	DEPENDENCIES
+		system
+		objc
+		Foundation
+)

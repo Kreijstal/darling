@@ -227,10 +227,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ARKit_A__System_Library_Frameworks_ARKit_framework_Versions_A_ARKit",
+      "directory": "ARKit",
       "framework": "ARKit",
       "install-name": "/System/Library/Frameworks/ARKit.framework/Versions/A/ARKit",
       "private": false,
+      "source-files": {
+        "legacy-exports": "AugmentedRealityCompatibility.c"
+      },
       "source-tbd": "System/Library/Frameworks/ARKit.framework/ARKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -253,10 +256,16 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "AVRouting_A__System_Library_Frameworks_AVRouting_framework_Versions_A_AVRouting",
+      "directory": "AVRouting",
       "framework": "AVRouting",
       "install-name": "/System/Library/Frameworks/AVRouting.framework/Versions/A/AVRouting",
       "private": false,
+      "source-files": {
+        "data": "MediaRoutingConstants.c",
+        "legacy-exports": "MediaRoutingRuntime.c",
+        "objective-c": "MediaRoutingObjects.m",
+        "runtime-data": "MediaRoutingIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/AVRouting.framework/AVRouting.tbd",
       "unversioned": false,
       "version": "A"
@@ -279,10 +288,15 @@
         "thread-locals": 0,
         "variables": 5
       },
-      "directory": "vImage_A__System_Library_Frameworks_Accelerate_framework_Versions_A_Frameworks_vImage_framework_Versions_A_vImage",
+      "directory": "vImage",
       "framework": "vImage",
       "install-name": "/System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vImage.framework/Versions/A/vImage",
       "private": false,
+      "source-files": {
+        "data": "ImageProcessingConstants.c",
+        "functions": "ImageProcessingFunctions.c",
+        "legacy-exports": "ImageProcessingRuntime.c"
+      },
       "source-tbd": "System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vImage.framework/vImage.tbd",
       "unversioned": false,
       "version": "A"
@@ -305,10 +319,17 @@
         "thread-locals": 0,
         "variables": 14
       },
-      "directory": "Accessibility_A__System_Library_Frameworks_Accessibility_framework_Versions_A_Accessibility",
+      "directory": "Accessibility",
       "framework": "Accessibility",
       "install-name": "/System/Library/Frameworks/Accessibility.framework/Versions/A/Accessibility",
       "private": false,
+      "source-files": {
+        "data": "AccessibilityConstants.c",
+        "functions": "AccessibilityFunctions.c",
+        "legacy-exports": "AccessibilityRuntime.c",
+        "objective-c": "AccessibilityObjects.m",
+        "swift-abi": "AccessibilitySwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/Accessibility.framework/Accessibility.tbd",
       "unversioned": false,
       "version": "A"
@@ -331,10 +352,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ActivityKit_A__System_Library_Frameworks_ActivityKit_framework_Versions_A_ActivityKit",
+      "directory": "ActivityKit",
       "framework": "ActivityKit",
       "install-name": "/System/Library/Frameworks/ActivityKit.framework/Versions/A/ActivityKit",
       "private": false,
+      "source-files": {
+        "legacy-exports": "LiveActivityRuntime.c",
+        "objective-c": "LiveActivityObjects.m",
+        "swift-abi": "LiveActivitySwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/ActivityKit.framework/ActivityKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -357,10 +383,15 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "AdServices_A__System_Library_Frameworks_AdServices_framework_Versions_A_AdServices",
+      "directory": "AdServices",
       "framework": "AdServices",
       "install-name": "/System/Library/Frameworks/AdServices.framework/Versions/A/AdServices",
       "private": false,
+      "source-files": {
+        "data": "AttributionConstants.c",
+        "legacy-exports": "AttributionRuntime.c",
+        "objective-c": "AttributionObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/AdServices.framework/AdServices.tbd",
       "unversioned": false,
       "version": "A"
@@ -383,10 +414,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "AdSupport_A__System_Library_Frameworks_AdSupport_framework_Versions_A_AdSupport",
+      "directory": "AdSupport",
       "framework": "AdSupport",
       "install-name": "/System/Library/Frameworks/AdSupport.framework/Versions/A/AdSupport",
       "private": false,
+      "source-files": {
+        "objective-c": "AdvertisingIdentifier.m"
+      },
       "source-tbd": "System/Library/Frameworks/AdSupport.framework/AdSupport.tbd",
       "unversioned": false,
       "version": "A"
@@ -409,10 +443,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "AppIntents_A__System_Library_Frameworks_AppIntents_framework_Versions_A_AppIntents",
+      "directory": "AppIntents",
       "framework": "AppIntents",
       "install-name": "/System/Library/Frameworks/AppIntents.framework/Versions/A/AppIntents",
       "private": false,
+      "source-files": {
+        "legacy-exports": "AppIntentRuntime.c",
+        "objective-c": "AppIntentObjects.m",
+        "swift-abi": "AppIntentSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/AppIntents.framework/AppIntents.tbd",
       "unversioned": false,
       "version": "A"
@@ -435,10 +474,14 @@
         "thread-locals": 0,
         "variables": 2
       },
-      "directory": "AppTrackingTransparency_A__System_Library_Frameworks_AppTrackingTransparency_framework_Versions_A_AppTrackingTransparency",
+      "directory": "AppTrackingTransparency",
       "framework": "AppTrackingTransparency",
       "install-name": "/System/Library/Frameworks/AppTrackingTransparency.framework/Versions/A/AppTrackingTransparency",
       "private": false,
+      "source-files": {
+        "data": "TrackingAuthorizationConstants.c",
+        "objective-c": "TrackingAuthorization.m"
+      },
       "source-tbd": "System/Library/Frameworks/AppTrackingTransparency.framework/AppTrackingTransparency.tbd",
       "unversioned": false,
       "version": "A"
@@ -461,10 +504,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "AppleScriptKit_A__System_Library_Frameworks_AppleScriptKit_framework_Versions_A_AppleScriptKit",
+      "directory": "AppleScriptKit",
       "framework": "AppleScriptKit",
       "install-name": "/System/Library/Frameworks/AppleScriptKit.framework/Versions/A/AppleScriptKit",
       "private": false,
+      "source-files": {
+        "legacy-exports": "ScriptEditorRuntime.c",
+        "objective-c": "ScriptEditorObjects.m",
+        "runtime-data": "ScriptEditorIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/AppleScriptKit.framework/AppleScriptKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -487,10 +535,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "AppleScriptObjC_A__System_Library_Frameworks_AppleScriptObjC_framework_Versions_A_AppleScriptObjC",
+      "directory": "AppleScriptObjC",
       "framework": "AppleScriptObjC",
       "install-name": "/System/Library/Frameworks/AppleScriptObjC.framework/Versions/A/AppleScriptObjC",
       "private": false,
+      "source-files": {
+        "legacy-exports": "ScriptingBridgeRuntime.c"
+      },
       "source-tbd": "System/Library/Frameworks/AppleScriptObjC.framework/AppleScriptObjC.tbd",
       "unversioned": false,
       "version": "A"
@@ -513,10 +564,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ATSUI_A__System_Library_Frameworks_ApplicationServices_framework_Versions_A_Frameworks_ATSUI_framework_Versions_A_ATSUI",
+      "directory": "ATSUI",
       "framework": "ATSUI",
       "install-name": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ATSUI.framework/Versions/A/ATSUI",
       "private": false,
+      "source-files": {
+        "legacy-exports": "LegacyTextLayout.c"
+      },
       "source-tbd": "System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ATSUI.framework/ATSUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -539,10 +593,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "AudioAccessoryKit_A__System_Library_Frameworks_AudioAccessoryKit_framework_Versions_A_AudioAccessoryKit",
+      "directory": "AudioAccessoryKit",
       "framework": "AudioAccessoryKit",
       "install-name": "/System/Library/Frameworks/AudioAccessoryKit.framework/Versions/A/AudioAccessoryKit",
       "private": false,
+      "source-files": {
+        "swift-abi": "AudioAccessorySwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/AudioAccessoryKit.framework/AudioAccessoryKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -565,10 +622,15 @@
         "thread-locals": 0,
         "variables": 3
       },
-      "directory": "AutomaticAssessmentConfiguration_A__System_Library_Frameworks_AutomaticAssessmentConfiguration_framework_Versions_A_AutomaticAssessmentConfiguration",
+      "directory": "AutomaticAssessmentConfiguration",
       "framework": "AutomaticAssessmentConfiguration",
       "install-name": "/System/Library/Frameworks/AutomaticAssessmentConfiguration.framework/Versions/A/AutomaticAssessmentConfiguration",
       "private": false,
+      "source-files": {
+        "data": "AssessmentConstants.c",
+        "objective-c": "AssessmentSessionObjects.m",
+        "swift-abi": "AssessmentSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/AutomaticAssessmentConfiguration.framework/AutomaticAssessmentConfiguration.tbd",
       "unversioned": false,
       "version": "A"
@@ -591,10 +653,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "AACClient_A__System_Library_Frameworks_AutomaticAssessmentConfiguration_framework_Versions_A_Frameworks_AACClient_framework_Versions_A_AACClient",
+      "directory": "AACClient",
       "framework": "AACClient",
       "install-name": "/System/Library/Frameworks/AutomaticAssessmentConfiguration.framework/Versions/A/Frameworks/AACClient.framework/Versions/A/AACClient",
       "private": false,
+      "source-files": {
+        "objective-c": "AssessmentClientObjects.m",
+        "swift-abi": "AssessmentClientSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/AutomaticAssessmentConfiguration.framework/Versions/A/Frameworks/AACClient.framework/AACClient.tbd",
       "unversioned": false,
       "version": "A"
@@ -617,10 +683,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "AACDependencies_A__System_Library_Frameworks_AutomaticAssessmentConfiguration_framework_Versions_A_Frameworks_AACDependencies_framework_Versions_A_AACDependencies",
+      "directory": "AACDependencies",
       "framework": "AACDependencies",
       "install-name": "/System/Library/Frameworks/AutomaticAssessmentConfiguration.framework/Versions/A/Frameworks/AACDependencies.framework/Versions/A/AACDependencies",
       "private": false,
+      "source-files": {
+        "objective-c": "AssessmentDependencyObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/AutomaticAssessmentConfiguration.framework/Versions/A/Frameworks/AACDependencies.framework/AACDependencies.tbd",
       "unversioned": false,
       "version": "A"
@@ -643,10 +712,16 @@
         "thread-locals": 0,
         "variables": 6
       },
-      "directory": "BackgroundAssets_A__System_Library_Frameworks_BackgroundAssets_framework_Versions_A_BackgroundAssets",
+      "directory": "BackgroundAssets",
       "framework": "BackgroundAssets",
       "install-name": "/System/Library/Frameworks/BackgroundAssets.framework/Versions/A/BackgroundAssets",
       "private": false,
+      "source-files": {
+        "data": "AssetDownloadConstants.c",
+        "legacy-exports": "AssetDownloadRuntime.c",
+        "objective-c": "AssetDownloadObjects.m",
+        "swift-abi": "AssetDownloadSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/BackgroundAssets.framework/BackgroundAssets.tbd",
       "unversioned": false,
       "version": "A"
@@ -669,10 +744,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "BackgroundTasks_A__System_Library_Frameworks_BackgroundTasks_framework_Versions_A_BackgroundTasks",
+      "directory": "BackgroundTasks",
       "framework": "BackgroundTasks",
       "install-name": "/System/Library/Frameworks/BackgroundTasks.framework/Versions/A/BackgroundTasks",
       "private": false,
+      "source-files": {
+        "legacy-exports": "TaskSchedulerRuntime.c"
+      },
       "source-tbd": "System/Library/Frameworks/BackgroundTasks.framework/BackgroundTasks.tbd",
       "unversioned": false,
       "version": "A"
@@ -695,10 +773,16 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "BrowserEngineCore_A__System_Library_Frameworks_BrowserEngineCore_framework_Versions_A_BrowserEngineCore",
+      "directory": "BrowserEngineCore",
       "framework": "BrowserEngineCore",
       "install-name": "/System/Library/Frameworks/BrowserEngineCore.framework/Versions/A/BrowserEngineCore",
       "private": false,
+      "source-files": {
+        "functions": "BrowserEngineFunctions.c",
+        "legacy-exports": "BrowserEngineRuntime.c",
+        "objective-c": "BrowserEngineObjects.m",
+        "swift-abi": "BrowserEngineSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/BrowserEngineCore.framework/BrowserEngineCore.tbd",
       "unversioned": false,
       "version": "A"
@@ -721,10 +805,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "BrowserEngineKit_A__System_Library_Frameworks_BrowserEngineKit_framework_Versions_A_BrowserEngineKit",
+      "directory": "BrowserEngineKit",
       "framework": "BrowserEngineKit",
       "install-name": "/System/Library/Frameworks/BrowserEngineKit.framework/Versions/A/BrowserEngineKit",
       "private": false,
+      "source-files": {
+        "objective-c": "BrowserExtensionObjects.m",
+        "swift-abi": "BrowserExtensionSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/BrowserEngineKit.framework/BrowserEngineKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -747,10 +835,14 @@
         "thread-locals": 0,
         "variables": 3
       },
-      "directory": "BusinessChat_A__System_Library_Frameworks_BusinessChat_framework_Versions_A_BusinessChat",
+      "directory": "BusinessChat",
       "framework": "BusinessChat",
       "install-name": "/System/Library/Frameworks/BusinessChat.framework/Versions/A/BusinessChat",
       "private": false,
+      "source-files": {
+        "data": "BusinessMessagingConstants.c",
+        "objective-c": "BusinessMessagingObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/BusinessChat.framework/BusinessChat.tbd",
       "unversioned": false,
       "version": "A"
@@ -773,10 +865,15 @@
         "thread-locals": 0,
         "variables": 5
       },
-      "directory": "CallKit_A__System_Library_Frameworks_CallKit_framework_Versions_A_CallKit",
+      "directory": "CallKit",
       "framework": "CallKit",
       "install-name": "/System/Library/Frameworks/CallKit.framework/Versions/A/CallKit",
       "private": false,
+      "source-files": {
+        "data": "CallManagementConstants.c",
+        "legacy-exports": "CallManagementRuntime.c",
+        "objective-c": "CallManagementObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/CallKit.framework/CallKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -799,10 +896,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "CarKey_A__System_Library_Frameworks_CarKey_framework_Versions_A_CarKey",
+      "directory": "CarKey",
       "framework": "CarKey",
       "install-name": "/System/Library/Frameworks/CarKey.framework/Versions/A/CarKey",
       "private": false,
+      "source-files": {
+        "objective-c": "VehicleKeyObjects.m",
+        "swift-abi": "VehicleKeySwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/CarKey.framework/CarKey.tbd",
       "unversioned": false,
       "version": "A"
@@ -825,10 +926,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "Charts_A__System_Library_Frameworks_Charts_framework_Versions_A_Charts",
+      "directory": "Charts",
       "framework": "Charts",
       "install-name": "/System/Library/Frameworks/Charts.framework/Versions/A/Charts",
       "private": false,
+      "source-files": {
+        "swift-abi": "ChartRenderingSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/Charts.framework/Charts.tbd",
       "unversioned": false,
       "version": "A"
@@ -851,10 +955,16 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "Cinematic_A__System_Library_Frameworks_Cinematic_framework_Versions_A_Cinematic",
+      "directory": "Cinematic",
       "framework": "Cinematic",
       "install-name": "/System/Library/Frameworks/Cinematic.framework/Versions/A/Cinematic",
       "private": false,
+      "source-files": {
+        "data": "CinematicVideoConstants.c",
+        "legacy-exports": "CinematicVideoRuntime.c",
+        "objective-c": "CinematicVideoObjects.m",
+        "swift-abi": "CinematicVideoSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/Cinematic.framework/Cinematic.tbd",
       "unversioned": false,
       "version": "A"
@@ -877,10 +987,15 @@
         "thread-locals": 0,
         "variables": 18
       },
-      "directory": "ClassKit_A__System_Library_Frameworks_ClassKit_framework_Versions_A_ClassKit",
+      "directory": "ClassKit",
       "framework": "ClassKit",
       "install-name": "/System/Library/Frameworks/ClassKit.framework/Versions/A/ClassKit",
       "private": false,
+      "source-files": {
+        "data": "EducationConstants.c",
+        "legacy-exports": "EducationRuntime.c",
+        "objective-c": "EducationObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/ClassKit.framework/ClassKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -903,10 +1018,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ClassKitUI_A__System_Library_Frameworks_ClassKitUI_framework_Versions_A_ClassKitUI",
+      "directory": "ClassKitUI",
       "framework": "ClassKitUI",
       "install-name": "/System/Library/Frameworks/ClassKitUI.framework/Versions/A/ClassKitUI",
       "private": false,
+      "source-files": {
+        "objective-c": "EducationUIObjects.m",
+        "swift-abi": "EducationUISwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/ClassKitUI.framework/ClassKitUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -929,10 +1048,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "Combine_A__System_Library_Frameworks_Combine_framework_Versions_A_Combine",
+      "directory": "Combine",
       "framework": "Combine",
       "install-name": "/System/Library/Frameworks/Combine.framework/Versions/A/Combine",
       "private": false,
+      "source-files": {
+        "swift-abi": "ReactiveStreamsSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/Combine.framework/Combine.tbd",
       "unversioned": false,
       "version": "A"
@@ -955,10 +1077,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "CompositorServices_A__System_Library_Frameworks_CompositorServices_framework_Versions_A_CompositorServices",
+      "directory": "CompositorServices",
       "framework": "CompositorServices",
       "install-name": "/System/Library/Frameworks/CompositorServices.framework/Versions/A/CompositorServices",
       "private": false,
+      "source-files": {
+        "legacy-exports": "ImmersiveCompositorRuntime.c",
+        "objective-c": "ImmersiveCompositorObjects.m",
+        "swift-abi": "ImmersiveCompositorSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/CompositorServices.framework/CompositorServices.tbd",
       "unversioned": false,
       "version": "A"
@@ -981,10 +1108,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "CoreDisplay_A__System_Library_Frameworks_CoreDisplay_framework_Versions_A_CoreDisplay",
+      "directory": "CoreDisplay",
       "framework": "CoreDisplay",
       "install-name": "/System/Library/Frameworks/CoreDisplay.framework/Versions/A/CoreDisplay",
       "private": false,
+      "source-files": {
+        "legacy-exports": "DisplayServerExports.c"
+      },
       "source-tbd": "System/Library/Frameworks/CoreDisplay.framework/CoreDisplay.tbd",
       "unversioned": false,
       "version": "A"
@@ -1007,10 +1137,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "CoreHID_A__System_Library_Frameworks_CoreHID_framework_Versions_A_CoreHID",
+      "directory": "CoreHID",
       "framework": "CoreHID",
       "install-name": "/System/Library/Frameworks/CoreHID.framework/Versions/A/CoreHID",
       "private": false,
+      "source-files": {
+        "swift-abi": "HumanInterfaceDeviceSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/CoreHID.framework/CoreHID.tbd",
       "unversioned": false,
       "version": "A"
@@ -1033,10 +1166,15 @@
         "thread-locals": 0,
         "variables": 43
       },
-      "directory": "CoreHaptics_A__System_Library_Frameworks_CoreHaptics_framework_Versions_A_CoreHaptics",
+      "directory": "CoreHaptics",
       "framework": "CoreHaptics",
       "install-name": "/System/Library/Frameworks/CoreHaptics.framework/Versions/A/CoreHaptics",
       "private": false,
+      "source-files": {
+        "data": "HapticEngineConstants.c",
+        "legacy-exports": "HapticEngineRuntime.c",
+        "objective-c": "HapticEngineObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/CoreHaptics.framework/CoreHaptics.tbd",
       "unversioned": false,
       "version": "A"
@@ -1059,10 +1197,17 @@
         "thread-locals": 0,
         "variables": 8
       },
-      "directory": "CoreML_A__System_Library_Frameworks_CoreML_framework_Versions_A_CoreML",
+      "directory": "CoreML",
       "framework": "CoreML",
       "install-name": "/System/Library/Frameworks/CoreML.framework/Versions/A/CoreML",
       "private": false,
+      "source-files": {
+        "data": "MachineLearningConstants.c",
+        "functions": "MachineLearningFunctions.c",
+        "legacy-exports": "MachineLearningRuntime.c",
+        "objective-c": "MachineLearningObjects.m",
+        "swift-abi": "MachineLearningSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/CoreML.framework/CoreML.tbd",
       "unversioned": false,
       "version": "A"
@@ -1085,10 +1230,18 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "CoreMotion_A__System_Library_Frameworks_CoreMotion_framework_Versions_A_CoreMotion",
+      "directory": "CoreMotion",
       "framework": "CoreMotion",
       "install-name": "/System/Library/Frameworks/CoreMotion.framework/Versions/A/CoreMotion",
       "private": false,
+      "source-files": {
+        "cxx-abi": "MotionCxxABI.c",
+        "data": "MotionConstants.c",
+        "legacy-exports": "MotionRuntime.c",
+        "objective-c": "MotionObjects.m",
+        "runtime-data": "MotionIvars.c",
+        "swift-abi": "MotionSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/CoreMotion.framework/CoreMotion.tbd",
       "unversioned": false,
       "version": "A"
@@ -1111,10 +1264,17 @@
         "thread-locals": 0,
         "variables": 15
       },
-      "directory": "CoreSpotlight_A__System_Library_Frameworks_CoreSpotlight_framework_Versions_A_CoreSpotlight",
+      "directory": "CoreSpotlight",
       "framework": "CoreSpotlight",
       "install-name": "/System/Library/Frameworks/CoreSpotlight.framework/Versions/A/CoreSpotlight",
       "private": false,
+      "source-files": {
+        "data": "SearchIndexConstants.c",
+        "legacy-exports": "SearchIndexRuntime.c",
+        "objective-c": "SearchIndexObjects.m",
+        "runtime-data": "SearchIndexIvars.c",
+        "swift-abi": "SearchIndexSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/CoreSpotlight.framework/CoreSpotlight.tbd",
       "unversioned": false,
       "version": "A"
@@ -1137,10 +1297,15 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "CoreTransferable_A__System_Library_Frameworks_CoreTransferable_framework_Versions_A_CoreTransferable",
+      "directory": "CoreTransferable",
       "framework": "CoreTransferable",
       "install-name": "/System/Library/Frameworks/CoreTransferable.framework/Versions/A/CoreTransferable",
       "private": false,
+      "source-files": {
+        "data": "TransferConstants.c",
+        "legacy-exports": "TransferableRuntime.c",
+        "swift-abi": "TransferableSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/CoreTransferable.framework/CoreTransferable.tbd",
       "unversioned": false,
       "version": "A"
@@ -1163,10 +1328,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "CreateMLComponents_A__System_Library_Frameworks_CreateMLComponents_framework_Versions_A_CreateMLComponents",
+      "directory": "CreateMLComponents",
       "framework": "CreateMLComponents",
       "install-name": "/System/Library/Frameworks/CreateMLComponents.framework/Versions/A/CreateMLComponents",
       "private": false,
+      "source-files": {
+        "swift-abi": "ModelTrainingSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/CreateMLComponents.framework/CreateMLComponents.tbd",
       "unversioned": false,
       "version": "A"
@@ -1189,10 +1357,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "CryptoKit_A__System_Library_Frameworks_CryptoKit_framework_Versions_A_CryptoKit",
+      "directory": "CryptoKit",
       "framework": "CryptoKit",
       "install-name": "/System/Library/Frameworks/CryptoKit.framework/Versions/A/CryptoKit",
       "private": false,
+      "source-files": {
+        "swift-abi": "CryptographySwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/CryptoKit.framework/CryptoKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -1215,10 +1386,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "DVDPlayback_A__System_Library_Frameworks_DVDPlayback_framework_Versions_A_DVDPlayback",
+      "directory": "DVDPlayback",
       "framework": "DVDPlayback",
       "install-name": "/System/Library/Frameworks/DVDPlayback.framework/Versions/A/DVDPlayback",
       "private": false,
+      "source-files": {
+        "functions": "DVDPlaybackFunctions.c",
+        "legacy-exports": "DVDPlaybackRuntime.c"
+      },
       "source-tbd": "System/Library/Frameworks/DVDPlayback.framework/DVDPlayback.tbd",
       "unversioned": false,
       "version": "A"
@@ -1241,10 +1416,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "DataDetection_A__System_Library_Frameworks_DataDetection_framework_Versions_A_DataDetection",
+      "directory": "DataDetection",
       "framework": "DataDetection",
       "install-name": "/System/Library/Frameworks/DataDetection.framework/Versions/A/DataDetection",
       "private": false,
+      "source-files": {
+        "objective-c": "DetectedDataObjects.m",
+        "swift-abi": "DetectedDataSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/DataDetection.framework/DataDetection.tbd",
       "unversioned": false,
       "version": "A"
@@ -1267,10 +1446,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "DeclaredAgeRange_A__System_Library_Frameworks_DeclaredAgeRange_framework_Versions_A_DeclaredAgeRange",
+      "directory": "DeclaredAgeRange",
       "framework": "DeclaredAgeRange",
       "install-name": "/System/Library/Frameworks/DeclaredAgeRange.framework/Versions/A/DeclaredAgeRange",
       "private": false,
+      "source-files": {
+        "swift-abi": "AgeRangeSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/DeclaredAgeRange.framework/DeclaredAgeRange.tbd",
       "unversioned": false,
       "version": "A"
@@ -1293,10 +1475,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "DeveloperToolsSupport_A__System_Library_Frameworks_DeveloperToolsSupport_framework_Versions_A_DeveloperToolsSupport",
+      "directory": "DeveloperToolsSupport",
       "framework": "DeveloperToolsSupport",
       "install-name": "/System/Library/Frameworks/DeveloperToolsSupport.framework/Versions/A/DeveloperToolsSupport",
       "private": false,
+      "source-files": {
+        "legacy-exports": "PreviewSupportRuntime.c",
+        "swift-abi": "PreviewSupportSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/DeveloperToolsSupport.framework/DeveloperToolsSupport.tbd",
       "unversioned": false,
       "version": "A"
@@ -1319,10 +1505,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "DeviceActivity_A__System_Library_Frameworks_DeviceActivity_framework_Versions_A_DeviceActivity",
+      "directory": "DeviceActivity",
       "framework": "DeviceActivity",
       "install-name": "/System/Library/Frameworks/DeviceActivity.framework/Versions/A/DeviceActivity",
       "private": false,
+      "source-files": {
+        "objective-c": "DeviceActivityObjects.m",
+        "swift-abi": "DeviceActivitySwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/DeviceActivity.framework/DeviceActivity.tbd",
       "unversioned": false,
       "version": "A"
@@ -1345,10 +1535,14 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "DeviceCheck_A__System_Library_Frameworks_DeviceCheck_framework_Versions_A_DeviceCheck",
+      "directory": "DeviceCheck",
       "framework": "DeviceCheck",
       "install-name": "/System/Library/Frameworks/DeviceCheck.framework/Versions/A/DeviceCheck",
       "private": false,
+      "source-files": {
+        "data": "DeviceAttestationConstants.c",
+        "objective-c": "DeviceAttestationObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/DeviceCheck.framework/DeviceCheck.tbd",
       "unversioned": false,
       "version": "A"
@@ -1371,10 +1565,17 @@
         "thread-locals": 0,
         "variables": 3
       },
-      "directory": "DeviceDiscoveryExtension_A__System_Library_Frameworks_DeviceDiscoveryExtension_framework_Versions_A_DeviceDiscoveryExtension",
+      "directory": "DeviceDiscoveryExtension",
       "framework": "DeviceDiscoveryExtension",
       "install-name": "/System/Library/Frameworks/DeviceDiscoveryExtension.framework/Versions/A/DeviceDiscoveryExtension",
       "private": false,
+      "source-files": {
+        "data": "DeviceDiscoveryConstants.c",
+        "functions": "DeviceDiscoveryFunctions.c",
+        "legacy-exports": "DeviceDiscoveryRuntime.c",
+        "objective-c": "DeviceDiscoveryObjects.m",
+        "swift-abi": "DeviceDiscoverySwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/DeviceDiscoveryExtension.framework/DeviceDiscoveryExtension.tbd",
       "unversioned": false,
       "version": "A"
@@ -1397,10 +1598,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "DockKit_A__System_Library_Frameworks_DockKit_framework_DockKit",
+      "directory": "DockKit",
       "framework": "DockKit",
       "install-name": "/System/Library/Frameworks/DockKit.framework/DockKit",
       "private": false,
+      "source-files": {
+        "swift-abi": "DockAccessorySwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/DockKit.framework/DockKit.tbd",
       "unversioned": true,
       "version": "A"
@@ -1423,10 +1627,16 @@
         "thread-locals": 0,
         "variables": 314
       },
-      "directory": "DriverKit_A__System_Library_Frameworks_DriverKit_framework_Versions_A_DriverKit",
+      "directory": "DriverKit",
       "framework": "DriverKit",
       "install-name": "/System/Library/Frameworks/DriverKit.framework/Versions/A/DriverKit",
       "private": false,
+      "source-files": {
+        "cxx-abi": "DriverCxxABI.c",
+        "data": "DriverRuntimeConstants.c",
+        "functions": "DriverRuntimeFunctions.c",
+        "legacy-exports": "DriverRuntimeExports.c"
+      },
       "source-tbd": "System/Library/Frameworks/DriverKit.framework/DriverKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -1449,10 +1659,14 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "ExecutionPolicy_A__System_Library_Frameworks_ExecutionPolicy_framework_Versions_A_ExecutionPolicy",
+      "directory": "ExecutionPolicy",
       "framework": "ExecutionPolicy",
       "install-name": "/System/Library/Frameworks/ExecutionPolicy.framework/Versions/A/ExecutionPolicy",
       "private": false,
+      "source-files": {
+        "data": "ExecutionPolicyConstants.c",
+        "objective-c": "ExecutionPolicyObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/ExecutionPolicy.framework/ExecutionPolicy.tbd",
       "unversioned": false,
       "version": "A"
@@ -1475,10 +1689,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ExtensionFoundation_A__System_Library_Frameworks_ExtensionFoundation_framework_Versions_A_ExtensionFoundation",
+      "directory": "ExtensionFoundation",
       "framework": "ExtensionFoundation",
       "install-name": "/System/Library/Frameworks/ExtensionFoundation.framework/Versions/A/ExtensionFoundation",
       "private": false,
+      "source-files": {
+        "legacy-exports": "ExtensionHostRuntime.c",
+        "objective-c": "ExtensionHostObjects.m",
+        "swift-abi": "ExtensionHostSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/ExtensionFoundation.framework/ExtensionFoundation.tbd",
       "unversioned": false,
       "version": "A"
@@ -1501,10 +1720,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ExtensionKit_A__System_Library_Frameworks_ExtensionKit_framework_Versions_A_ExtensionKit",
+      "directory": "ExtensionKit",
       "framework": "ExtensionKit",
       "install-name": "/System/Library/Frameworks/ExtensionKit.framework/Versions/A/ExtensionKit",
       "private": false,
+      "source-files": {
+        "legacy-exports": "ApplicationExtensionRuntime.c",
+        "objective-c": "ApplicationExtensionObjects.m",
+        "swift-abi": "ApplicationExtensionSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/ExtensionKit.framework/ExtensionKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -1527,10 +1751,15 @@
         "thread-locals": 0,
         "variables": 4
       },
-      "directory": "ExternalAccessory_A__System_Library_Frameworks_ExternalAccessory_framework_ExternalAccessory",
+      "directory": "ExternalAccessory",
       "framework": "ExternalAccessory",
       "install-name": "/System/Library/Frameworks/ExternalAccessory.framework/ExternalAccessory",
       "private": false,
+      "source-files": {
+        "data": "AccessoryConstants.c",
+        "legacy-exports": "AccessoryRuntime.c",
+        "objective-c": "AccessorySessionObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/ExternalAccessory.framework/ExternalAccessory.tbd",
       "unversioned": true,
       "version": "A"
@@ -1553,10 +1782,17 @@
         "thread-locals": 0,
         "variables": 6
       },
-      "directory": "FSKit_A__System_Library_Frameworks_FSKit_framework_Versions_A_FSKit",
+      "directory": "FSKit",
       "framework": "FSKit",
       "install-name": "/System/Library/Frameworks/FSKit.framework/Versions/A/FSKit",
       "private": false,
+      "source-files": {
+        "data": "FileSystemConstants.c",
+        "functions": "FileSystemFunctions.c",
+        "legacy-exports": "FileSystemRuntime.c",
+        "objective-c": "FileSystemObjects.m",
+        "swift-abi": "FileSystemSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/FSKit.framework/FSKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -1579,10 +1815,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "FamilyControls_A__System_Library_Frameworks_FamilyControls_framework_Versions_A_FamilyControls",
+      "directory": "FamilyControls",
       "framework": "FamilyControls",
       "install-name": "/System/Library/Frameworks/FamilyControls.framework/Versions/A/FamilyControls",
       "private": false,
+      "source-files": {
+        "swift-abi": "ParentalControlsSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/FamilyControls.framework/FamilyControls.tbd",
       "unversioned": false,
       "version": "A"
@@ -1605,10 +1844,17 @@
         "thread-locals": 0,
         "variables": 13
       },
-      "directory": "FileProvider_A__System_Library_Frameworks_FileProvider_framework_Versions_A_FileProvider",
+      "directory": "FileProvider",
       "framework": "FileProvider",
       "install-name": "/System/Library/Frameworks/FileProvider.framework/Versions/A/FileProvider",
       "private": false,
+      "source-files": {
+        "data": "FileProviderConstants.c",
+        "legacy-exports": "FileProviderRuntime.c",
+        "objective-c": "FileProviderObjects.m",
+        "runtime-data": "FileProviderIvars.c",
+        "swift-abi": "FileProviderSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/FileProvider.framework/FileProvider.tbd",
       "unversioned": false,
       "version": "A"
@@ -1631,10 +1877,15 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "FileProviderUI_A__System_Library_Frameworks_FileProviderUI_framework_Versions_A_FileProviderUI",
+      "directory": "FileProviderUI",
       "framework": "FileProviderUI",
       "install-name": "/System/Library/Frameworks/FileProviderUI.framework/Versions/A/FileProviderUI",
       "private": false,
+      "source-files": {
+        "data": "FileProviderUIConstants.c",
+        "legacy-exports": "FileProviderUIRuntime.c",
+        "objective-c": "FileProviderUIObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/FileProviderUI.framework/FileProviderUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -1657,10 +1908,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "FinanceKit_A__System_Library_Frameworks_FinanceKit_framework_Versions_A_FinanceKit",
+      "directory": "FinanceKit",
       "framework": "FinanceKit",
       "install-name": "/System/Library/Frameworks/FinanceKit.framework/Versions/A/FinanceKit",
       "private": false,
+      "source-files": {
+        "legacy-exports": "FinancialDataRuntime.c",
+        "objective-c": "FinancialDataObjects.m",
+        "swift-abi": "FinancialDataSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/FinanceKit.framework/FinanceKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -1683,10 +1939,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "FinanceKitUI_A__System_Library_Frameworks_FinanceKitUI_framework_Versions_A_FinanceKitUI",
+      "directory": "FinanceKitUI",
       "framework": "FinanceKitUI",
       "install-name": "/System/Library/Frameworks/FinanceKitUI.framework/Versions/A/FinanceKitUI",
       "private": false,
+      "source-files": {
+        "legacy-exports": "FinancialDataUIRuntime.c",
+        "objective-c": "FinancialDataUIObjects.m",
+        "swift-abi": "FinancialDataUISwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/FinanceKitUI.framework/FinanceKitUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -1709,10 +1970,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "FinderSync_A__System_Library_Frameworks_FinderSync_framework_Versions_A_FinderSync",
+      "directory": "FinderSync",
       "framework": "FinderSync",
       "install-name": "/System/Library/Frameworks/FinderSync.framework/Versions/A/FinderSync",
       "private": false,
+      "source-files": {
+        "objective-c": "FinderExtensionObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/FinderSync.framework/FinderSync.tbd",
       "unversioned": false,
       "version": "A"
@@ -1735,10 +1999,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "FoundationModels_A__System_Library_Frameworks_FoundationModels_framework_Versions_A_FoundationModels",
+      "directory": "FoundationModels",
       "framework": "FoundationModels",
       "install-name": "/System/Library/Frameworks/FoundationModels.framework/Versions/A/FoundationModels",
       "private": false,
+      "source-files": {
+        "swift-abi": "GenerativeModelsSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/FoundationModels.framework/FoundationModels.tbd",
       "unversioned": false,
       "version": "A"
@@ -1761,10 +2028,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "GameKit_A__System_Library_Frameworks_GameKit_framework_Versions_A_GameKit",
+      "directory": "GameKit",
       "framework": "GameKit",
       "install-name": "/System/Library/Frameworks/GameKit.framework/Versions/A/GameKit",
       "private": false,
+      "source-files": {
+        "objective-c": "GameServiceObjects.m",
+        "swift-abi": "GameServiceSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/GameKit.framework/GameKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -1787,10 +2058,15 @@
         "thread-locals": 0,
         "variables": 2
       },
-      "directory": "GameSave_A__System_Library_Frameworks_GameSave_framework_Versions_A_GameSave",
+      "directory": "GameSave",
       "framework": "GameSave",
       "install-name": "/System/Library/Frameworks/GameSave.framework/Versions/A/GameSave",
       "private": false,
+      "source-files": {
+        "data": "GameSaveConstants.c",
+        "objective-c": "GameSaveObjects.m",
+        "swift-abi": "GameSaveSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/GameSave.framework/GameSave.tbd",
       "unversioned": false,
       "version": "A"
@@ -1813,10 +2089,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "GameplayKit_A__System_Library_Frameworks_GameplayKit_framework_Versions_A_GameplayKit",
+      "directory": "GameplayKit",
       "framework": "GameplayKit",
       "install-name": "/System/Library/Frameworks/GameplayKit.framework/Versions/A/GameplayKit",
       "private": false,
+      "source-files": {
+        "cxx-abi": "GameplayCxxABI.c",
+        "legacy-exports": "GameplayRuntime.c",
+        "objective-c": "GameplayObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/GameplayKit.framework/GameplayKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -1839,10 +2120,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "GeoToolbox_A__System_Library_Frameworks_GeoToolbox_framework_Versions_A_GeoToolbox",
+      "directory": "GeoToolbox",
       "framework": "GeoToolbox",
       "install-name": "/System/Library/Frameworks/GeoToolbox.framework/Versions/A/GeoToolbox",
       "private": false,
+      "source-files": {
+        "swift-abi": "GeospatialSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/GeoToolbox.framework/GeoToolbox.tbd",
       "unversioned": false,
       "version": "A"
@@ -1865,10 +2149,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "GroupActivities_A__System_Library_Frameworks_GroupActivities_framework_Versions_A_GroupActivities",
+      "directory": "GroupActivities",
       "framework": "GroupActivities",
       "install-name": "/System/Library/Frameworks/GroupActivities.framework/Versions/A/GroupActivities",
       "private": false,
+      "source-files": {
+        "legacy-exports": "SharedActivityRuntime.c",
+        "objective-c": "SharedActivityObjects.m",
+        "swift-abi": "SharedActivitySwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/GroupActivities.framework/GroupActivities.tbd",
       "unversioned": false,
       "version": "A"
@@ -1891,10 +2180,18 @@
         "thread-locals": 0,
         "variables": 405
       },
-      "directory": "HealthKit_A__System_Library_Frameworks_HealthKit_framework_Versions_A_HealthKit",
+      "directory": "HealthKit",
       "framework": "HealthKit",
       "install-name": "/System/Library/Frameworks/HealthKit.framework/Versions/A/HealthKit",
       "private": false,
+      "source-files": {
+        "data": "HealthDataConstants.c",
+        "functions": "HealthDataFunctions.c",
+        "legacy-exports": "HealthDataRuntime.c",
+        "objective-c": "HealthDataObjects.m",
+        "runtime-data": "HealthDataIvars.c",
+        "swift-abi": "HealthDataSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/HealthKit.framework/HealthKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -1917,10 +2214,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "Hypervisor_A__System_Library_Frameworks_Hypervisor_framework_Versions_A_Hypervisor",
+      "directory": "Hypervisor",
       "framework": "Hypervisor",
       "install-name": "/System/Library/Frameworks/Hypervisor.framework/Versions/A/Hypervisor",
       "private": false,
+      "source-files": {
+        "functions": "HypervisorFunctions.c",
+        "legacy-exports": "HypervisorRuntime.c",
+        "objective-c": "VirtualMachineProtocols.m"
+      },
       "source-tbd": "System/Library/Frameworks/Hypervisor.framework/Hypervisor.tbd",
       "unversioned": false,
       "version": "A"
@@ -1943,10 +2245,15 @@
         "thread-locals": 0,
         "variables": 146
       },
-      "directory": "ICADevices_A__System_Library_Frameworks_ICADevices_framework_Versions_A_ICADevices",
+      "directory": "ICADevices",
       "framework": "ICADevices",
       "install-name": "/System/Library/Frameworks/ICADevices.framework/Versions/A/ICADevices",
       "private": false,
+      "source-files": {
+        "data": "ImageCaptureConstants.c",
+        "functions": "ImageCaptureFunctions.c",
+        "legacy-exports": "ImageCaptureRuntime.c"
+      },
       "source-tbd": "System/Library/Frameworks/ICADevices.framework/ICADevices.tbd",
       "unversioned": false,
       "version": "A"
@@ -1969,10 +2276,15 @@
         "thread-locals": 0,
         "variables": 24
       },
-      "directory": "IOUSBHost_A__System_Library_Frameworks_IOUSBHost_framework_Versions_A_IOUSBHost",
+      "directory": "IOUSBHost",
       "framework": "IOUSBHost",
       "install-name": "/System/Library/Frameworks/IOUSBHost.framework/Versions/A/IOUSBHost",
       "private": false,
+      "source-files": {
+        "data": "USBHostConstants.c",
+        "functions": "USBHostFunctions.c",
+        "objective-c": "USBHostObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/IOUSBHost.framework/IOUSBHost.tbd",
       "unversioned": false,
       "version": "A"
@@ -1995,10 +2307,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "IdentityDocumentServices_A__System_Library_Frameworks_IdentityDocumentServices_framework_Versions_A_IdentityDocumentServices",
+      "directory": "IdentityDocumentServices",
       "framework": "IdentityDocumentServices",
       "install-name": "/System/Library/Frameworks/IdentityDocumentServices.framework/Versions/A/IdentityDocumentServices",
       "private": false,
+      "source-files": {
+        "swift-abi": "IdentityDocumentSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/IdentityDocumentServices.framework/IdentityDocumentServices.tbd",
       "unversioned": false,
       "version": "A"
@@ -2021,10 +2336,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "IdentityDocumentServicesUI_A__System_Library_Frameworks_IdentityDocumentServicesUI_framework_Versions_A_IdentityDocumentServicesUI",
+      "directory": "IdentityDocumentServicesUI",
       "framework": "IdentityDocumentServicesUI",
       "install-name": "/System/Library/Frameworks/IdentityDocumentServicesUI.framework/Versions/A/IdentityDocumentServicesUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "IdentityDocumentUISwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/IdentityDocumentServicesUI.framework/IdentityDocumentServicesUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -2047,10 +2365,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ImagePlayground_A__System_Library_Frameworks_ImagePlayground_framework_Versions_A_ImagePlayground",
+      "directory": "ImagePlayground",
       "framework": "ImagePlayground",
       "install-name": "/System/Library/Frameworks/ImagePlayground.framework/Versions/A/ImagePlayground",
       "private": false,
+      "source-files": {
+        "objective-c": "ImageGenerationObjects.m",
+        "swift-abi": "ImageGenerationSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/ImagePlayground.framework/ImagePlayground.tbd",
       "unversioned": false,
       "version": "A"
@@ -2073,10 +2395,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ImmersiveMediaSupport_A__System_Library_Frameworks_ImmersiveMediaSupport_framework_Versions_A_ImmersiveMediaSupport",
+      "directory": "ImmersiveMediaSupport",
       "framework": "ImmersiveMediaSupport",
       "install-name": "/System/Library/Frameworks/ImmersiveMediaSupport.framework/Versions/A/ImmersiveMediaSupport",
       "private": false,
+      "source-files": {
+        "objective-c": "ImmersiveMediaObjects.m",
+        "swift-abi": "ImmersiveMediaSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/ImmersiveMediaSupport.framework/ImmersiveMediaSupport.tbd",
       "unversioned": false,
       "version": "A"
@@ -2099,10 +2425,16 @@
         "thread-locals": 0,
         "variables": 3
       },
-      "directory": "InstallerPlugins_A__System_Library_Frameworks_InstallerPlugins_framework_Versions_A_InstallerPlugins",
+      "directory": "InstallerPlugins",
       "framework": "InstallerPlugins",
       "install-name": "/System/Library/Frameworks/InstallerPlugins.framework/Versions/A/InstallerPlugins",
       "private": false,
+      "source-files": {
+        "data": "InstallerPluginConstants.c",
+        "legacy-exports": "InstallerPluginRuntime.c",
+        "objective-c": "InstallerPluginObjects.m",
+        "runtime-data": "InstallerPluginIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/InstallerPlugins.framework/InstallerPlugins.tbd",
       "unversioned": false,
       "version": "A"
@@ -2125,10 +2457,16 @@
         "thread-locals": 0,
         "variables": 85
       },
-      "directory": "Intents_A__System_Library_Frameworks_Intents_framework_Versions_A_Intents",
+      "directory": "Intents",
       "framework": "Intents",
       "install-name": "/System/Library/Frameworks/Intents.framework/Versions/A/Intents",
       "private": false,
+      "source-files": {
+        "data": "SiriIntentConstants.c",
+        "legacy-exports": "SiriIntentRuntime.c",
+        "objective-c": "SiriIntentObjects.m",
+        "runtime-data": "SiriIntentIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/Intents.framework/Intents.tbd",
       "unversioned": false,
       "version": "A"
@@ -2151,10 +2489,15 @@
         "thread-locals": 0,
         "variables": 2
       },
-      "directory": "IntentsUI_A__System_Library_Frameworks_IntentsUI_framework_Versions_A_IntentsUI",
+      "directory": "IntentsUI",
       "framework": "IntentsUI",
       "install-name": "/System/Library/Frameworks/IntentsUI.framework/Versions/A/IntentsUI",
       "private": false,
+      "source-files": {
+        "data": "SiriIntentUIConstants.c",
+        "legacy-exports": "SiriIntentUIRuntime.c",
+        "objective-c": "SiriIntentUIObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/IntentsUI.framework/IntentsUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -2177,10 +2520,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "JavaNativeFoundation_A__System_Library_Frameworks_JavaNativeFoundation_framework_Versions_A_JavaNativeFoundation",
+      "directory": "JavaNativeFoundation",
       "framework": "JavaNativeFoundation",
       "install-name": "/System/Library/Frameworks/JavaNativeFoundation.framework/Versions/A/JavaNativeFoundation",
       "private": false,
+      "source-files": {
+        "legacy-exports": "JavaBridgeRuntime.c",
+        "objective-c": "JavaBridgeObjects.m",
+        "runtime-data": "JavaBridgeExceptionData.c"
+      },
       "source-tbd": "System/Library/Frameworks/JavaNativeFoundation.framework/JavaNativeFoundation.tbd",
       "unversioned": false,
       "version": "A"
@@ -2203,10 +2551,15 @@
         "thread-locals": 0,
         "variables": 2
       },
-      "directory": "KernelManagement_A__System_Library_Frameworks_KernelManagement_framework_Versions_A_KernelManagement",
+      "directory": "KernelManagement",
       "framework": "KernelManagement",
       "install-name": "/System/Library/Frameworks/KernelManagement.framework/Versions/A/KernelManagement",
       "private": false,
+      "source-files": {
+        "data": "KernelExtensionConstants.c",
+        "legacy-exports": "KernelExtensionRuntime.c",
+        "objective-c": "KernelExtensionObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/KernelManagement.framework/KernelManagement.tbd",
       "unversioned": false,
       "version": "A"
@@ -2229,10 +2582,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "LatentSemanticMapping_A__System_Library_Frameworks_LatentSemanticMapping_framework_Versions_A_LatentSemanticMapping",
+      "directory": "LatentSemanticMapping",
       "framework": "LatentSemanticMapping",
       "install-name": "/System/Library/Frameworks/LatentSemanticMapping.framework/Versions/A/LatentSemanticMapping",
       "private": false,
+      "source-files": {
+        "functions": "SemanticMappingFunctions.c",
+        "legacy-exports": "SemanticMappingRuntime.c"
+      },
       "source-tbd": "System/Library/Frameworks/LatentSemanticMapping.framework/LatentSemanticMapping.tbd",
       "unversioned": false,
       "version": "A"
@@ -2255,10 +2612,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "LightweightCodeRequirements_A__System_Library_Frameworks_LightweightCodeRequirements_framework_Versions_A_LightweightCodeRequirements",
+      "directory": "LightweightCodeRequirements",
       "framework": "LightweightCodeRequirements",
       "install-name": "/System/Library/Frameworks/LightweightCodeRequirements.framework/Versions/A/LightweightCodeRequirements",
       "private": false,
+      "source-files": {
+        "swift-abi": "CodeRequirementSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/LightweightCodeRequirements.framework/LightweightCodeRequirements.tbd",
       "unversioned": false,
       "version": "A"
@@ -2281,10 +2641,16 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "LinkPresentation_A__System_Library_Frameworks_LinkPresentation_framework_Versions_A_LinkPresentation",
+      "directory": "LinkPresentation",
       "framework": "LinkPresentation",
       "install-name": "/System/Library/Frameworks/LinkPresentation.framework/Versions/A/LinkPresentation",
       "private": false,
+      "source-files": {
+        "data": "LinkMetadataConstants.c",
+        "legacy-exports": "LinkMetadataRuntime.c",
+        "objective-c": "LinkMetadataObjects.m",
+        "swift-abi": "LinkMetadataSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/LinkPresentation.framework/LinkPresentation.tbd",
       "unversioned": false,
       "version": "A"
@@ -2307,10 +2673,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "LiveCommunicationKit_A__System_Library_Frameworks_LiveCommunicationKit_framework_Versions_A_LiveCommunicationKit",
+      "directory": "LiveCommunicationKit",
       "framework": "LiveCommunicationKit",
       "install-name": "/System/Library/Frameworks/LiveCommunicationKit.framework/Versions/A/LiveCommunicationKit",
       "private": false,
+      "source-files": {
+        "objective-c": "LiveCommunicationObjects.m",
+        "swift-abi": "LiveCommunicationSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/LiveCommunicationKit.framework/LiveCommunicationKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -2333,10 +2703,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "DaemonUtils_A__System_Library_Frameworks_LocalAuthentication_framework_Support_DaemonUtils_framework_Versions_A_DaemonUtils",
+      "directory": "LocalAuthenticationDaemonUtils",
       "framework": "DaemonUtils",
       "install-name": "/System/Library/Frameworks/LocalAuthentication.framework/Support/DaemonUtils.framework/Versions/A/DaemonUtils",
       "private": false,
+      "source-files": {
+        "legacy-exports": "AuthenticationDaemonRuntime.c",
+        "objective-c": "AuthenticationDaemonObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/LocalAuthentication.framework/Support/DaemonUtils.framework/DaemonUtils.tbd",
       "unversioned": false,
       "version": "A"
@@ -2359,10 +2733,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MechanismBase_A__System_Library_Frameworks_LocalAuthentication_framework_Support_MechanismBase_framework_Versions_A_MechanismBase",
+      "directory": "LocalAuthenticationMechanismBase",
       "framework": "MechanismBase",
       "install-name": "/System/Library/Frameworks/LocalAuthentication.framework/Support/MechanismBase.framework/Versions/A/MechanismBase",
       "private": false,
+      "source-files": {
+        "legacy-exports": "AuthenticationMechanismRuntime.c",
+        "objective-c": "AuthenticationMechanismObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/LocalAuthentication.framework/Support/MechanismBase.framework/MechanismBase.tbd",
       "unversioned": false,
       "version": "A"
@@ -2385,10 +2763,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ModuleBase_A__System_Library_Frameworks_LocalAuthentication_framework_Support_ModuleBase_framework_Versions_A_ModuleBase",
+      "directory": "LocalAuthenticationModuleBase",
       "framework": "ModuleBase",
       "install-name": "/System/Library/Frameworks/LocalAuthentication.framework/Support/ModuleBase.framework/Versions/A/ModuleBase",
       "private": false,
+      "source-files": {
+        "legacy-exports": "AuthenticationModuleRuntime.c",
+        "objective-c": "AuthenticationModuleObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/LocalAuthentication.framework/Support/ModuleBase.framework/ModuleBase.tbd",
       "unversioned": false,
       "version": "A"
@@ -2411,10 +2793,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "SharedUtils_A__System_Library_Frameworks_LocalAuthentication_framework_Support_SharedUtils_framework_Versions_A_SharedUtils",
+      "directory": "LocalAuthenticationSharedUtils",
       "framework": "SharedUtils",
       "install-name": "/System/Library/Frameworks/LocalAuthentication.framework/Support/SharedUtils.framework/Versions/A/SharedUtils",
       "private": false,
+      "source-files": {
+        "legacy-exports": "AuthenticationSharedRuntime.c",
+        "objective-c": "AuthenticationSharedObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/LocalAuthentication.framework/Support/SharedUtils.framework/SharedUtils.tbd",
       "unversioned": false,
       "version": "A"
@@ -2437,10 +2823,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "LocalAuthenticationEmbeddedUI_A__System_Library_Frameworks_LocalAuthenticationEmbeddedUI_framework_Versions_A_LocalAuthenticationEmbeddedUI",
+      "directory": "LocalAuthenticationEmbeddedUI",
       "framework": "LocalAuthenticationEmbeddedUI",
       "install-name": "/System/Library/Frameworks/LocalAuthenticationEmbeddedUI.framework/Versions/A/LocalAuthenticationEmbeddedUI",
       "private": false,
+      "source-files": {
+        "legacy-exports": "AuthenticationUIRuntime.c",
+        "objective-c": "AuthenticationUIObjects.m",
+        "swift-abi": "AuthenticationUISwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/LocalAuthenticationEmbeddedUI.framework/LocalAuthenticationEmbeddedUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -2463,10 +2854,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MLCompute_A__System_Library_Frameworks_MLCompute_framework_Versions_A_MLCompute",
+      "directory": "MLCompute",
       "framework": "MLCompute",
       "install-name": "/System/Library/Frameworks/MLCompute.framework/Versions/A/MLCompute",
       "private": false,
+      "source-files": {
+        "functions": "ComputeGraphFunctions.c",
+        "legacy-exports": "ComputeGraphRuntime.c",
+        "objective-c": "ComputeGraphObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/MLCompute.framework/MLCompute.tbd",
       "unversioned": false,
       "version": "A"
@@ -2489,10 +2885,15 @@
         "thread-locals": 0,
         "variables": 2
       },
-      "directory": "MailKit_A__System_Library_Frameworks_MailKit_framework_Versions_A_MailKit",
+      "directory": "MailKit",
       "framework": "MailKit",
       "install-name": "/System/Library/Frameworks/MailKit.framework/Versions/A/MailKit",
       "private": false,
+      "source-files": {
+        "data": "MailExtensionConstants.c",
+        "legacy-exports": "MailExtensionRuntime.c",
+        "objective-c": "MailExtensionObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/MailKit.framework/MailKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -2515,10 +2916,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ManagedAppDistribution_A__System_Library_Frameworks_ManagedAppDistribution_framework_Versions_A_ManagedAppDistribution",
+      "directory": "ManagedAppDistribution",
       "framework": "ManagedAppDistribution",
       "install-name": "/System/Library/Frameworks/ManagedAppDistribution.framework/Versions/A/ManagedAppDistribution",
       "private": false,
+      "source-files": {
+        "objective-c": "ManagedDistributionObjects.m",
+        "swift-abi": "ManagedDistributionSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/ManagedAppDistribution.framework/ManagedAppDistribution.tbd",
       "unversioned": false,
       "version": "A"
@@ -2541,10 +2946,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ManagedSettings_A__System_Library_Frameworks_ManagedSettings_framework_Versions_A_ManagedSettings",
+      "directory": "ManagedSettings",
       "framework": "ManagedSettings",
       "install-name": "/System/Library/Frameworks/ManagedSettings.framework/Versions/A/ManagedSettings",
       "private": false,
+      "source-files": {
+        "objective-c": "ManagedSettingObjects.m",
+        "swift-abi": "ManagedSettingSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/ManagedSettings.framework/ManagedSettings.tbd",
       "unversioned": false,
       "version": "A"
@@ -2567,10 +2976,15 @@
         "thread-locals": 0,
         "variables": 41
       },
-      "directory": "Matter_A__System_Library_Frameworks_Matter_framework_Versions_A_Matter",
+      "directory": "Matter",
       "framework": "Matter",
       "install-name": "/System/Library/Frameworks/Matter.framework/Versions/A/Matter",
       "private": false,
+      "source-files": {
+        "data": "MatterConstants.c",
+        "functions": "MatterFunctions.c",
+        "objective-c": "MatterClustersAndDevices.m"
+      },
       "source-tbd": "System/Library/Frameworks/Matter.framework/Matter.tbd",
       "unversioned": false,
       "version": "A"
@@ -2593,10 +3007,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MatterSupport_A__System_Library_Frameworks_MatterSupport_framework_Versions_A_MatterSupport",
+      "directory": "MatterSupport",
       "framework": "MatterSupport",
       "install-name": "/System/Library/Frameworks/MatterSupport.framework/Versions/A/MatterSupport",
       "private": false,
+      "source-files": {
+        "legacy-exports": "MatterSetupRuntime.c",
+        "objective-c": "MatterSetupObjects.m",
+        "swift-abi": "MatterSetupSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/MatterSupport.framework/MatterSupport.tbd",
       "unversioned": false,
       "version": "A"
@@ -2619,10 +3038,15 @@
         "thread-locals": 0,
         "variables": 4
       },
-      "directory": "MediaExtension_A__System_Library_Frameworks_MediaExtension_framework_Versions_A_MediaExtension",
+      "directory": "MediaExtension",
       "framework": "MediaExtension",
       "install-name": "/System/Library/Frameworks/MediaExtension.framework/Versions/A/MediaExtension",
       "private": false,
+      "source-files": {
+        "data": "MediaExtensionConstants.c",
+        "objective-c": "MediaExtensionObjects.m",
+        "swift-abi": "MediaExtensionSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/MediaExtension.framework/MediaExtension.tbd",
       "unversioned": false,
       "version": "A"
@@ -2645,10 +3069,15 @@
         "thread-locals": 0,
         "variables": 148
       },
-      "directory": "MediaLibrary_A__System_Library_Frameworks_MediaLibrary_framework_Versions_A_MediaLibrary",
+      "directory": "MediaLibrary",
       "framework": "MediaLibrary",
       "install-name": "/System/Library/Frameworks/MediaLibrary.framework/Versions/A/MediaLibrary",
       "private": false,
+      "source-files": {
+        "data": "MediaLibraryConstants.c",
+        "legacy-exports": "MediaLibraryRuntime.c",
+        "objective-c": "MediaLibraryObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/MediaLibrary.framework/MediaLibrary.tbd",
       "unversioned": false,
       "version": "A"
@@ -2671,10 +3100,17 @@
         "thread-locals": 0,
         "variables": 88
       },
-      "directory": "MediaPlayer_A__System_Library_Frameworks_MediaPlayer_framework_Versions_A_MediaPlayer",
+      "directory": "MediaPlayer",
       "framework": "MediaPlayer",
       "install-name": "/System/Library/Frameworks/MediaPlayer.framework/Versions/A/MediaPlayer",
       "private": false,
+      "source-files": {
+        "data": "MediaPlaybackConstants.c",
+        "legacy-exports": "MediaPlaybackRuntime.c",
+        "objective-c": "MediaPlaybackObjects.m",
+        "runtime-data": "MediaPlaybackIvars.c",
+        "swift-abi": "MediaPlaybackSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/MediaPlayer.framework/MediaPlayer.tbd",
       "unversioned": false,
       "version": "A"
@@ -2697,10 +3133,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MetalFX_A__System_Library_Frameworks_MetalFX_framework_Versions_A_MetalFX",
+      "directory": "MetalFX",
       "framework": "MetalFX",
       "install-name": "/System/Library/Frameworks/MetalFX.framework/Versions/A/MetalFX",
       "private": false,
+      "source-files": {
+        "objective-c": "SpatialScalingObjects.m",
+        "runtime-data": "SpatialScalingIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/MetalFX.framework/MetalFX.tbd",
       "unversioned": false,
       "version": "A"
@@ -2723,10 +3163,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MPSBenchmarkLoop_A__System_Library_Frameworks_MetalPerformanceShaders_framework_Versions_A_Frameworks_MPSBenchmarkLoop_framework_Versions_A_MPSBenchmarkLoop",
+      "directory": "MPSBenchmarkLoop",
       "framework": "MPSBenchmarkLoop",
       "install-name": "/System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSBenchmarkLoop.framework/Versions/A/MPSBenchmarkLoop",
       "private": false,
+      "source-files": {
+        "cxx-abi": "BenchmarkLoopCxxABI.c",
+        "objective-c": "BenchmarkLoopObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSBenchmarkLoop.framework/MPSBenchmarkLoop.tbd",
       "unversioned": false,
       "version": "A"
@@ -2749,10 +3193,18 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "MPSCore_A__System_Library_Frameworks_MetalPerformanceShaders_framework_Versions_A_Frameworks_MPSCore_framework_Versions_A_MPSCore",
+      "directory": "MPSCore",
       "framework": "MPSCore",
       "install-name": "/System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSCore.framework/Versions/A/MPSCore",
       "private": false,
+      "source-files": {
+        "cxx-abi": "MetalPerformanceCoreCxxABI.c",
+        "data": "MetalPerformanceCoreConstants.c",
+        "functions": "MetalPerformanceCoreFunctions.c",
+        "legacy-exports": "MetalPerformanceCoreRuntime.c",
+        "objective-c": "MetalPerformanceCoreObjects.m",
+        "runtime-data": "MetalPerformanceCoreIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSCore.framework/MPSCore.tbd",
       "unversioned": false,
       "version": "A"
@@ -2775,10 +3227,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MPSFunctions_A__System_Library_Frameworks_MetalPerformanceShaders_framework_Versions_A_Frameworks_MPSFunctions_framework_Versions_A_MPSFunctions",
+      "directory": "MPSFunctions",
       "framework": "MPSFunctions",
       "install-name": "/System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSFunctions.framework/Versions/A/MPSFunctions",
       "private": false,
+      "source-files": {
+        "objective-c": "MetalShaderFunctionObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSFunctions.framework/MPSFunctions.tbd",
       "unversioned": false,
       "version": "A"
@@ -2801,10 +3256,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MPSHost_A__System_Library_Frameworks_MetalPerformanceShaders_framework_Versions_A_Frameworks_MPSHost_framework_Versions_A_MPSHost",
+      "directory": "MPSHost",
       "framework": "MPSHost",
       "install-name": "/System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSHost.framework/Versions/A/MPSHost",
       "private": false,
+      "source-files": {
+        "cxx-abi": "MetalHostCxxABI.c",
+        "objective-c": "MetalHostObjects.m",
+        "runtime-data": "MetalHostIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSHost.framework/MPSHost.tbd",
       "unversioned": false,
       "version": "A"
@@ -2827,10 +3287,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MPSImage_A__System_Library_Frameworks_MetalPerformanceShaders_framework_Versions_A_Frameworks_MPSImage_framework_Versions_A_MPSImage",
+      "directory": "MPSImage",
       "framework": "MPSImage",
       "install-name": "/System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSImage.framework/Versions/A/MPSImage",
       "private": false,
+      "source-files": {
+        "legacy-exports": "MetalImageRuntime.c",
+        "objective-c": "MetalImageObjects.m",
+        "runtime-data": "MetalImageIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSImage.framework/MPSImage.tbd",
       "unversioned": false,
       "version": "A"
@@ -2853,10 +3318,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MPSMatrix_A__System_Library_Frameworks_MetalPerformanceShaders_framework_Versions_A_Frameworks_MPSMatrix_framework_Versions_A_MPSMatrix",
+      "directory": "MPSMatrix",
       "framework": "MPSMatrix",
       "install-name": "/System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSMatrix.framework/Versions/A/MPSMatrix",
       "private": false,
+      "source-files": {
+        "objective-c": "MetalMatrixObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSMatrix.framework/MPSMatrix.tbd",
       "unversioned": false,
       "version": "A"
@@ -2879,10 +3347,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MPSNDArray_A__System_Library_Frameworks_MetalPerformanceShaders_framework_Versions_A_Frameworks_MPSNDArray_framework_Versions_A_MPSNDArray",
+      "directory": "MPSNDArray",
       "framework": "MPSNDArray",
       "install-name": "/System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSNDArray.framework/Versions/A/MPSNDArray",
       "private": false,
+      "source-files": {
+        "legacy-exports": "MetalNDArrayRuntime.c",
+        "objective-c": "MetalNDArrayObjects.m",
+        "runtime-data": "MetalNDArrayIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSNDArray.framework/MPSNDArray.tbd",
       "unversioned": false,
       "version": "A"
@@ -2905,10 +3378,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MPSNeuralNetwork_A__System_Library_Frameworks_MetalPerformanceShaders_framework_Versions_A_Frameworks_MPSNeuralNetwork_framework_Versions_A_MPSNeuralNetwork",
+      "directory": "MPSNeuralNetwork",
       "framework": "MPSNeuralNetwork",
       "install-name": "/System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSNeuralNetwork.framework/Versions/A/MPSNeuralNetwork",
       "private": false,
+      "source-files": {
+        "legacy-exports": "MetalNeuralNetworkRuntime.c",
+        "objective-c": "MetalNeuralNetworkObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSNeuralNetwork.framework/MPSNeuralNetwork.tbd",
       "unversioned": false,
       "version": "A"
@@ -2931,10 +3408,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MPSRayIntersector_A__System_Library_Frameworks_MetalPerformanceShaders_framework_Versions_A_Frameworks_MPSRayIntersector_framework_Versions_A_MPSRayIntersector",
+      "directory": "MPSRayIntersector",
       "framework": "MPSRayIntersector",
       "install-name": "/System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSRayIntersector.framework/Versions/A/MPSRayIntersector",
       "private": false,
+      "source-files": {
+        "cxx-abi": "RayIntersectionCxxABI.c",
+        "legacy-exports": "RayIntersectionRuntime.c",
+        "objective-c": "RayIntersectionObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/MetalPerformanceShaders.framework/Versions/A/Frameworks/MPSRayIntersector.framework/MPSRayIntersector.tbd",
       "unversioned": false,
       "version": "A"
@@ -2957,10 +3439,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MetalPerformanceShadersGraph_A__System_Library_Frameworks_MetalPerformanceShadersGraph_framework_Versions_A_MetalPerformanceShadersGraph",
+      "directory": "MetalPerformanceShadersGraph",
       "framework": "MetalPerformanceShadersGraph",
       "install-name": "/System/Library/Frameworks/MetalPerformanceShadersGraph.framework/Versions/A/MetalPerformanceShadersGraph",
       "private": false,
+      "source-files": {
+        "legacy-exports": "ComputeGraphRuntime.c",
+        "objective-c": "ComputeGraphObjects.m",
+        "swift-abi": "ComputeGraphSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/MetalPerformanceShadersGraph.framework/MetalPerformanceShadersGraph.tbd",
       "unversioned": false,
       "version": "A"
@@ -2983,10 +3470,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "MusicKit_A__System_Library_Frameworks_MusicKit_framework_Versions_A_MusicKit",
+      "directory": "MusicKit",
       "framework": "MusicKit",
       "install-name": "/System/Library/Frameworks/MusicKit.framework/Versions/A/MusicKit",
       "private": false,
+      "source-files": {
+        "legacy-exports": "MusicCatalogRuntime.c",
+        "objective-c": "MusicCatalogObjects.m",
+        "swift-abi": "MusicCatalogSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/MusicKit.framework/MusicKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3009,10 +3501,15 @@
         "thread-locals": 0,
         "variables": 131
       },
-      "directory": "NaturalLanguage_A__System_Library_Frameworks_NaturalLanguage_framework_Versions_A_NaturalLanguage",
+      "directory": "NaturalLanguage",
       "framework": "NaturalLanguage",
       "install-name": "/System/Library/Frameworks/NaturalLanguage.framework/Versions/A/NaturalLanguage",
       "private": false,
+      "source-files": {
+        "data": "LanguageAnalysisConstants.c",
+        "legacy-exports": "LanguageAnalysisRuntime.c",
+        "objective-c": "LanguageAnalysisObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/NaturalLanguage.framework/NaturalLanguage.tbd",
       "unversioned": false,
       "version": "A"
@@ -3035,10 +3532,18 @@
         "thread-locals": 0,
         "variables": 9
       },
-      "directory": "NearbyInteraction_A__System_Library_Frameworks_NearbyInteraction_framework_Versions_A_NearbyInteraction",
+      "directory": "NearbyInteraction",
       "framework": "NearbyInteraction",
       "install-name": "/System/Library/Frameworks/NearbyInteraction.framework/Versions/A/NearbyInteraction",
       "private": false,
+      "source-files": {
+        "cxx-abi": "NearbySessionCxxABI.c",
+        "data": "NearbySessionConstants.c",
+        "functions": "NearbySessionFunctions.c",
+        "legacy-exports": "NearbySessionRuntime.c",
+        "objective-c": "NearbySessionObjects.m",
+        "swift-abi": "NearbySessionSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/NearbyInteraction.framework/NearbyInteraction.tbd",
       "unversioned": false,
       "version": "A"
@@ -3061,10 +3566,16 @@
         "thread-locals": 0,
         "variables": 22
       },
-      "directory": "NetworkExtension_A__System_Library_Frameworks_NetworkExtension_framework_Versions_A_NetworkExtension",
+      "directory": "NetworkExtension",
       "framework": "NetworkExtension",
       "install-name": "/System/Library/Frameworks/NetworkExtension.framework/Versions/A/NetworkExtension",
       "private": false,
+      "source-files": {
+        "data": "NetworkExtensionConstants.c",
+        "legacy-exports": "NetworkExtensionRuntime.c",
+        "objective-c": "NetworkExtensionObjects.m",
+        "swift-abi": "NetworkExtensionSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/NetworkExtension.framework/NetworkExtension.tbd",
       "unversioned": false,
       "version": "A"
@@ -3087,10 +3598,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "NotificationCenter_A__System_Library_Frameworks_NotificationCenter_framework_Versions_A_NotificationCenter",
+      "directory": "NotificationCenter",
       "framework": "NotificationCenter",
       "install-name": "/System/Library/Frameworks/NotificationCenter.framework/Versions/A/NotificationCenter",
       "private": false,
+      "source-files": {
+        "legacy-exports": "TodayExtensionRuntime.c",
+        "objective-c": "TodayExtensionObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/NotificationCenter.framework/NotificationCenter.tbd",
       "unversioned": false,
       "version": "A"
@@ -3113,10 +3628,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "OSLog_A__System_Library_Frameworks_OSLog_framework_Versions_A_OSLog",
+      "directory": "OSLog",
       "framework": "OSLog",
       "install-name": "/System/Library/Frameworks/OSLog.framework/Versions/A/OSLog",
       "private": false,
+      "source-files": {
+        "legacy-exports": "UnifiedLoggingRuntime.c",
+        "objective-c": "UnifiedLoggingObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/OSLog.framework/OSLog.tbd",
       "unversioned": false,
       "version": "A"
@@ -3139,10 +3658,15 @@
         "thread-locals": 0,
         "variables": 6
       },
-      "directory": "PHASE_A__System_Library_Frameworks_PHASE_framework_Versions_A_PHASE",
+      "directory": "PHASE",
       "framework": "PHASE",
       "install-name": "/System/Library/Frameworks/PHASE.framework/Versions/A/PHASE",
       "private": false,
+      "source-files": {
+        "data": "SpatialAudioConstants.c",
+        "legacy-exports": "SpatialAudioRuntime.c",
+        "objective-c": "SpatialAudioObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/PHASE.framework/PHASE.tbd",
       "unversioned": false,
       "version": "A"
@@ -3165,10 +3689,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "PaperKit_A__System_Library_Frameworks_PaperKit_framework_Versions_A_PaperKit",
+      "directory": "PaperKit",
       "framework": "PaperKit",
       "install-name": "/System/Library/Frameworks/PaperKit.framework/Versions/A/PaperKit",
       "private": false,
+      "source-files": {
+        "objective-c": "DocumentMarkupObjects.m",
+        "swift-abi": "DocumentMarkupSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/PaperKit.framework/PaperKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3191,10 +3719,15 @@
         "thread-locals": 0,
         "variables": 3
       },
-      "directory": "ParavirtualizedGraphics_A__System_Library_Frameworks_ParavirtualizedGraphics_framework_Versions_A_ParavirtualizedGraphics",
+      "directory": "ParavirtualizedGraphics",
       "framework": "ParavirtualizedGraphics",
       "install-name": "/System/Library/Frameworks/ParavirtualizedGraphics.framework/Versions/A/ParavirtualizedGraphics",
       "private": false,
+      "source-files": {
+        "data": "VirtualGraphicsConstants.c",
+        "functions": "VirtualGraphicsFunctions.c",
+        "objective-c": "VirtualGraphicsObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/ParavirtualizedGraphics.framework/ParavirtualizedGraphics.tbd",
       "unversioned": false,
       "version": "A"
@@ -3217,10 +3750,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "PermissionKit_A__System_Library_Frameworks_PermissionKit_framework_Versions_A_PermissionKit",
+      "directory": "PermissionKit",
       "framework": "PermissionKit",
       "install-name": "/System/Library/Frameworks/PermissionKit.framework/Versions/A/PermissionKit",
       "private": false,
+      "source-files": {
+        "swift-abi": "PermissionSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/PermissionKit.framework/PermissionKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3243,10 +3779,16 @@
         "thread-locals": 0,
         "variables": 9
       },
-      "directory": "PhotosUI_A__System_Library_Frameworks_PhotosUI_framework_Versions_A_PhotosUI",
+      "directory": "PhotosUI",
       "framework": "PhotosUI",
       "install-name": "/System/Library/Frameworks/PhotosUI.framework/Versions/A/PhotosUI",
       "private": false,
+      "source-files": {
+        "data": "PhotoPickerConstants.c",
+        "legacy-exports": "PhotoPickerRuntime.c",
+        "objective-c": "PhotoPickerObjects.m",
+        "swift-abi": "PhotoPickerSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/PhotosUI.framework/PhotosUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -3269,10 +3811,16 @@
         "thread-locals": 0,
         "variables": 8
       },
-      "directory": "PreferencePanes_A__System_Library_Frameworks_PreferencePanes_framework_Versions_A_PreferencePanes",
+      "directory": "PreferencePanes",
       "framework": "PreferencePanes",
       "install-name": "/System/Library/Frameworks/PreferencePanes.framework/Versions/A/PreferencePanes",
       "private": false,
+      "source-files": {
+        "data": "PreferencePaneConstants.c",
+        "legacy-exports": "PreferencePaneRuntime.c",
+        "objective-c": "PreferencePaneObjects.m",
+        "runtime-data": "PreferencePaneIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/PreferencePanes.framework/PreferencePanes.tbd",
       "unversioned": false,
       "version": "A"
@@ -3295,10 +3843,13 @@
         "thread-locals": 0,
         "variables": 2
       },
-      "directory": "ProximityReaderStub_A__System_Library_Frameworks_ProximityReaderStub_framework_Versions_A_ProximityReaderStub",
+      "directory": "ProximityReader",
       "framework": "ProximityReaderStub",
       "install-name": "/System/Library/Frameworks/ProximityReaderStub.framework/Versions/A/ProximityReaderStub",
       "private": false,
+      "source-files": {
+        "data": "ProximityReaderConstants.c"
+      },
       "source-tbd": "System/Library/Frameworks/ProximityReaderStub.framework/ProximityReaderStub.tbd",
       "unversioned": false,
       "version": "A"
@@ -3321,10 +3872,15 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "PushKit_A__System_Library_Frameworks_PushKit_framework_Versions_A_PushKit",
+      "directory": "PushKit",
       "framework": "PushKit",
       "install-name": "/System/Library/Frameworks/PushKit.framework/Versions/A/PushKit",
       "private": false,
+      "source-files": {
+        "data": "PushRegistryConstants.c",
+        "legacy-exports": "PushRegistryRuntime.c",
+        "objective-c": "PushRegistryObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/PushKit.framework/PushKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3347,10 +3903,17 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "QuickLookThumbnailing_A__System_Library_Frameworks_QuickLookThumbnailing_framework_Versions_A_QuickLookThumbnailing",
+      "directory": "QuickLookThumbnailing",
       "framework": "QuickLookThumbnailing",
       "install-name": "/System/Library/Frameworks/QuickLookThumbnailing.framework/Versions/A/QuickLookThumbnailing",
       "private": false,
+      "source-files": {
+        "data": "ThumbnailGeneratorConstants.c",
+        "legacy-exports": "ThumbnailGeneratorRuntime.c",
+        "objective-c": "ThumbnailGeneratorObjects.m",
+        "runtime-data": "ThumbnailGeneratorIvars.c",
+        "swift-abi": "ThumbnailGeneratorSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/QuickLookThumbnailing.framework/QuickLookThumbnailing.tbd",
       "unversioned": false,
       "version": "A"
@@ -3373,10 +3936,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "QuickLookUI_A__System_Library_Frameworks_QuickLookUI_framework_Versions_A_QuickLookUI",
+      "directory": "QuickLookUI",
       "framework": "QuickLookUI",
       "install-name": "/System/Library/Frameworks/QuickLookUI.framework/Versions/A/QuickLookUI",
       "private": false,
+      "source-files": {
+        "legacy-exports": "PreviewPanelRuntime.c",
+        "objective-c": "PreviewPanelObjects.m",
+        "runtime-data": "PreviewPanelIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/QuickLookUI.framework/QuickLookUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -3399,10 +3967,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "RealityFoundation_A__System_Library_Frameworks_RealityFoundation_framework_Versions_A_RealityFoundation",
+      "directory": "RealityFoundation",
       "framework": "RealityFoundation",
       "install-name": "/System/Library/Frameworks/RealityFoundation.framework/Versions/A/RealityFoundation",
       "private": false,
+      "source-files": {
+        "legacy-exports": "RealityFoundationRuntime.c",
+        "objective-c": "RealityFoundationObjects.m",
+        "swift-abi": "RealityFoundationSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/RealityFoundation.framework/RealityFoundation.tbd",
       "unversioned": false,
       "version": "A"
@@ -3425,10 +3998,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "RealityKit_A__System_Library_Frameworks_RealityKit_framework_Versions_A_RealityKit",
+      "directory": "RealityKit",
       "framework": "RealityKit",
       "install-name": "/System/Library/Frameworks/RealityKit.framework/Versions/A/RealityKit",
       "private": false,
+      "source-files": {
+        "objective-c": "RealityRenderingObjects.m",
+        "swift-abi": "RealityRenderingSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/RealityKit.framework/RealityKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3451,10 +4028,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "RelevanceKit_A__System_Library_Frameworks_RelevanceKit_framework_Versions_A_RelevanceKit",
+      "directory": "RelevanceKit",
       "framework": "RelevanceKit",
       "install-name": "/System/Library/Frameworks/RelevanceKit.framework/Versions/A/RelevanceKit",
       "private": false,
+      "source-files": {
+        "legacy-exports": "RelevantContentRuntime.c",
+        "objective-c": "RelevantContentObjects.m",
+        "swift-abi": "RelevantContentSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/RelevanceKit.framework/RelevanceKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3477,10 +4059,16 @@
         "thread-locals": 0,
         "variables": 4
       },
-      "directory": "ReplayKit_A__System_Library_Frameworks_ReplayKit_framework_Versions_A_ReplayKit",
+      "directory": "ReplayKit",
       "framework": "ReplayKit",
       "install-name": "/System/Library/Frameworks/ReplayKit.framework/Versions/A/ReplayKit",
       "private": false,
+      "source-files": {
+        "data": "ScreenRecordingConstants.c",
+        "legacy-exports": "ScreenRecordingRuntime.c",
+        "objective-c": "ScreenRecordingObjects.m",
+        "runtime-data": "ScreenRecordingIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/ReplayKit.framework/ReplayKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3503,10 +4091,15 @@
         "thread-locals": 0,
         "variables": 5
       },
-      "directory": "SafariServices_A__System_Library_Frameworks_SafariServices_framework_Versions_A_SafariServices",
+      "directory": "SafariServices",
       "framework": "SafariServices",
       "install-name": "/System/Library/Frameworks/SafariServices.framework/Versions/A/SafariServices",
       "private": false,
+      "source-files": {
+        "data": "SafariIntegrationConstants.c",
+        "legacy-exports": "SafariIntegrationRuntime.c",
+        "objective-c": "SafariIntegrationObjects.m"
+      },
       "source-tbd": "System/Cryptexes/OS/System/Library/Frameworks/SafariServices.framework/SafariServices.tbd",
       "unversioned": false,
       "version": "A"
@@ -3529,10 +4122,15 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "SafetyKit_A__System_Library_Frameworks_SafetyKit_framework_Versions_A_SafetyKit",
+      "directory": "SafetyKit",
       "framework": "SafetyKit",
       "install-name": "/System/Library/Frameworks/SafetyKit.framework/Versions/A/SafetyKit",
       "private": false,
+      "source-files": {
+        "data": "EmergencyEventConstants.c",
+        "legacy-exports": "EmergencyEventRuntime.c",
+        "objective-c": "EmergencyEventObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/SafetyKit.framework/SafetyKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3555,10 +4153,16 @@
         "thread-locals": 0,
         "variables": 10
       },
-      "directory": "ScreenCaptureKit_A__System_Library_Frameworks_ScreenCaptureKit_framework_Versions_A_ScreenCaptureKit",
+      "directory": "ScreenCaptureKit",
       "framework": "ScreenCaptureKit",
       "install-name": "/System/Library/Frameworks/ScreenCaptureKit.framework/Versions/A/ScreenCaptureKit",
       "private": false,
+      "source-files": {
+        "data": "ScreenCaptureConstants.c",
+        "legacy-exports": "ScreenCaptureRuntime.c",
+        "objective-c": "ScreenCaptureObjects.m",
+        "swift-abi": "ScreenCaptureSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/ScreenCaptureKit.framework/ScreenCaptureKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3581,10 +4185,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ScreenTime_A__System_Library_Frameworks_ScreenTime_framework_Versions_A_ScreenTime",
+      "directory": "ScreenTime",
       "framework": "ScreenTime",
       "install-name": "/System/Library/Frameworks/ScreenTime.framework/Versions/A/ScreenTime",
       "private": false,
+      "source-files": {
+        "legacy-exports": "ScreenTimeRuntime.c",
+        "objective-c": "ScreenTimeObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/ScreenTime.framework/ScreenTime.tbd",
       "unversioned": false,
       "version": "A"
@@ -3607,10 +4215,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "SecurityUI_A__System_Library_Frameworks_SecurityUI_framework_Versions_A_SecurityUI",
+      "directory": "SecurityUI",
       "framework": "SecurityUI",
       "install-name": "/System/Library/Frameworks/SecurityUI.framework/Versions/A/SecurityUI",
       "private": false,
+      "source-files": {
+        "objective-c": "SecurityUIObjects.m",
+        "swift-abi": "SecurityUISwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/SecurityUI.framework/SecurityUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -3633,10 +4245,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "SensitiveContentAnalysis_A__System_Library_Frameworks_SensitiveContentAnalysis_framework_Versions_A_SensitiveContentAnalysis",
+      "directory": "SensitiveContentAnalysis",
       "framework": "SensitiveContentAnalysis",
       "install-name": "/System/Library/Frameworks/SensitiveContentAnalysis.framework/Versions/A/SensitiveContentAnalysis",
       "private": false,
+      "source-files": {
+        "legacy-exports": "SensitiveContentRuntime.c",
+        "objective-c": "SensitiveContentObjects.m",
+        "swift-abi": "SensitiveContentSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/SensitiveContentAnalysis.framework/SensitiveContentAnalysis.tbd",
       "unversioned": false,
       "version": "A"
@@ -3659,10 +4276,17 @@
         "thread-locals": 0,
         "variables": 23
       },
-      "directory": "SensorKit_A__System_Library_Frameworks_SensorKit_framework_Versions_A_SensorKit",
+      "directory": "SensorKit",
       "framework": "SensorKit",
       "install-name": "/System/Library/Frameworks/SensorKit.framework/Versions/A/SensorKit",
       "private": false,
+      "source-files": {
+        "data": "SensorReaderConstants.c",
+        "functions": "SensorReaderFunctions.c",
+        "legacy-exports": "SensorReaderRuntime.c",
+        "objective-c": "SensorReaderObjects.m",
+        "swift-abi": "SensorReaderSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/SensorKit.framework/SensorKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3685,10 +4309,16 @@
         "thread-locals": 0,
         "variables": 2
       },
-      "directory": "SharedWithYou_A__System_Library_Frameworks_SharedWithYou_framework_Versions_A_SharedWithYou",
+      "directory": "SharedWithYou",
       "framework": "SharedWithYou",
       "install-name": "/System/Library/Frameworks/SharedWithYou.framework/Versions/A/SharedWithYou",
       "private": false,
+      "source-files": {
+        "data": "SharedContentConstants.c",
+        "legacy-exports": "SharedContentRuntime.c",
+        "objective-c": "SharedContentObjects.m",
+        "swift-abi": "SharedContentSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/SharedWithYou.framework/SharedWithYou.tbd",
       "unversioned": false,
       "version": "A"
@@ -3711,10 +4341,16 @@
         "thread-locals": 0,
         "variables": 3
       },
-      "directory": "SharedWithYouCore_A__System_Library_Frameworks_SharedWithYouCore_framework_Versions_A_SharedWithYouCore",
+      "directory": "SharedWithYouCore",
       "framework": "SharedWithYouCore",
       "install-name": "/System/Library/Frameworks/SharedWithYouCore.framework/Versions/A/SharedWithYouCore",
       "private": false,
+      "source-files": {
+        "data": "SharedContentCoreConstants.c",
+        "legacy-exports": "SharedContentCoreRuntime.c",
+        "objective-c": "SharedContentCoreObjects.m",
+        "swift-abi": "SharedContentCoreSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/SharedWithYouCore.framework/SharedWithYouCore.tbd",
       "unversioned": false,
       "version": "A"
@@ -3737,10 +4373,15 @@
         "thread-locals": 0,
         "variables": 5
       },
-      "directory": "Social_A__System_Library_Frameworks_Social_framework_Versions_A_Social",
+      "directory": "Social",
       "framework": "Social",
       "install-name": "/System/Library/Frameworks/Social.framework/Versions/A/Social",
       "private": false,
+      "source-files": {
+        "data": "SocialCompositionConstants.c",
+        "legacy-exports": "SocialCompositionRuntime.c",
+        "objective-c": "SocialCompositionObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/Social.framework/Social.tbd",
       "unversioned": false,
       "version": "A"
@@ -3763,10 +4404,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "StickerKit_A__System_Library_Frameworks_StickerKit_framework_Versions_A_StickerKit",
+      "directory": "StickerKit",
       "framework": "StickerKit",
       "install-name": "/System/Library/Frameworks/StickerKit.framework/Versions/A/StickerKit",
       "private": false,
+      "source-files": {
+        "legacy-exports": "StickerRuntime.c",
+        "objective-c": "StickerObjects.m",
+        "swift-abi": "StickerSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/StickerKit.framework/StickerKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3789,10 +4435,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "SwiftData_A__System_Library_Frameworks_SwiftData_framework_Versions_A_SwiftData",
+      "directory": "SwiftData",
       "framework": "SwiftData",
       "install-name": "/System/Library/Frameworks/SwiftData.framework/Versions/A/SwiftData",
       "private": false,
+      "source-files": {
+        "swift-abi": "PersistentModelSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/SwiftData.framework/SwiftData.tbd",
       "unversioned": false,
       "version": "A"
@@ -3815,10 +4464,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "SwiftUI_A__System_Library_Frameworks_SwiftUI_framework_Versions_A_SwiftUI",
+      "directory": "SwiftUI",
       "framework": "SwiftUI",
       "install-name": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
       "private": false,
+      "source-files": {
+        "legacy-exports": "SwiftUIRuntime.c",
+        "objective-c": "SwiftUIBridgeObjects.m",
+        "swift-abi": "SwiftUIViewABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/SwiftUI.framework/SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -3841,10 +4495,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "SwiftUICore_A__System_Library_Frameworks_SwiftUICore_framework_Versions_A_SwiftUICore",
+      "directory": "SwiftUICore",
       "framework": "SwiftUICore",
       "install-name": "/System/Library/Frameworks/SwiftUICore.framework/Versions/A/SwiftUICore",
       "private": false,
+      "source-files": {
+        "legacy-exports": "SwiftUICoreRuntime.c",
+        "objective-c": "SwiftUICoreBridgeObjects.m",
+        "swift-abi": "SwiftUICoreABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/SwiftUICore.framework/SwiftUICore.tbd",
       "unversioned": false,
       "version": "A"
@@ -3867,10 +4526,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "Symbols_A__System_Library_Frameworks_Symbols_framework_Versions_A_Symbols",
+      "directory": "Symbols",
       "framework": "Symbols",
       "install-name": "/System/Library/Frameworks/Symbols.framework/Versions/A/Symbols",
       "private": false,
+      "source-files": {
+        "objective-c": "SymbolImageObjects.m",
+        "swift-abi": "SymbolImageSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/Symbols.framework/Symbols.tbd",
       "unversioned": false,
       "version": "A"
@@ -3893,10 +4556,15 @@
         "thread-locals": 0,
         "variables": 4
       },
-      "directory": "SystemExtensions_A__System_Library_Frameworks_SystemExtensions_framework_Versions_A_SystemExtensions",
+      "directory": "SystemExtensions",
       "framework": "SystemExtensions",
       "install-name": "/System/Library/Frameworks/SystemExtensions.framework/Versions/A/SystemExtensions",
       "private": false,
+      "source-files": {
+        "data": "SystemExtensionConstants.c",
+        "legacy-exports": "SystemExtensionRuntime.c",
+        "objective-c": "SystemExtensionObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/SystemExtensions.framework/SystemExtensions.tbd",
       "unversioned": false,
       "version": "A"
@@ -3919,10 +4587,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "TWAIN_A__System_Library_Frameworks_TWAIN_framework_Versions_A_TWAIN",
+      "directory": "TWAIN",
       "framework": "TWAIN",
       "install-name": "/System/Library/Frameworks/TWAIN.framework/Versions/A/TWAIN",
       "private": false,
+      "source-files": {
+        "functions": "ScannerManagerFunctions.c"
+      },
       "source-tbd": "System/Library/Frameworks/TWAIN.framework/TWAIN.tbd",
       "unversioned": false,
       "version": "A"
@@ -3945,10 +4616,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "TabularData_A__System_Library_Frameworks_TabularData_framework_Versions_A_TabularData",
+      "directory": "TabularData",
       "framework": "TabularData",
       "install-name": "/System/Library/Frameworks/TabularData.framework/Versions/A/TabularData",
       "private": false,
+      "source-files": {
+        "swift-abi": "DataFrameSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/TabularData.framework/TabularData.tbd",
       "unversioned": false,
       "version": "A"
@@ -3971,10 +4645,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "TelephonyMessagingKit_A__System_Library_Frameworks_TelephonyMessagingKit_framework_Versions_A_TelephonyMessagingKit",
+      "directory": "TelephonyMessagingKit",
       "framework": "TelephonyMessagingKit",
       "install-name": "/System/Library/Frameworks/TelephonyMessagingKit.framework/Versions/A/TelephonyMessagingKit",
       "private": false,
+      "source-files": {
+        "swift-abi": "TelephonyMessagingSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/TelephonyMessagingKit.framework/TelephonyMessagingKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -3997,10 +4674,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ThreadNetwork_A__System_Library_Frameworks_ThreadNetwork_framework_Versions_A_ThreadNetwork",
+      "directory": "ThreadNetwork",
       "framework": "ThreadNetwork",
       "install-name": "/System/Library/Frameworks/ThreadNetwork.framework/Versions/A/ThreadNetwork",
       "private": false,
+      "source-files": {
+        "objective-c": "ThreadNetworkObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/ThreadNetwork.framework/ThreadNetwork.tbd",
       "unversioned": false,
       "version": "A"
@@ -4023,10 +4703,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "TipKit_A__System_Library_Frameworks_TipKit_framework_Versions_A_TipKit",
+      "directory": "TipKit",
       "framework": "TipKit",
       "install-name": "/System/Library/Frameworks/TipKit.framework/Versions/A/TipKit",
       "private": false,
+      "source-files": {
+        "objective-c": "TipPresentationObjects.m",
+        "swift-abi": "TipPresentationSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/TipKit.framework/TipKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -4049,10 +4733,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "Translation_A__System_Library_Frameworks_Translation_framework_Versions_A_Translation",
+      "directory": "Translation",
       "framework": "Translation",
       "install-name": "/System/Library/Frameworks/Translation.framework/Versions/A/Translation",
       "private": false,
+      "source-files": {
+        "legacy-exports": "TranslationRuntime.c",
+        "objective-c": "TranslationObjects.m",
+        "swift-abi": "TranslationSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/Translation.framework/Translation.tbd",
       "unversioned": false,
       "version": "A"
@@ -4075,10 +4764,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "UserNotificationsUI_A__System_Library_Frameworks_UserNotificationsUI_framework_Versions_A_UserNotificationsUI",
+      "directory": "UserNotificationsUI",
       "framework": "UserNotificationsUI",
       "install-name": "/System/Library/Frameworks/UserNotificationsUI.framework/Versions/A/UserNotificationsUI",
       "private": false,
+      "source-files": {
+        "legacy-exports": "NotificationUIRuntime.c",
+        "objective-c": "NotificationUIObjects.m",
+        "runtime-data": "NotificationUIIvars.c"
+      },
       "source-tbd": "System/Library/Frameworks/UserNotificationsUI.framework/UserNotificationsUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4101,10 +4795,16 @@
         "thread-locals": 0,
         "variables": 9
       },
-      "directory": "VideoSubscriberAccount_A__System_Library_Frameworks_VideoSubscriberAccount_framework_Versions_A_VideoSubscriberAccount",
+      "directory": "VideoSubscriberAccount",
       "framework": "VideoSubscriberAccount",
       "install-name": "/System/Library/Frameworks/VideoSubscriberAccount.framework/Versions/A/VideoSubscriberAccount",
       "private": false,
+      "source-files": {
+        "data": "SubscriberAccountConstants.c",
+        "legacy-exports": "SubscriberAccountRuntime.c",
+        "objective-c": "SubscriberAccountObjects.m",
+        "swift-abi": "SubscriberAccountSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/VideoSubscriberAccount.framework/VideoSubscriberAccount.tbd",
       "unversioned": false,
       "version": "A"
@@ -4127,10 +4827,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "VisionKit_A__System_Library_Frameworks_VisionKit_framework_Versions_A_VisionKit",
+      "directory": "VisionKit",
       "framework": "VisionKit",
       "install-name": "/System/Library/Frameworks/VisionKit.framework/Versions/A/VisionKit",
       "private": false,
+      "source-files": {
+        "objective-c": "VisualAnalysisObjects.m",
+        "swift-abi": "VisualAnalysisSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/VisionKit.framework/VisionKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -4153,10 +4857,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "WeatherKit_A__System_Library_Frameworks_WeatherKit_framework_Versions_A_WeatherKit",
+      "directory": "WeatherKit",
       "framework": "WeatherKit",
       "install-name": "/System/Library/Frameworks/WeatherKit.framework/Versions/A/WeatherKit",
       "private": false,
+      "source-files": {
+        "swift-abi": "WeatherServiceSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/WeatherKit.framework/WeatherKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -4179,10 +4886,17 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "WebCore_A__System_Library_Frameworks_WebKit_framework_Versions_A_Frameworks_WebCore_framework_Versions_A_WebCore",
+      "directory": "WebCore",
       "framework": "WebCore",
       "install-name": "/System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks/WebCore.framework/Versions/A/WebCore",
       "private": false,
+      "source-files": {
+        "cxx-abi": "WebCoreCxxABI.c",
+        "legacy-exports": "WebCoreRuntime.c",
+        "objective-c": "WebCoreBridgeObjects.m",
+        "runtime-data": "WebCoreIvars.c",
+        "swift-abi": "WebCoreSwiftABI.c"
+      },
       "source-tbd": "System/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks/WebCore.framework/WebCore.tbd",
       "unversioned": false,
       "version": "A"
@@ -4205,10 +4919,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "WebKitLegacy_A__System_Library_Frameworks_WebKit_framework_Versions_A_Frameworks_WebKitLegacy_framework_Versions_A_WebKitLegacy",
+      "directory": "WebKitLegacy",
       "framework": "WebKitLegacy",
       "install-name": "/System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks/WebKitLegacy.framework/Versions/A/WebKitLegacy",
       "private": false,
+      "source-files": {
+        "legacy-exports": "LegacyWebViewRuntime.c",
+        "objective-c": "LegacyWebViewObjects.m",
+        "runtime-data": "LegacyWebViewIvars.c"
+      },
       "source-tbd": "System/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks/WebKitLegacy.framework/WebKitLegacy.tbd",
       "unversioned": false,
       "version": "A"
@@ -4231,10 +4950,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "WiFiAware_A__System_Library_Frameworks_WiFiAware_framework_Versions_A_WiFiAware",
+      "directory": "WiFiAware",
       "framework": "WiFiAware",
       "install-name": "/System/Library/Frameworks/WiFiAware.framework/Versions/A/WiFiAware",
       "private": false,
+      "source-files": {
+        "swift-abi": "PeerToPeerWiFiSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/WiFiAware.framework/WiFiAware.tbd",
       "unversioned": false,
       "version": "A"
@@ -4257,10 +4979,15 @@
         "thread-locals": 0,
         "variables": 4
       },
-      "directory": "WidgetKit_A__System_Library_Frameworks_WidgetKit_framework_Versions_A_WidgetKit",
+      "directory": "WidgetKit",
       "framework": "WidgetKit",
       "install-name": "/System/Library/Frameworks/WidgetKit.framework/Versions/A/WidgetKit",
       "private": false,
+      "source-files": {
+        "data": "WidgetConstants.c",
+        "objective-c": "WidgetObjects.m",
+        "swift-abi": "WidgetSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/WidgetKit.framework/WidgetKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -4283,10 +5010,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "WorkoutKit_A__System_Library_Frameworks_WorkoutKit_framework_Versions_A_WorkoutKit",
+      "directory": "WorkoutKit",
       "framework": "WorkoutKit",
       "install-name": "/System/Library/Frameworks/WorkoutKit.framework/Versions/A/WorkoutKit",
       "private": false,
+      "source-files": {
+        "swift-abi": "WorkoutSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/WorkoutKit.framework/WorkoutKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -4309,10 +5039,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_ARKit_SwiftUI_A__System_Library_Frameworks__ARKit_SwiftUI_framework_Versions_A__ARKit_SwiftUI",
+      "directory": "ARKitSwiftUIBridge",
       "framework": "_ARKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_ARKit_SwiftUI.framework/Versions/A/_ARKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "AugmentedRealityViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_ARKit_SwiftUI.framework/_ARKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4335,10 +5068,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_AVKit_SwiftUI_A__System_Library_Frameworks__AVKit_SwiftUI_framework_Versions_A__AVKit_SwiftUI",
+      "directory": "AVKitSwiftUIBridge",
       "framework": "_AVKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_AVKit_SwiftUI.framework/Versions/A/_AVKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "VideoPlayerViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_AVKit_SwiftUI.framework/_AVKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4361,10 +5097,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_AppIntents_AppKit_A__System_Library_Frameworks__AppIntents_AppKit_framework_Versions_A__AppIntents_AppKit",
+      "directory": "AppIntentsAppKitBridge",
       "framework": "_AppIntents_AppKit",
       "install-name": "/System/Library/Frameworks/_AppIntents_AppKit.framework/Versions/A/_AppIntents_AppKit",
       "private": false,
+      "source-files": {
+        "objective-c": "AppIntentAppKitObjects.m",
+        "swift-abi": "AppIntentAppKitBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_AppIntents_AppKit.framework/_AppIntents_AppKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -4387,10 +5127,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_AppIntents_SwiftUI_A__System_Library_Frameworks__AppIntents_SwiftUI_framework_Versions_A__AppIntents_SwiftUI",
+      "directory": "AppIntentsSwiftUIBridge",
       "framework": "_AppIntents_SwiftUI",
       "install-name": "/System/Library/Frameworks/_AppIntents_SwiftUI.framework/Versions/A/_AppIntents_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "AppIntentViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_AppIntents_SwiftUI.framework/_AppIntents_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4413,10 +5156,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_AuthenticationServices_SwiftUI_A__System_Library_Frameworks__AuthenticationServices_SwiftUI_framework_Versions_A__AuthenticationServices_SwiftUI",
+      "directory": "AuthenticationServicesSwiftUIBridge",
       "framework": "_AuthenticationServices_SwiftUI",
       "install-name": "/System/Library/Frameworks/_AuthenticationServices_SwiftUI.framework/Versions/A/_AuthenticationServices_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "AuthenticationViewBridge.c"
+      },
       "source-tbd": "System/Cryptexes/OS/System/Library/Frameworks/_AuthenticationServices_SwiftUI.framework/_AuthenticationServices_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4439,10 +5185,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_CompositorServices_SwiftUI_A__System_Library_Frameworks__CompositorServices_SwiftUI_framework_Versions_A__CompositorServices_SwiftUI",
+      "directory": "CompositorServicesSwiftUIBridge",
       "framework": "_CompositorServices_SwiftUI",
       "install-name": "/System/Library/Frameworks/_CompositorServices_SwiftUI.framework/Versions/A/_CompositorServices_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "CompositorViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_CompositorServices_SwiftUI.framework/_CompositorServices_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4465,10 +5214,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_CoreData_CloudKit_A__System_Library_Frameworks__CoreData_CloudKit_framework_Versions_A__CoreData_CloudKit",
+      "directory": "CoreDataCloudKitBridge",
       "framework": "_CoreData_CloudKit",
       "install-name": "/System/Library/Frameworks/_CoreData_CloudKit.framework/Versions/A/_CoreData_CloudKit",
       "private": false,
+      "source-files": {
+        "swift-abi": "CloudPersistentStoreBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_CoreData_CloudKit.framework/_CoreData_CloudKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -4491,10 +5243,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_DeviceActivity_SwiftUI_A__System_Library_Frameworks__DeviceActivity_SwiftUI_framework_Versions_A__DeviceActivity_SwiftUI",
+      "directory": "DeviceActivitySwiftUIBridge",
       "framework": "_DeviceActivity_SwiftUI",
       "install-name": "/System/Library/Frameworks/_DeviceActivity_SwiftUI.framework/Versions/A/_DeviceActivity_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "DeviceActivityViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_DeviceActivity_SwiftUI.framework/_DeviceActivity_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4517,10 +5272,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_GeoToolbox_AppIntents_A__System_Library_Frameworks__GeoToolbox_AppIntents_framework_Versions_A__GeoToolbox_AppIntents",
+      "directory": "GeoToolboxAppIntentsBridge",
       "framework": "_GeoToolbox_AppIntents",
       "install-name": "/System/Library/Frameworks/_GeoToolbox_AppIntents.framework/Versions/A/_GeoToolbox_AppIntents",
       "private": false,
+      "source-files": {
+        "swift-abi": "GeospatialIntentBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_GeoToolbox_AppIntents.framework/_GeoToolbox_AppIntents.tbd",
       "unversioned": false,
       "version": "A"
@@ -4543,10 +5301,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_GroupActivities_AppKit_A__System_Library_Frameworks__GroupActivities_AppKit_framework_Versions_A__GroupActivities_AppKit",
+      "directory": "GroupActivitiesAppKitBridge",
       "framework": "_GroupActivities_AppKit",
       "install-name": "/System/Library/Frameworks/_GroupActivities_AppKit.framework/Versions/A/_GroupActivities_AppKit",
       "private": false,
+      "source-files": {
+        "objective-c": "SharedActivityAppKitObjects.m",
+        "swift-abi": "SharedActivityAppKitBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_GroupActivities_AppKit.framework/_GroupActivities_AppKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -4569,10 +5331,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_Intents_TipKit_A__System_Library_Frameworks__Intents_TipKit_framework_Versions_A__Intents_TipKit",
+      "directory": "IntentsTipKitBridge",
       "framework": "_Intents_TipKit",
       "install-name": "/System/Library/Frameworks/_Intents_TipKit.framework/Versions/A/_Intents_TipKit",
       "private": false,
+      "source-files": {
+        "swift-abi": "IntentTipBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_Intents_TipKit.framework/_Intents_TipKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -4595,10 +5360,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_LinkPresentation_AppIntents_A__System_Library_Frameworks__LinkPresentation_AppIntents_framework_Versions_A__LinkPresentation_AppIntents",
+      "directory": "LinkPresentationAppIntentsBridge",
       "framework": "_LinkPresentation_AppIntents",
       "install-name": "/System/Library/Frameworks/_LinkPresentation_AppIntents.framework/Versions/A/_LinkPresentation_AppIntents",
       "private": false,
+      "source-files": {
+        "swift-abi": "LinkMetadataIntentBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_LinkPresentation_AppIntents.framework/_LinkPresentation_AppIntents.tbd",
       "unversioned": false,
       "version": "A"
@@ -4621,10 +5389,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_LocalAuthentication_SwiftUI_A__System_Library_Frameworks__LocalAuthentication_SwiftUI_framework_Versions_A__LocalAuthentication_SwiftUI",
+      "directory": "LocalAuthenticationSwiftUIBridge",
       "framework": "_LocalAuthentication_SwiftUI",
       "install-name": "/System/Library/Frameworks/_LocalAuthentication_SwiftUI.framework/Versions/A/_LocalAuthentication_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "AuthenticationViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_LocalAuthentication_SwiftUI.framework/_LocalAuthentication_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4647,10 +5418,16 @@
         "thread-locals": 0,
         "variables": 11
       },
-      "directory": "_LocationEssentials_A__System_Library_Frameworks__LocationEssentials_framework_Versions_A__LocationEssentials",
+      "directory": "LocationEssentials",
       "framework": "_LocationEssentials",
       "install-name": "/System/Library/Frameworks/_LocationEssentials.framework/Versions/A/_LocationEssentials",
       "private": false,
+      "source-files": {
+        "data": "LocationEssentialsConstants.c",
+        "functions": "LocationEssentialsFunctions.c",
+        "legacy-exports": "LocationEssentialsRuntime.c",
+        "objective-c": "LocationEssentialsObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/_LocationEssentials.framework/_LocationEssentials.tbd",
       "unversioned": false,
       "version": "A"
@@ -4673,10 +5450,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_ManagedAppDistribution_SwiftUI_A__System_Library_Frameworks__ManagedAppDistribution_SwiftUI_framework_Versions_A__ManagedAppDistribution_SwiftUI",
+      "directory": "ManagedAppDistributionSwiftUIBridge",
       "framework": "_ManagedAppDistribution_SwiftUI",
       "install-name": "/System/Library/Frameworks/_ManagedAppDistribution_SwiftUI.framework/Versions/A/_ManagedAppDistribution_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "ManagedDistributionViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_ManagedAppDistribution_SwiftUI.framework/_ManagedAppDistribution_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4699,10 +5479,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_MapKit_SwiftUI_A__System_Library_Frameworks__MapKit_SwiftUI_framework_Versions_A__MapKit_SwiftUI",
+      "directory": "MapKitSwiftUIBridge",
       "framework": "_MapKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_MapKit_SwiftUI.framework/Versions/A/_MapKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "MapViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_MapKit_SwiftUI.framework/_MapKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4725,10 +5508,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_MusicKit_SwiftUI_A__System_Library_Frameworks__MusicKit_SwiftUI_framework_Versions_A__MusicKit_SwiftUI",
+      "directory": "MusicKitSwiftUIBridge",
       "framework": "_MusicKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_MusicKit_SwiftUI.framework/Versions/A/_MusicKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "MusicViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_MusicKit_SwiftUI.framework/_MusicKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4751,10 +5537,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_PassKit_SwiftUI_A__System_Library_Frameworks__PassKit_SwiftUI_framework_Versions_A__PassKit_SwiftUI",
+      "directory": "PassKitSwiftUIBridge",
       "framework": "_PassKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_PassKit_SwiftUI.framework/Versions/A/_PassKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "objective-c": "PaymentViewBridgeObjects.m",
+        "swift-abi": "PaymentViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_PassKit_SwiftUI.framework/_PassKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4777,10 +5567,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_PermissionKit_AppKit_A__System_Library_Frameworks__PermissionKit_AppKit_framework_Versions_A__PermissionKit_AppKit",
+      "directory": "PermissionKitAppKitBridge",
       "framework": "_PermissionKit_AppKit",
       "install-name": "/System/Library/Frameworks/_PermissionKit_AppKit.framework/Versions/A/_PermissionKit_AppKit",
       "private": false,
+      "source-files": {
+        "swift-abi": "PermissionAppKitBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_PermissionKit_AppKit.framework/_PermissionKit_AppKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -4803,10 +5596,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_PermissionKit_SwiftUI_A__System_Library_Frameworks__PermissionKit_SwiftUI_framework_Versions_A__PermissionKit_SwiftUI",
+      "directory": "PermissionKitSwiftUIBridge",
       "framework": "_PermissionKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_PermissionKit_SwiftUI.framework/Versions/A/_PermissionKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "PermissionViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_PermissionKit_SwiftUI.framework/_PermissionKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4829,10 +5625,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_PhotosUI_SwiftUI_A__System_Library_Frameworks__PhotosUI_SwiftUI_framework_Versions_A__PhotosUI_SwiftUI",
+      "directory": "PhotosUISwiftUIBridge",
       "framework": "_PhotosUI_SwiftUI",
       "install-name": "/System/Library/Frameworks/_PhotosUI_SwiftUI.framework/Versions/A/_PhotosUI_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "PhotoPickerViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_PhotosUI_SwiftUI.framework/_PhotosUI_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4855,10 +5654,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_PhotosUI_WidgetKit_A__System_Library_Frameworks__PhotosUI_WidgetKit_framework_Versions_A__PhotosUI_WidgetKit",
+      "directory": "PhotosUIWidgetKitBridge",
       "framework": "_PhotosUI_WidgetKit",
       "install-name": "/System/Library/Frameworks/_PhotosUI_WidgetKit.framework/Versions/A/_PhotosUI_WidgetKit",
       "private": false,
+      "source-files": {
+        "swift-abi": "PhotoWidgetBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_PhotosUI_WidgetKit.framework/_PhotosUI_WidgetKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -4881,10 +5683,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_Photos_AppIntents_A__System_Library_Frameworks__Photos_AppIntents_framework_Versions_A__Photos_AppIntents",
+      "directory": "PhotosAppIntentsBridge",
       "framework": "_Photos_AppIntents",
       "install-name": "/System/Library/Frameworks/_Photos_AppIntents.framework/Versions/A/_Photos_AppIntents",
       "private": false,
+      "source-files": {
+        "swift-abi": "PhotoIntentBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_Photos_AppIntents.framework/_Photos_AppIntents.tbd",
       "unversioned": false,
       "version": "A"
@@ -4907,10 +5712,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_QuickLook_SwiftUI_A__System_Library_Frameworks__QuickLook_SwiftUI_framework_Versions_A__QuickLook_SwiftUI",
+      "directory": "QuickLookSwiftUIBridge",
       "framework": "_QuickLook_SwiftUI",
       "install-name": "/System/Library/Frameworks/_QuickLook_SwiftUI.framework/Versions/A/_QuickLook_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "PreviewViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_QuickLook_SwiftUI.framework/_QuickLook_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4933,10 +5741,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_RealityKit_SwiftUI_A__System_Library_Frameworks__RealityKit_SwiftUI_framework_Versions_A__RealityKit_SwiftUI",
+      "directory": "RealityKitSwiftUIBridge",
       "framework": "_RealityKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_RealityKit_SwiftUI.framework/Versions/A/_RealityKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "RealityViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_RealityKit_SwiftUI.framework/_RealityKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4959,10 +5770,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_SceneKit_SwiftUI_A__System_Library_Frameworks__SceneKit_SwiftUI_framework_Versions_A__SceneKit_SwiftUI",
+      "directory": "SceneKitSwiftUIBridge",
       "framework": "_SceneKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_SceneKit_SwiftUI.framework/Versions/A/_SceneKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "SceneViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_SceneKit_SwiftUI.framework/_SceneKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -4985,10 +5799,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_SpriteKit_SwiftUI_A__System_Library_Frameworks__SpriteKit_SwiftUI_framework_Versions_A__SpriteKit_SwiftUI",
+      "directory": "SpriteKitSwiftUIBridge",
       "framework": "_SpriteKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_SpriteKit_SwiftUI.framework/Versions/A/_SpriteKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "SpriteViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_SpriteKit_SwiftUI.framework/_SpriteKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -5011,10 +5828,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_StoreKit_SwiftUI_A__System_Library_Frameworks__StoreKit_SwiftUI_framework_Versions_A__StoreKit_SwiftUI",
+      "directory": "StoreKitSwiftUIBridge",
       "framework": "_StoreKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_StoreKit_SwiftUI.framework/Versions/A/_StoreKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "objective-c": "StoreViewBridgeObjects.m",
+        "swift-abi": "StoreViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_StoreKit_SwiftUI.framework/_StoreKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -5037,10 +5858,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_SwiftData_CoreData_A__System_Library_Frameworks__SwiftData_CoreData_framework_Versions_A__SwiftData_CoreData",
+      "directory": "SwiftDataCoreDataBridge",
       "framework": "_SwiftData_CoreData",
       "install-name": "/System/Library/Frameworks/_SwiftData_CoreData.framework/Versions/A/_SwiftData_CoreData",
       "private": false,
+      "source-files": {
+        "swift-abi": "PersistentModelCoreDataBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_SwiftData_CoreData.framework/_SwiftData_CoreData.tbd",
       "unversioned": false,
       "version": "A"
@@ -5063,10 +5887,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_SwiftData_SwiftUI_A__System_Library_Frameworks__SwiftData_SwiftUI_framework_Versions_A__SwiftData_SwiftUI",
+      "directory": "SwiftDataSwiftUIBridge",
       "framework": "_SwiftData_SwiftUI",
       "install-name": "/System/Library/Frameworks/_SwiftData_SwiftUI.framework/Versions/A/_SwiftData_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "PersistentModelViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_SwiftData_SwiftUI.framework/_SwiftData_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -5089,10 +5916,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_Translation_SwiftUI_A__System_Library_Frameworks__Translation_SwiftUI_framework_Versions_A__Translation_SwiftUI",
+      "directory": "TranslationSwiftUIBridge",
       "framework": "_Translation_SwiftUI",
       "install-name": "/System/Library/Frameworks/_Translation_SwiftUI.framework/Versions/A/_Translation_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "TranslationViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_Translation_SwiftUI.framework/_Translation_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -5115,10 +5945,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_WebKit_SwiftUI_A__System_Library_Frameworks__WebKit_SwiftUI_framework_Versions_A__WebKit_SwiftUI",
+      "directory": "WebKitSwiftUIBridge",
       "framework": "_WebKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_WebKit_SwiftUI.framework/Versions/A/_WebKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "WebViewBridge.c"
+      },
       "source-tbd": "System/Cryptexes/OS/System/Library/Frameworks/_WebKit_SwiftUI.framework/_WebKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -5141,10 +5974,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "_WorkoutKit_SwiftUI_A__System_Library_Frameworks__WorkoutKit_SwiftUI_framework_Versions_A__WorkoutKit_SwiftUI",
+      "directory": "WorkoutKitSwiftUIBridge",
       "framework": "_WorkoutKit_SwiftUI",
       "install-name": "/System/Library/Frameworks/_WorkoutKit_SwiftUI.framework/Versions/A/_WorkoutKit_SwiftUI",
       "private": false,
+      "source-files": {
+        "swift-abi": "WorkoutViewBridge.c"
+      },
       "source-tbd": "System/Library/Frameworks/_WorkoutKit_SwiftUI.framework/_WorkoutKit_SwiftUI.tbd",
       "unversioned": false,
       "version": "A"
@@ -5167,10 +6003,17 @@
         "thread-locals": 0,
         "variables": 81
       },
-      "directory": "iTunesLibrary_A__System_Library_Frameworks_iTunesLibrary_framework_Versions_A_iTunesLibrary",
+      "directory": "iTunesLibrary",
       "framework": "iTunesLibrary",
       "install-name": "/System/Library/Frameworks/iTunesLibrary.framework/Versions/A/iTunesLibrary",
       "private": false,
+      "source-files": {
+        "data": "MediaLibraryConstants.c",
+        "legacy-exports": "MediaLibraryRuntime.c",
+        "objective-c": "MediaLibraryObjects.m",
+        "runtime-data": "MediaLibraryIvars.c",
+        "swift-abi": "MediaLibrarySwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/iTunesLibrary.framework/iTunesLibrary.tbd",
       "unversioned": false,
       "version": "A"
@@ -5193,10 +6036,15 @@
         "thread-locals": 0,
         "variables": 23
       },
-      "directory": "vmnet_A__System_Library_Frameworks_vmnet_framework_Versions_A_vmnet",
+      "directory": "vmnet",
       "framework": "vmnet",
       "install-name": "/System/Library/Frameworks/vmnet.framework/Versions/A/vmnet",
       "private": false,
+      "source-files": {
+        "data": "VirtualNetworkConstants.c",
+        "functions": "VirtualNetworkFunctions.c",
+        "legacy-exports": "VirtualNetworkRuntime.c"
+      },
       "source-tbd": "System/Library/Frameworks/vmnet.framework/vmnet.tbd",
       "unversioned": false,
       "version": "A"
@@ -5219,10 +6067,16 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "ARKitCore_A__System_Library_PrivateFrameworks_ARKitCore_framework_Versions_A_ARKitCore",
+      "directory": "ARKitCore",
       "framework": "ARKitCore",
       "install-name": "/System/Library/PrivateFrameworks/ARKitCore.framework/Versions/A/ARKitCore",
       "private": true,
+      "source-files": {
+        "data": "AugmentedRealityCoreConstants.c",
+        "functions": "AugmentedRealityCoreFunctions.c",
+        "legacy-exports": "AugmentedRealityCoreRuntime.c",
+        "objective-c": "AnchorsSessionsAndTracking.m"
+      },
       "source-tbd": "System/Library/Frameworks/ARKit.framework/ARKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -5245,10 +6099,14 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "ARKitFoundation_A__System_Library_PrivateFrameworks_ARKitFoundation_framework_Versions_A_ARKitFoundation",
+      "directory": "ARKitFoundation",
       "framework": "ARKitFoundation",
       "install-name": "/System/Library/PrivateFrameworks/ARKitFoundation.framework/Versions/A/ARKitFoundation",
       "private": true,
+      "source-files": {
+        "legacy-exports": "AugmentedRealityFoundationRuntime.c",
+        "objective-c": "AugmentedRealityFoundationObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/ARKit.framework/ARKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -5271,10 +6129,16 @@
         "thread-locals": 0,
         "variables": 1
       },
-      "directory": "CompositorNonUI_A__System_Library_PrivateFrameworks_CompositorNonUI_framework_Versions_A_CompositorNonUI",
+      "directory": "CompositorNonUI",
       "framework": "CompositorNonUI",
       "install-name": "/System/Library/PrivateFrameworks/CompositorNonUI.framework/Versions/A/CompositorNonUI",
       "private": true,
+      "source-files": {
+        "data": "CompositorResourceConstants.c",
+        "functions": "CompositorResourceFunctions.c",
+        "legacy-exports": "CompositorResourceRuntime.c",
+        "objective-c": "CompositorResourceObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/CompositorServices.framework/CompositorServices.tbd",
       "unversioned": false,
       "version": "A"
@@ -5297,10 +6161,15 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "DocumentCamera_A__System_Library_PrivateFrameworks_DocumentCamera_framework_Versions_A_DocumentCamera",
+      "directory": "DocumentCamera",
       "framework": "DocumentCamera",
       "install-name": "/System/Library/PrivateFrameworks/DocumentCamera.framework/Versions/A/DocumentCamera",
       "private": true,
+      "source-files": {
+        "legacy-exports": "DocumentScannerRuntime.c",
+        "objective-c": "DocumentScannerObjects.m",
+        "swift-abi": "DocumentScannerSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/VisionKit.framework/VisionKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -5323,10 +6192,17 @@
         "thread-locals": 0,
         "variables": 11
       },
-      "directory": "GameCenterFoundation_A__System_Library_PrivateFrameworks_GameCenterFoundation_framework_Versions_A_GameCenterFoundation",
+      "directory": "GameCenterFoundation",
       "framework": "GameCenterFoundation",
       "install-name": "/System/Library/PrivateFrameworks/GameCenterFoundation.framework/Versions/A/GameCenterFoundation",
       "private": true,
+      "source-files": {
+        "data": "GameCenterServiceConstants.c",
+        "legacy-exports": "GameCenterServiceRuntime.c",
+        "objective-c": "GameCenterServiceObjects.m",
+        "runtime-data": "GameCenterServiceIvars.c",
+        "swift-abi": "GameCenterServiceSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/GameKit.framework/GameKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -5349,10 +6225,16 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "GameCenterUI_A__System_Library_PrivateFrameworks_GameCenterUI_framework_Versions_A_GameCenterUI",
+      "directory": "GameCenterUI",
       "framework": "GameCenterUI",
       "install-name": "/System/Library/PrivateFrameworks/GameCenterUI.framework/Versions/A/GameCenterUI",
       "private": true,
+      "source-files": {
+        "legacy-exports": "GameCenterUIRuntime.c",
+        "objective-c": "GameCenterUIObjects.m",
+        "runtime-data": "GameCenterUIIvars.c",
+        "swift-abi": "GameCenterUISwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/GameKit.framework/GameKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -5375,10 +6257,16 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "GameCenterUICore_A__System_Library_PrivateFrameworks_GameCenterUICore_framework_Versions_A_GameCenterUICore",
+      "directory": "GameCenterUICore",
       "framework": "GameCenterUICore",
       "install-name": "/System/Library/PrivateFrameworks/GameCenterUICore.framework/Versions/A/GameCenterUICore",
       "private": true,
+      "source-files": {
+        "legacy-exports": "GameCenterUICoreRuntime.c",
+        "objective-c": "GameCenterUICoreObjects.m",
+        "runtime-data": "GameCenterUICoreIvars.c",
+        "swift-abi": "GameCenterUICoreSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/GameKit.framework/GameKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -5401,10 +6289,18 @@
         "thread-locals": 0,
         "variables": 65
       },
-      "directory": "PassKitCore_A__System_Library_PrivateFrameworks_PassKitCore_framework_Versions_A_PassKitCore",
+      "directory": "PassKitCore",
       "framework": "PassKitCore",
       "install-name": "/System/Library/PrivateFrameworks/PassKitCore.framework/Versions/A/PassKitCore",
       "private": true,
+      "source-files": {
+        "cxx-abi": "PaymentCxxABI.c",
+        "data": "PaymentConstants.c",
+        "legacy-exports": "PaymentRuntime.c",
+        "objective-c": "PaymentsWalletAndPasses.m",
+        "runtime-data": "PaymentIvars.c",
+        "swift-abi": "PaymentSwiftABI.c"
+      },
       "source-tbd": "System/Library/Frameworks/PassKit.framework/PassKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -5427,10 +6323,13 @@
         "thread-locals": 0,
         "variables": 0
       },
-      "directory": "PassKitMacHelperTemp_A__System_Library_PrivateFrameworks_PassKitMacHelperTemp_framework_Versions_A_PassKitMacHelperTemp",
+      "directory": "PassKitMacHelper",
       "framework": "PassKitMacHelperTemp",
       "install-name": "/System/Library/PrivateFrameworks/PassKitMacHelperTemp.framework/Versions/A/PassKitMacHelperTemp",
       "private": true,
+      "source-files": {
+        "objective-c": "PaymentMacHelperObjects.m"
+      },
       "source-tbd": "System/Library/Frameworks/PassKit.framework/PassKit.tbd",
       "unversioned": false,
       "version": "A"
@@ -5442,6 +6341,10 @@
     "header-catalog": {
       "name": "header-api-declarations.json.gz",
       "sha256": "dc239d117326a214d2f51a601d39464dac532f1de99e54de81e799d2dd757dd8"
+    },
+    "source-layout": {
+      "name": "public-sdk-source-layout.json",
+      "sha256": "19dc23f57a1f3fbae3ff346ccde05fb1f3763ec93a6169a6a3f22f7103160dbb"
     },
     "tbd-catalog": {
       "name": "tbd-macos-exports.json.gz",

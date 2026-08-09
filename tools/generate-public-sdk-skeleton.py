@@ -58,6 +58,16 @@ FRAMEWORK_INSTALL_RE = re.compile(
 )
 ADD_FRAMEWORK_RE = re.compile(r"\badd_framework\s*\(\s*([A-Za-z0-9_+.-]+)")
 IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+SOURCE_KINDS = (
+    "objective-c",
+    "functions",
+    "data",
+    "swift-abi",
+    "cxx-abi",
+    "legacy-exports",
+    "runtime-data",
+    "thread-locals",
+)
 
 
 def open_catalog(path: Path) -> TextIO:
@@ -222,6 +232,33 @@ def discover_existing_frameworks(root: Path, extra_list: Path) -> Set[str]:
             if line and not line.startswith("#"):
                 existing.add(line)
     return existing
+
+
+def read_source_layout(path: Path) -> Dict[str, Dict[str, str]]:
+    document = json.loads(path.read_text(encoding="utf-8"))
+    if document.get("schema-version") != 1 or not isinstance(document.get("providers"), dict):
+        raise ValueError(f"invalid public SDK source layout: {path}")
+    layouts: Dict[str, Dict[str, str]] = {}
+    for provider, raw_layout in document["providers"].items():
+        if not isinstance(raw_layout, dict):
+            raise ValueError(f"layout for {provider} must be an object")
+        layout = {str(key): str(value) for key, value in raw_layout.items()}
+        unknown = set(layout) - {"directory", *SOURCE_KINDS}
+        if unknown:
+            raise ValueError(f"unknown layout keys for {provider}: {sorted(unknown)}")
+        if not layout.get("directory"):
+            raise ValueError(f"layout for {provider} has no directory")
+        filenames = [value for key, value in layout.items() if key != "directory"]
+        if len(filenames) != len(set(filenames)):
+            raise ValueError(f"layout for {provider} reuses a source filename")
+        for kind, filename in layout.items():
+            if kind == "directory":
+                continue
+            expected_suffix = ".m" if kind == "objective-c" else ".c"
+            if Path(filename).name != filename or Path(filename).suffix != expected_suffix:
+                raise ValueError(f"invalid curated filename for {provider}: {filename}")
+        layouts[provider] = layout
+    return layouts
 
 
 def parse_framework_install_name(install_name: str) -> Optional[Tuple[str, str, str, bool, bool]]:
@@ -441,60 +478,81 @@ def normalize_final_newline(path: Path) -> None:
     path.write_text(contents.rstrip("\n") + "\n", encoding="utf-8")
 
 
-def write_c_symbols(framework: Framework, directory: Path, chunk_size: int) -> List[str]:
-    records: List[Tuple[str, str, bool]] = []
+def symbol_groups(framework: Framework) -> Dict[str, List[Tuple[str, str, bool]]]:
+    groups: Dict[str, List[Tuple[str, str, bool]]] = defaultdict(list)
     for symbol in sorted(framework.functions):
-        records.append((symbol, "function", False))
+        groups["functions"].append((symbol, "function", False))
     for symbol in sorted(framework.weak_functions - framework.functions):
-        records.append((symbol, "function", True))
+        groups["functions"].append((symbol, "function", True))
     for symbol in sorted(framework.variables):
-        records.append((symbol, "variable", False))
+        groups["data"].append((symbol, "variable", False))
     for symbol in sorted(framework.weak_variables - framework.variables):
-        records.append((symbol, "variable", True))
-    for symbol in sorted(framework.opaque_symbols):
-        records.append((symbol, "opaque", False))
-    for symbol in sorted(framework.weak_opaque_symbols - framework.opaque_symbols):
-        records.append((symbol, "opaque", True))
+        groups["data"].append((symbol, "variable", True))
+    for weak, symbols in (
+        (False, framework.opaque_symbols),
+        (True, framework.weak_opaque_symbols - framework.opaque_symbols),
+    ):
+        for symbol in sorted(symbols):
+            if symbol.startswith(("_$s", "_$S", "$s", "$S", "__swift")):
+                group = "swift-abi"
+            elif symbol.startswith(("__Z", "_Z")):
+                group = "cxx-abi"
+            else:
+                group = "legacy-exports"
+            groups[group].append((symbol, "opaque", weak))
     for symbol in sorted(framework.thread_locals):
-        records.append((symbol, "thread-local", False))
+        groups["thread-locals"].append((symbol, "thread-local", False))
     for ivar in sorted(framework.ivars):
-        records.append(("_OBJC_IVAR_$_" + ivar, "ivar-offset", False))
+        groups["runtime-data"].append(("_OBJC_IVAR_$_" + ivar, "ivar-offset", False))
     for eh_type in sorted(framework.objc_eh_types):
-        records.append(("_OBJC_EHTYPE_$_" + eh_type, "objc-eh-type", False))
-
-    names: List[str] = []
-    for chunk_index in range(0, len(records), chunk_size):
-        source_name = f"symbols-{chunk_index // chunk_size:04d}.c"
-        names.append(source_name)
-        with (directory / source_name).open("w", encoding="utf-8") as out:
-            out.write(COPYRIGHT)
-            out.write("\n#include <stdint.h>\n#include <stdio.h>\n#include <stdlib.h>\n\n")
-            for local_index, (symbol, kind, weak) in enumerate(records[chunk_index : chunk_index + chunk_size]):
-                ident = f"PublicSDK_{chunk_index + local_index:08d}"
-                attrs = "__attribute__((visibility(\"default\")" + (", weak" if weak else "") + "))"
-                if kind in ("function", "opaque"):
-                    out.write(f"{attrs} uintptr_t {ident}(void) __asm__({c_string(symbol)});\n")
-                    out.write(f"uintptr_t {ident}(void) {{\n")
-                    if kind == "function":
-                        out.write("\tif (getenv(\"PUBLIC_SDK_STUB_VERBOSE\")) ")
-                        out.write(f"fprintf(stderr, \"PUBLIC SDK STUB: {symbol} called\\n\");\n")
-                    out.write("\treturn 0;\n}\n\n")
-                elif kind == "thread-local":
-                    out.write(f"{attrs} __thread uintptr_t {ident} __asm__({c_string(symbol)});\n\n")
-                else:
-                    out.write(f"{attrs} uintptr_t {ident} __asm__({c_string(symbol)}) = 0;\n\n")
-        normalize_final_newline(directory / source_name)
-    return names
+        groups["runtime-data"].append(("_OBJC_EHTYPE_$_" + eh_type, "objc-eh-type", False))
+    return groups
 
 
-def write_framework(framework: Framework, output: Path, chunk_size: int) -> Dict[str, Any]:
-    slug = cmake_safe(framework.name + "_" + framework.version + "_" + framework.install_name)
-    directory = output / slug
+def write_c_group(records: List[Tuple[str, str, bool]], group: str, path: Path) -> None:
+    with path.open("w", encoding="utf-8") as out:
+        out.write(COPYRIGHT)
+        out.write("\n#include <stdint.h>\n#include <stdio.h>\n#include <stdlib.h>\n\n")
+        group_identifier = cmake_safe(group)
+        for index, (symbol, kind, weak) in enumerate(records):
+            ident = f"PublicSDK_{group_identifier}_{index:08d}"
+            attrs = "__attribute__((visibility(\"default\")" + (", weak" if weak else "") + "))"
+            if kind in ("function", "opaque"):
+                out.write(f"{attrs} uintptr_t {ident}(void) __asm__({c_string(symbol)});\n")
+                out.write(f"uintptr_t {ident}(void) {{\n")
+                if kind == "function":
+                    out.write("\tif (getenv(\"PUBLIC_SDK_STUB_VERBOSE\")) ")
+                    out.write(f"fprintf(stderr, \"PUBLIC SDK STUB: {symbol} called\\n\");\n")
+                out.write("\treturn 0;\n}\n\n")
+            elif kind == "thread-local":
+                out.write(f"{attrs} __thread uintptr_t {ident} __asm__({c_string(symbol)});\n\n")
+            else:
+                out.write(f"{attrs} uintptr_t {ident} __asm__({c_string(symbol)}) = 0;\n\n")
+    normalize_final_newline(path)
+
+
+def write_framework(framework: Framework, output: Path, layout: Dict[str, str]) -> Dict[str, Any]:
+    directory_name = layout["directory"]
+    directory = output / directory_name
     directory.mkdir(parents=True)
-    invalid_objc = write_objc(framework, directory / "classes.m")
-    symbol_sources = write_c_symbols(framework, directory, chunk_size)
-
-    sources = ["classes.m"] + symbol_sources
+    sources: List[str] = []
+    has_objc = bool(framework.classes or framework.protocols or framework.instance_methods or framework.class_methods or framework.properties)
+    invalid_objc = 0
+    if has_objc:
+        source_name = layout.get("objective-c")
+        if not source_name:
+            raise ValueError(f"curated layout for {framework.name} has no objective-c filename")
+        invalid_objc = write_objc(framework, directory / source_name)
+        sources.append(source_name)
+    groups = symbol_groups(framework)
+    for group in SOURCE_KINDS:
+        if group == "objective-c" or not groups.get(group):
+            continue
+        source_name = layout.get(group)
+        if not source_name:
+            raise ValueError(f"curated layout for {framework.name} has no {group} filename")
+        write_c_group(groups[group], group, directory / source_name)
+        sources.append(source_name)
     with (directory / "CMakeLists.txt").open("w", encoding="utf-8") as out:
         out.write(f"project(PublicSDKSkeleton_{cmake_safe(framework.name)})\n\n")
         out.write('set(DYLIB_COMPAT_VERSION "1.0.0")\n')
@@ -507,7 +565,7 @@ def write_framework(framework: Framework, output: Path, chunk_size: int) -> Dict
             out.write("\tUNVERSIONED\n")
         out.write(f"\tVERSION {framework.version}\n")
         out.write(f"\tPARENT_DIR {framework.parent_dir}\n")
-        out.write(f"\tTARGET_NAME PublicSDKSkeleton_{slug}\n")
+        out.write(f"\tTARGET_NAME PublicSDKSkeleton_{cmake_safe(framework.name + '_' + framework.install_name)}\n")
         out.write("\tSOURCES\n")
         for source in sources:
             out.write(f"\t\t{source}\n")
@@ -521,7 +579,8 @@ def write_framework(framework: Framework, output: Path, chunk_size: int) -> Dict
         "unversioned": framework.unversioned,
         "private": framework.private,
         "source-tbd": framework.source_tbd,
-        "directory": slug,
+        "directory": directory_name,
+        "source-files": {kind: layout[kind] for kind in SOURCE_KINDS if kind in layout and (kind == "objective-c" and has_objc or groups.get(kind))},
         "counts": {
             "functions": len(framework.functions | framework.weak_functions),
             "variables": len(framework.variables | framework.weak_variables),
@@ -546,11 +605,45 @@ def write_output(
     frameworks: Dict[str, Framework],
     skipped: List[Dict[str, str]],
     existing: Set[str],
-    chunk_size: int,
+    layouts: Dict[str, Dict[str, str]],
+    source_layout_path: Path,
     sdk_label: str,
     tbd_catalog: Path,
     header_catalog: Path,
 ) -> Dict[str, Any]:
+    missing_layouts = sorted({framework.name for framework in frameworks.values()} - set(layouts))
+    if missing_layouts:
+        raise ValueError(f"providers missing from curated source layout: {missing_layouts}")
+    used_directories: Dict[str, str] = {}
+    for framework in frameworks.values():
+        layout = layouts[framework.name]
+        directory = layout["directory"]
+        if directory in used_directories:
+            raise ValueError(
+                f"curated directory {directory} is shared by {used_directories[directory]} and {framework.name}"
+            )
+        used_directories[directory] = framework.name
+        has_objc = bool(
+            framework.classes
+            or framework.protocols
+            or framework.instance_methods
+            or framework.class_methods
+            or framework.properties
+        )
+        required = set(symbol_groups(framework))
+        if has_objc:
+            required.add("objective-c")
+        missing_kinds = sorted(required - set(layout))
+        if missing_kinds:
+            raise ValueError(
+                f"curated layout for {framework.name} has no {', '.join(missing_kinds)} filename"
+            )
+        unused_kinds = sorted((set(layout) - {"directory"}) - required)
+        if unused_kinds:
+            raise ValueError(
+                f"curated layout for {framework.name} assigns unused kinds: {', '.join(unused_kinds)}"
+            )
+
     if output.exists():
         manifest_path = output / "manifest.json"
         if not manifest_path.is_file():
@@ -565,7 +658,10 @@ def write_output(
         shutil.rmtree(output)
     output.mkdir(parents=True)
 
-    generated = [write_framework(fw, output, chunk_size) for fw in sorted(frameworks.values(), key=lambda f: f.install_name)]
+    generated = [
+        write_framework(fw, output, layouts[fw.name])
+        for fw in sorted(frameworks.values(), key=lambda f: f.install_name)
+    ]
     with (output / "CMakeLists.txt").open("w", encoding="utf-8") as out:
         out.write("project(public-sdk-stubs)\n\n")
         for item in generated:
@@ -582,6 +678,7 @@ def write_output(
         "inputs": {
             "tbd-catalog": {"name": tbd_catalog.name, "sha256": sha256(tbd_catalog)},
             "header-catalog": {"name": header_catalog.name, "sha256": sha256(header_catalog)},
+            "source-layout": {"name": source_layout_path.name, "sha256": sha256(source_layout_path)},
         },
         "scope": "macOS exports of public SDK frameworks absent from Darling",
         "generated-framework-count": len(generated),
@@ -609,6 +706,10 @@ def write_output(
         "SDK frameworks for which Darling has no existing framework target. "
         "Header declarations classify public C and Objective-C API; remaining "
         "TBD exports are retained as opaque linker symbols.\n\n"
+        "Every generated directory and source filename is explicitly assigned "
+        "in `tools/public-sdk-source-layout.json`. The generator deliberately "
+        "has no fallback filename: new providers or content kinds require a "
+        "human source-layout decision before regeneration succeeds.\n\n"
         "When a public TBD assigns its API to a private runtime provider, the "
         "provider is emitted at that real install name and remains associated "
         "with the public header component in the manifest.\n\n"
@@ -635,8 +736,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--header-catalog", required=True, type=Path)
     parser.add_argument("--darling-root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--existing-frameworks", type=Path)
+    parser.add_argument("--source-layout", type=Path)
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--chunk-size", type=int, default=750)
     parser.add_argument("--sdk-label", default="macOS SDK")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
@@ -646,10 +747,12 @@ def main() -> int:
     args = parse_args()
     root = args.darling_root.resolve()
     extra = args.existing_frameworks or root / "tools" / "public-sdk-existing-frameworks.txt"
+    source_layout = args.source_layout or root / "tools" / "public-sdk-source-layout.json"
     output = args.output or root / "src" / "frameworks" / "public-sdk-stubs"
     headers = read_headers(args.header_catalog)
     existing = discover_existing_frameworks(root, extra)
     frameworks, skipped = read_frameworks(args.tbd_catalog, headers, existing)
+    layouts = read_source_layout(source_layout)
 
     if args.dry_run:
         result = {
@@ -665,7 +768,8 @@ def main() -> int:
             frameworks,
             skipped,
             existing,
-            args.chunk_size,
+            layouts,
+            source_layout,
             args.sdk_label,
             args.tbd_catalog,
             args.header_catalog,

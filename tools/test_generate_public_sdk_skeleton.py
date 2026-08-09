@@ -82,16 +82,28 @@ class PublicSDKSkeletonTests(unittest.TestCase):
             self.assertIn({"component": "System/Library/Frameworks/Existing.framework", "reason": "existing-darling-framework"}, skipped)
 
             output = root / "src" / "frameworks" / "public-sdk-stubs"
+            layouts = {
+                "Missing": {
+                    "directory": "Missing",
+                    "objective-c": "MissingObjects.m",
+                    "functions": "MissingFunctions.c",
+                    "data": "MissingGlobals.c",
+                    "legacy-exports": "MissingRuntime.c",
+                    "runtime-data": "MissingIvars.c",
+                }
+            }
             manifest = MODULE.write_output(
-                output, frameworks, skipped, existing, 10, "fixture", tbd_path, header_path
+                output, frameworks, skipped, existing, layouts, SCRIPT, "fixture", tbd_path, header_path
             )
             self.assertEqual(manifest["generated-framework-count"], 1)
             generated_dir = output / manifest["generated"][0]["directory"]
-            symbols = (generated_dir / "symbols-0000.c").read_text()
-            classes = (generated_dir / "classes.m").read_text()
-            self.assertIn('__asm__("_MissingCall")', symbols)
-            self.assertIn('__asm__("_MissingValue")', symbols)
-            self.assertIn('__asm__("_NotPublic")', symbols)
+            functions = (generated_dir / "MissingFunctions.c").read_text()
+            data = (generated_dir / "MissingGlobals.c").read_text()
+            runtime = (generated_dir / "MissingRuntime.c").read_text()
+            classes = (generated_dir / "MissingObjects.m").read_text()
+            self.assertIn('__asm__("_MissingCall")', functions)
+            self.assertIn('__asm__("_MissingValue")', data)
+            self.assertIn('__asm__("_NotPublic")', runtime)
             self.assertIn("@implementation MissingObject", classes)
             self.assertIn("@implementation PrivateObject", classes)
 
@@ -101,8 +113,35 @@ class PublicSDKSkeletonTests(unittest.TestCase):
             output.mkdir()
             (output / "owned-by-user").write_text("keep")
             with self.assertRaisesRegex(ValueError, "refusing to replace"):
-                MODULE.write_output(output, {}, [], set(), 10, "fixture", SCRIPT, SCRIPT)
+                MODULE.write_output(output, {}, [], set(), {}, SCRIPT, "fixture", SCRIPT, SCRIPT)
             self.assertTrue((output / "owned-by-user").exists())
+
+    def test_requires_a_curated_filename_for_each_content_kind(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "output"
+            framework = MODULE.Framework(
+                component="System/Library/Frameworks/Missing.framework",
+                name="Missing",
+                install_name="/System/Library/Frameworks/Missing.framework/Versions/A/Missing",
+                version="A",
+                parent_dir="/System/Library/Frameworks",
+                unversioned=False,
+                private=False,
+                source_tbd="Missing.tbd",
+                functions={"_MissingCall"},
+            )
+            with self.assertRaisesRegex(ValueError, "has no functions filename"):
+                MODULE.write_output(
+                    output,
+                    {framework.install_name: framework},
+                    [],
+                    set(),
+                    {"Missing": {"directory": "Missing"}},
+                    SCRIPT,
+                    "fixture",
+                    SCRIPT,
+                    SCRIPT,
+                )
 
     def test_private_and_unversioned_install_names(self):
         self.assertEqual(

@@ -70,7 +70,9 @@ providers (including private providers that carry public framework APIs).
 Its input hashes, coverage counts, omissions, and ABI approximations are recorded
 in `src/frameworks/public-sdk-stubs/manifest.json`. Regenerate it with
 `tools/generate-public-sdk-skeleton.py` and catalogs produced by the
-`darling-testsuite` SDK harvest.
+`darling-testsuite` SDK harvest. Generated directories and source filenames are
+human-curated in `tools/public-sdk-source-layout.json`; generation fails rather
+than inventing a filename for a new provider or content kind.
 
 ## Usage
 
