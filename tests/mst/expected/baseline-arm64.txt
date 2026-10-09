@@ -1,0 +1,12 @@
+arm64 opcode real main_func exit=9 err=-
+arm64 opcode real main_data exit=5 err=-
+arm64 opcode real main_weak exit=9 err=-
+arm64 opcode empty main_func exit=134 err=dyld: lazy symbol binding failed: Symbol not found: _f_int|Referenced from: <OUT>/arm64/opcode/empty/main_func|Expected in: <OUT>/arm64/opcode/empty/libmst.dylib|dyld: Symbol not found: _f_int|Referenced from: <OUT>/arm64/opcode/empty/main_func|Expected in: <OUT>/arm64/opcode/empty/libmst.dylib|
+arm64 opcode empty main_data exit=134 err=dyld: Symbol not found: _d_data|Referenced from: <OUT>/arm64/opcode/empty/main_data|Expected in: <OUT>/arm64/opcode/empty/libmst.dylib|in <OUT>/arm64/opcode/empty/main_data|
+arm64 opcode empty main_weak exit=0 err=-
+arm64 chained real main_func exit=9 err=-
+arm64 chained real main_data exit=5 err=-
+arm64 chained real main_weak exit=9 err=-
+arm64 chained empty main_func exit=134 err=dyld: Symbol not found: _f_int|Referenced from: <OUT>/arm64/chained/empty/main_func|Expected in: <OUT>/arm64/chained/empty/libmst.dylib|
+arm64 chained empty main_data exit=134 err=dyld: Symbol not found: _d_data|Referenced from: <OUT>/arm64/chained/empty/main_data|Expected in: <OUT>/arm64/chained/empty/libmst.dylib|
+arm64 chained empty main_weak exit=0 err=-
