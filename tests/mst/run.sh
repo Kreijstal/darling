@@ -67,7 +67,7 @@ run_one() {
 		;;
 	esac
 	pat=$(sed_escape "/Volumes/SystemRoot$out")
-	msg=$(sed -e "s#$pat#<OUT>#g" -e "s/^ *//" "$log.err" | grep -v "^$" | tr "\n" "|")
+	msg=$(sed -e "s#$pat#<OUT>#g" -e "s/^ *//" "$log.err" | grep -v -e "^$" -e "^Setting up a new Darling prefix" | tr "\n" "|")
 	printf '%s %s %s %s exit=%s err=%s\n' "$arch" "$variant" "$lib" "$fx" "$rc" "${msg:--}"
 }
 
@@ -85,6 +85,9 @@ baseline() {
 		ran=$((ran + 1))
 		pfx=$work/pfx-$arch
 		mkdir -p "$pfx" || exit 1
+		# The first command in a new prefix prints a setup banner and may be slow; absorb it here.
+		DPREFIX=$pfx timeout 300 "$darling" shell /usr/bin/true >"$work/warmup-$arch.log" 2>&1 ||
+			{ echo "FAIL: prefix warm-up failed for $arch (see $work/warmup-$arch.log)" >&2; exit 1; }
 		res=$work/baseline-$arch.txt
 		: >"$res"
 		for variant in opcode chained; do
