@@ -2641,6 +2641,7 @@ void setupShellspawnEnv(int sockfd)
 		"TMPDIR",
 		"HOME",
 		"TERM",
+		"SDKROOT",
 		"LANG",
 		"LANGUAGE",
 		"LC_ALL",
@@ -2736,6 +2737,8 @@ void setupShellspawnEnv(int sockfd)
 
 		pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, var);
 	}
+
+	pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, "SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk");
 }
 
 void setupWorkingDir(int sockfd)

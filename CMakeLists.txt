@@ -291,6 +291,15 @@ InstallSymlink(../../Volumes/SystemRoot/usr/share/zoneinfo ${CMAKE_INSTALL_PREFI
 
 install(DIRECTORY DESTINATION libexec/darling/Library/Preferences)
 
+# Install open-source Darling SDK to CommandLineTools/SDKs for DarlingCLT
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
+	DESTINATION "libexec/darling/Library/Developer/CommandLineTools/SDKs"
+	USE_SOURCE_PERMISSIONS
+)
+InstallSymlink("MacOSX.sdk" "${CMAKE_INSTALL_PREFIX}/libexec/darling/Library/Developer/CommandLineTools/SDKs/MacOSX14.5.sdk")
+InstallSymlink("MacOSX.sdk" "${CMAKE_INSTALL_PREFIX}/libexec/darling/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk")
+InstallSymlink("../CommandLineTools/SDKs" "${CMAKE_INSTALL_PREFIX}/libexec/darling/Library/Developer/DarlingCLT/SDKs")
+
 # TODO: re-enable when shutdown-user.sh is ported and supported on ARM64 / non-root
 # if(NOT DEBIAN_PACKAGING)
 # 	install(CODE "execute_process(COMMAND bash ${DARLING_TOP_DIRECTORY}/tools/shutdown-user.sh)")

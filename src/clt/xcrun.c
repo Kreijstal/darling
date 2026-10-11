@@ -118,6 +118,31 @@ int main(int argc, char** argv)
 		execv(devToolsPath, argv);
 	}
 
+	if (strcmp(toolName, "clang") == 0 || strcmp(toolName, "clang++") == 0 ||
+	    strcmp(toolName, "cc") == 0 || strcmp(toolName, "c++") == 0 ||
+	    strcmp(toolName, "make") == 0 || strcmp(toolName, "gnumake") == 0)
+	{
+		if (getenv("DARLING_NO_AUTO_INSTALL") == NULL && access("/usr/libexec/darling/clt_install.py", X_OK) == 0)
+		{
+			fprintf(stderr, "xcrun: Command line developer tools (%s) not found. Installing automatically on first use...\n", toolName);
+			int status = system("/usr/libexec/darling/clt_install.py");
+			if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+			{
+				if (access(toolPath, X_OK) == 0)
+				{
+					argv[0] = toolPath;
+					execv(toolPath, argv);
+				}
+			}
+			fprintf(stderr, "xcrun: automatic installation of developer tools failed.\n");
+		}
+
+		fprintf(stderr, "xcrun: error: Command line developer tools are not installed.\n"
+		                "To install the tools on demand, run:\n"
+		                "    xcode-select --install\n");
+		return 1;
+	}
+
 	if (strcmp(toolName, "swift") == 0 || strcmp(toolName, "swiftc") == 0 ||
 	    strncmp(toolName, "swift-", 6) == 0)
 	{
