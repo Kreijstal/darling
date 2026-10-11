@@ -103,6 +103,7 @@ static const char *dwb_socket_path(void)
 	/* Frame region shared with the host. NULL until attached. */
 	void *shmBase;
 	size_t shmSize;
+	char shmPath[128];
 	/* Last frame presented, so a pull can skip work when nothing changed. */
 	dwb_frame_header lastFrame;
 	BOOL haveFrame;
@@ -124,6 +125,7 @@ static const char *dwb_socket_path(void)
 	client.fd = -1;
 	shmBase = NULL;
 	shmSize = 0;
+	shmPath[0] = '\0';
 	haveFrame = NO;
 	return self;
 }
@@ -140,8 +142,15 @@ static const char *dwb_socket_path(void)
 - (void) dealloc
 {
 	[pendingError release];
-	if (shmBase)
+	if (shmBase) {
 		munmap(shmBase, shmSize);
+		shmBase = NULL;
+		shmSize = 0;
+	}
+	if (shmPath[0] != '\0') {
+		unlink(shmPath);
+		shmPath[0] = '\0';
+	}
 	if (client.fd >= 0)
 		dwb_client_close(&client);
 	[super dealloc];
@@ -330,14 +339,16 @@ static const char *dwb_socket_path(void)
 	/* Frames are ~3MB as raw RGB; sending them over the socket is ~90MB/s at
 	 * 30fps, which is unusable for video. The host copies into this region
 	 * instead and sends only the header. */
-	char path[128];
-	snprintf(path, sizeof(path), "/tmp/dwb-frames-%d", (int)getpid());
-	int fd = open(path, O_CREAT | O_RDWR | O_TRUNC, 0600);
-	if (fd < 0)
+	snprintf(_host->shmPath, sizeof(_host->shmPath), "/tmp/dwb-frames-%d-%p", (int)getpid(), (void *)self);
+	int fd = open(_host->shmPath, O_CREAT | O_RDWR | O_TRUNC, 0600);
+	if (fd < 0) {
+		_host->shmPath[0] = '\0';
 		return;
+	}
 	if (ftruncate(fd, (off_t)DWB_FRAME_REGION) != 0) {
 		close(fd);
-		unlink(path);
+		unlink(_host->shmPath);
+		_host->shmPath[0] = '\0';
 		return;
 	}
 	_host->shmBase = mmap(NULL, DWB_FRAME_REGION, PROT_READ | PROT_WRITE,
@@ -345,15 +356,17 @@ static const char *dwb_socket_path(void)
 	close(fd);
 	if (_host->shmBase == MAP_FAILED) {
 		_host->shmBase = NULL;
-		unlink(path);
+		unlink(_host->shmPath);
+		_host->shmPath[0] = '\0';
 		return;
 	}
 	_host->shmSize = DWB_FRAME_REGION;
-	if (dwb_client_attach_shm(&_host->client, path, DWB_FRAME_REGION) != 0) {
+	if (dwb_client_attach_shm(&_host->client, _host->shmPath, DWB_FRAME_REGION) != 0) {
 		munmap(_host->shmBase, _host->shmSize);
 		_host->shmBase = NULL;
 		_host->shmSize = 0;
-		unlink(path);
+		unlink(_host->shmPath);
+		_host->shmPath[0] = '\0';
 	}
 }
 
@@ -669,9 +682,36 @@ static const char *dwb_socket_path(void)
 			if (dst == NULL || rowBytes < copyBytes) {
 				[rep release];
 				rep = nil;
-			} else {
+			} else if (fh.format == DWB_PIXEL_RGBA || fh.format == DWB_PIXEL_RGB) {
 				for (uint32_t y = 0; y < fh.height; y++)
 					memcpy(dst + y * rowBytes, src + (size_t)y * fh.stride, copyBytes);
+			} else if (fh.format == DWB_PIXEL_BGRA) {
+				for (uint32_t y = 0; y < fh.height; y++) {
+					const unsigned char *srow = src + (size_t)y * fh.stride;
+					unsigned char *drow = dst + y * rowBytes;
+					for (uint32_t x = 0; x < fh.width; x++) {
+						drow[x * 4 + 0] = srow[x * 4 + 2]; // R <- src[2] (R in BGRA)
+						drow[x * 4 + 1] = srow[x * 4 + 1]; // G <- src[1] (G in BGRA)
+						drow[x * 4 + 2] = srow[x * 4 + 0]; // B <- src[0] (B in BGRA)
+						drow[x * 4 + 3] = srow[x * 4 + 3]; // A <- src[3] (A in BGRA)
+					}
+				}
+			} else if (fh.format == DWB_PIXEL_ARGB) {
+				for (uint32_t y = 0; y < fh.height; y++) {
+					const unsigned char *srow = src + (size_t)y * fh.stride;
+					unsigned char *drow = dst + y * rowBytes;
+					for (uint32_t x = 0; x < fh.width; x++) {
+						drow[x * 4 + 0] = srow[x * 4 + 1]; // R <- src[1] (R in ARGB)
+						drow[x * 4 + 1] = srow[x * 4 + 2]; // G <- src[2] (G in ARGB)
+						drow[x * 4 + 2] = srow[x * 4 + 3]; // B <- src[3] (B in ARGB)
+						drow[x * 4 + 3] = srow[x * 4 + 0]; // A <- src[0] (A in ARGB, moved to end)
+					}
+				}
+			} else {
+				[_host setPendingError: [NSString stringWithFormat:
+					@"unsupported raw frame pixel format %u", fh.format]];
+				[rep release];
+				rep = nil;
 			}
 		} else {
 			/* JPEG from the Chromium backend; AppKit decodes it. */
