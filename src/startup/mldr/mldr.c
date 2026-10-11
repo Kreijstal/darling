@@ -114,8 +114,6 @@ static void maybe_disable_ptrauth(char** envp)
 static void maybe_disable_ptrauth(char** envp) { (void) envp; }
 #endif
 
-static const char* dyld_path = INSTALL_PREFIX "/libexec/darling/usr/lib/dyld";
-
 struct sockaddr_un __dserver_socket_address_data = {
 	.sun_family = AF_UNIX,
 	.sun_path = "\0",
@@ -319,7 +317,13 @@ int main(int argc, char** argv, char** envp)
 	}
 
 	// adjust envp: remove special mldr variables, drop empty/malformed entries
+	char** new_envp = (char**) malloc((mldr_load_results.envc + 4) * sizeof(char*));
+	if (!new_envp) {
+		fprintf(stderr, "mldr: out of memory allocating envp\n");
+		exit(1);
+	}
 	size_t dst = 0;
+	bool has_dyld_root = false;
 	for (size_t src = 0; src < mldr_load_results.envc; ++src) {
 		const char* entry = mldr_load_results.envp[src];
 		if (!entry)
@@ -331,8 +335,13 @@ int main(int argc, char** argv, char** envp)
 
 		// If we were passed __mldr_DYLD_ROOT_PATH, remove the prefix so dyld sees DYLD_ROOT_PATH
 		if (strncmp(entry, "__mldr_DYLD_ROOT_PATH=", sizeof("__mldr_DYLD_ROOT_PATH=") - 1) == 0) {
-			mldr_load_results.envp[dst++] = (char*)(entry + sizeof("__mldr_") - 1);
+			new_envp[dst++] = (char*)(entry + sizeof("__mldr_") - 1);
+			has_dyld_root = true;
 			continue;
+		}
+
+		if (strncmp(entry, "DYLD_ROOT_PATH=", sizeof("DYLD_ROOT_PATH=") - 1) == 0) {
+			has_dyld_root = true;
 		}
 
 		// Don't pass any other internal mldr variables down to userland
@@ -347,9 +356,19 @@ int main(int argc, char** argv, char** envp)
 		if (strchr(entry, '=') == NULL)
 			continue;
 
-		mldr_load_results.envp[dst++] = (char*)entry;
+		new_envp[dst++] = (char*)entry;
 	}
-	mldr_load_results.envp[dst] = NULL;
+
+	if (!has_dyld_root && mldr_load_results.root_path != NULL) {
+		char* buf = (char*) malloc(mldr_load_results.root_path_length + sizeof("DYLD_ROOT_PATH=") + 1);
+		if (buf) {
+			sprintf(buf, "DYLD_ROOT_PATH=%s", mldr_load_results.root_path);
+			new_envp[dst++] = buf;
+		}
+	}
+
+	new_envp[dst] = NULL;
+	mldr_load_results.envp = new_envp;
 	mldr_load_results.envc = dst;
 
 	if (mldr_load_results._32on64)
@@ -634,6 +653,48 @@ static void process_special_env(struct load_results* lr) {
 
 	if (str != NULL && lr->root_path == NULL) {
 		strncpy(root_path, str, sizeof(root_path) - 1);
+		root_path[sizeof(root_path) - 1] = '\0';
+		lr->root_path = root_path;
+		lr->root_path_length = strlen(lr->root_path);
+	}
+
+	// Dynamic detection of Darling runtime prefix from mldr executable path
+	if (lr->root_path == NULL) {
+		char exePath[4096];
+		ssize_t len = readlink("/proc/self/exe", exePath, sizeof(exePath) - 1);
+		if (len > 0) {
+			exePath[len] = '\0';
+			char* p = strstr(exePath, "/libexec/darling");
+			if (p != NULL) {
+				p += strlen("/libexec/darling");
+				*p = '\0';
+				char checkPath[4096];
+				snprintf(checkPath, sizeof(checkPath), "%s/usr/lib/dyld", exePath);
+				if (access(checkPath, R_OK) == 0) {
+					strncpy(root_path, exePath, sizeof(root_path) - 1);
+					root_path[sizeof(root_path) - 1] = '\0';
+					lr->root_path = root_path;
+					lr->root_path_length = strlen(lr->root_path);
+				}
+			}
+		}
+	}
+
+	if (lr->root_path == NULL) {
+		const char* env = getenv("DARLING_INSTALL_PREFIX");
+		if (env && env[0]) {
+			snprintf(root_path, sizeof(root_path), "%s/libexec/darling", env);
+			char checkPath[4096];
+			snprintf(checkPath, sizeof(checkPath), "%s/usr/lib/dyld", root_path);
+			if (access(checkPath, R_OK) == 0) {
+				lr->root_path = root_path;
+				lr->root_path_length = strlen(lr->root_path);
+			}
+		}
+	}
+
+	if (lr->root_path == NULL) {
+		strncpy(root_path, INSTALL_PREFIX "/libexec/darling", sizeof(root_path) - 1);
 		root_path[sizeof(root_path) - 1] = '\0';
 		lr->root_path = root_path;
 		lr->root_path_length = strlen(lr->root_path);
