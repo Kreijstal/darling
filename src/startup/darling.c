@@ -442,6 +442,7 @@ static void spawnShellspawn(void)
 		unsetenv("LC_MESSAGES");
 		unsetenv("LANGUAGE");
 		setenv("LANG", "en_US.UTF-8", 1);
+		setenv("VERSIONER_PERL_VERSION", "5.28", 1);
 
 		execl(mldrBin,
 		      vchrootArg0,
@@ -2702,6 +2703,7 @@ void setupShellspawnEnv(int sockfd)
 		"/System/Library/Perl/5.18:"
 		"/System/Library/Perl/5.18/darwin-thread-multi-2level:"
 		"/Library/Perl/5.18");
+	pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, "VERSIONER_PERL_VERSION=5.28");
 
 	const char* login = NULL;
 	struct passwd* pw = getpwuid(geteuid());
