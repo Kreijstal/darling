@@ -3,13 +3,11 @@ set(FRAMEWORK_VERSION "A")
 generate_sdk_framework(QuickLookUI
     VERSION ${FRAMEWORK_VERSION}
     HEADER "include/QuickLookUI"
-    PRIVATE
 )
 
 add_framework(QuickLookUI
     FAT
     CURRENT_VERSION
-    PRIVATE
     VERSION ${FRAMEWORK_VERSION}
 
     SOURCES
@@ -20,3 +18,5 @@ add_framework(QuickLookUI
         objc
         Foundation
 )
+
+InstallSymlink("../Frameworks/QuickLookUI.framework" "${CMAKE_INSTALL_PREFIX}/libexec/darling/System/Library/PrivateFrameworks/QuickLookUI.framework")
