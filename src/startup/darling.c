@@ -2641,7 +2641,6 @@ void setupShellspawnEnv(int sockfd)
 		"TMPDIR",
 		"HOME",
 		"TERM",
-		"PERL5LIB",
 		"LANG",
 		"LANGUAGE",
 		"LC_ALL",
@@ -2696,13 +2695,6 @@ void setupShellspawnEnv(int sockfd)
 	char envCache[4096];
 	snprintf(envCache, sizeof(envCache), "XDG_CACHE_HOME=%s", xdgCacheDir);
 	pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, envCache);
-	pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV,
-		"PERL5LIB=/System/Library/Perl/5.28:"
-		"/System/Library/Perl/5.28/darwin-thread-multi-2level:"
-		"/Library/Perl/5.28:"
-		"/System/Library/Perl/5.18:"
-		"/System/Library/Perl/5.18/darwin-thread-multi-2level:"
-		"/Library/Perl/5.18");
 	pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, "VERSIONER_PERL_VERSION=5.28");
 
 	const char* login = NULL;
