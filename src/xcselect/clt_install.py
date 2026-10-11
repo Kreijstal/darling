@@ -41,6 +41,29 @@ def install_darling_clt_oss():
     # Link SDKs into DarlingCLT
     os.system("ln -sfn /Library/Developer/CommandLineTools/SDKs /Library/Developer/DarlingCLT/SDKs")
 
+    # Setup SDK system library and framework binary links for linker (ld64)
+    sdk_usr_lib = os.path.join(SDK_DIR, "usr", "lib")
+    os.system("mkdir -p " + sdk_usr_lib)
+    if os.path.exists("/usr/lib"):
+        for f in os.listdir("/usr/lib"):
+            if f.endswith(".dylib"):
+                dst = os.path.join(sdk_usr_lib, f)
+                if not os.path.exists(dst):
+                    os.system("ln -sfn /usr/lib/" + f + " " + dst)
+
+    sdk_fw_dir = os.path.join(SDK_DIR, "System", "Library", "Frameworks")
+    os.system("mkdir -p " + sdk_fw_dir)
+    if os.path.exists("/System/Library/Frameworks"):
+        for item in os.listdir("/System/Library/Frameworks"):
+            if item.endswith(".framework"):
+                fw_name = item[:-10]
+                src_bin = os.path.join("/System/Library/Frameworks", item, fw_name)
+                dst_fw = os.path.join(sdk_fw_dir, item)
+                dst_bin = os.path.join(dst_fw, fw_name)
+                if os.path.exists(src_bin) and not os.path.exists(dst_bin):
+                    os.system("mkdir -p " + dst_fw)
+                    os.system("ln -sfn " + src_bin + " " + dst_bin)
+
     # 2. Setup GNU make
     make_bin = None
     for cand in ["/opt/nanobrew/prefix/opt/make/libexec/gnubin/make", "/opt/nanobrew/prefix/bin/gmake", "/opt/nanobrew/prefix/bin/make"]:
@@ -94,6 +117,21 @@ def install_darling_clt_oss():
             f.write("-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk\n")
     except Exception:
         pass
+
+    # 5. Setup NASM assembler if available
+    nasm_bin = None
+    for cand in [
+        "/opt/nanobrew/prefix/bin/nasm",
+        "/opt/nanobrew/prefix/opt/nasm/bin/nasm",
+        "/usr/local/bin/nasm",
+    ]:
+        if os.path.exists(cand):
+            nasm_bin = cand
+            break
+
+    if nasm_bin and os.path.exists(nasm_bin):
+        os.system("ln -sfn " + nasm_bin + " " + os.path.join(DARLING_CLT_BIN, "nasm"))
+        log("Configured nasm -> " + nasm_bin)
 
     log("Open-source DarlingCLT configuration complete!")
     return 0
