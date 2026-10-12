@@ -891,14 +891,13 @@ int __mldr_create_rpc_socket(void) {
 	}
 
 	if (dup2(pre_fd, fd) < 0) {
-		// we have to put it away ourselves here because `fd` is not yet valid, so we can't close() it in the error handler
 		socket_bitmap_put(&socket_bitmap, fd);
-		fd = -1;
-		goto err_out;
+		fd = pre_fd;
+		pre_fd = -1;
+	} else {
+		close(pre_fd);
+		pre_fd = -1;
 	}
-
-	close(pre_fd);
-	pre_fd = -1;
 
 	// `fd` now contains the socket with the desired FD number returned by `socket_bitmap_get`
 
