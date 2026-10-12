@@ -1736,6 +1736,7 @@ job_new_anonymous(jobmgr_t jm, pid_t anonpid)
 		return NULL;
 	}
 
+#ifndef DARLING
 	if (anonpid >= 100000) {
 		/* The kernel current defines PID_MAX to be 99999, but that define isn't
 		 * exported.
@@ -1744,6 +1745,13 @@ job_new_anonymous(jobmgr_t jm, pid_t anonpid)
 		errno = EINVAL;
 		return NULL;
 	}
+#else
+	if (anonpid >= 4194304) {
+		launchd_syslog(LOG_WARNING, "Did PID_MAX change? Got request from PID: %d", anonpid);
+		errno = EINVAL;
+		return NULL;
+	}
+#endif
 
 	/* libproc returns the number of bytes written into the buffer upon success,
 	 * zero on failure. I'd much rather it return -1 on failure, like sysctl(3).
@@ -6929,6 +6937,10 @@ jobmgr_new(jobmgr_t jm, mach_port_t requestorport, mach_port_t transfer_port, bo
 		if (jobmgr_assumes_zero(jmr, runtime_add_mport(jmr->jm_port, job_server)) != KERN_SUCCESS) {
 			goto out_bad;
 		}
+		if (!jm) {
+			task_set_special_port(mach_task_self(), TASK_BOOTSTRAP_PORT, jmr->jm_port);
+			task_set_special_port(mach_task_self(), TASK_BOOTSTRAP_PORT, MACH_PORT_NULL);
+		}
 	}
 
 	jobmgr_log(jmr, LOG_DEBUG, "Created job manager%s%s", jm ? " with parent: " : ".", jm ? jm->name : "");
@@ -9008,7 +9020,7 @@ job_mig_register2(job_t j, name_t servicename, mach_port_t serviceport, uint64_t
 #endif
 
 	// 5641783 for the embedded hack
-#if !TARGET_OS_EMBEDDED
+#if !TARGET_OS_EMBEDDED && !defined(DARLING)
 	/*
 	 * From a per-user/session launchd's perspective, SecurityAgent (UID
 	 * 92) is a rogue application (not our UID, not root and not a child of
@@ -9026,19 +9038,25 @@ job_mig_register2(job_t j, name_t servicename, mach_port_t serviceport, uint64_t
 	ms = jobmgr_lookup_service(j->mgr, servicename, false, flags & BOOTSTRAP_PER_PID_SERVICE ? ldc->pid : 0);
 
 	if (unlikely(ms)) {
-		if (machservice_job(ms) != j) {
-			return BOOTSTRAP_NOT_PRIVILEGED;
+		job_t owner = machservice_job(ms);
+		if (owner != j) {
+			if (owner && job_active(owner)) {
+				return BOOTSTRAP_NOT_PRIVILEGED;
+			}
+			job_log(j, LOG_DEBUG, "Cleaning up orphaned Mach service registration from dead job: %s", servicename);
+			machservice_delete(owner, ms, false);
+		} else {
+			if (machservice_active(ms)) {
+				job_log(j, LOG_DEBUG, "Mach service registration failed. Already active: %s", servicename);
+				return BOOTSTRAP_SERVICE_ACTIVE;
+			}
+			if (ms->recv && (serviceport != MACH_PORT_NULL)) {
+				job_log(j, LOG_ERR, "bootstrap_register() erroneously called instead of bootstrap_check_in(). Mach service: %s", servicename);
+				return BOOTSTRAP_NOT_PRIVILEGED;
+			}
+			job_checkin(j);
+			machservice_delete(j, ms, false);
 		}
-		if (machservice_active(ms)) {
-			job_log(j, LOG_DEBUG, "Mach service registration failed. Already active: %s", servicename);
-			return BOOTSTRAP_SERVICE_ACTIVE;
-		}
-		if (ms->recv && (serviceport != MACH_PORT_NULL)) {
-			job_log(j, LOG_ERR, "bootstrap_register() erroneously called instead of bootstrap_check_in(). Mach service: %s", servicename);
-			return BOOTSTRAP_NOT_PRIVILEGED;
-		}
-		job_checkin(j);
-		machservice_delete(j, ms, false);
 	}
 
 	if (likely(serviceport != MACH_PORT_NULL)) {
