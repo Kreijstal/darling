@@ -18,8 +18,34 @@
 */
 
 #import <OpenDirectory/ODQuery.h>
+#import <OpenDirectory/ODNode.h>
+#import <OpenDirectory/ODRecord.h>
+#import <Foundation/Foundation.h>
 
 @implementation ODQuery
+
++ (ODQuery *)queryWithNode:(ODNode *)inNode
+            forRecordTypes:(id)inRecordTypeOrList
+                 attribute:(ODAttributeType)inAttribute
+                 matchType:(ODMatchType)inMatchType
+               queryValues:(id)inQueryValueOrList
+          returnAttributes:(id)inReturnAttributeOrList
+            maximumResults:(NSInteger)inMaximumResults
+                     error:(NSError **)outError {
+    if (outError) *outError = nil;
+    return [[[self alloc] init] autorelease];
+}
+
+- (NSArray *)resultsAllowingPartial:(BOOL)inAllowPartialResults error:(NSError **)outError {
+    if (outError) *outError = nil;
+    NSString *currUser = NSUserName() ?: @"root";
+    ODNode *node = [ODNode nodeWithSession:nil type:0 error:nil];
+    ODRecord *rec = [node recordWithRecordType:nil name:currUser attributes:nil error:nil];
+    if (rec) {
+        return @[ rec ];
+    }
+    return @[];
+}
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {

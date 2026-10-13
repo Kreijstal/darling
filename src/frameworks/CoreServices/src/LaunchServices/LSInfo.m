@@ -327,6 +327,11 @@ CFArrayRef LSCopyAllRoleHandlersForContentType(CFStringRef inContentType, LSRole
 	return NULL;
 }
 
+CFStringRef LSCopyDefaultRoleHandlerForContentType(CFStringRef inContentType, LSRolesMask inRole)
+{
+	return NULL;
+}
+
 CFStringRef LSCopyDefaultHandlerForURLScheme(CFStringRef inURLScheme)
 {
 	puts("LSCopyDefaultHandlerForURLScheme STUB");

@@ -18,8 +18,52 @@
 */
 
 #import <OpenDirectory/ODRecord.h>
+#import <OpenDirectory/OpenDirectory.h>
+#import <Foundation/Foundation.h>
+#include <pwd.h>
+#include <unistd.h>
+
+@interface ODRecord ()
+- (instancetype)initWithRecordType:(ODRecordType)inRecordType recordName:(NSString *)inRecordName attributes:(id)inAttributes;
+@end
 
 @implementation ODRecord
+
+- (instancetype)initWithRecordType:(ODRecordType)inRecordType recordName:(NSString *)inRecordName attributes:(id)inAttributes {
+    self = [super init];
+    if (self) {
+        _internal = (void *)[inRecordName copy];
+    }
+    return self;
+}
+
+- (void)dealloc {
+    [(id)_internal release];
+    [super dealloc];
+}
+
+- (NSString *)recordName {
+    return (NSString *)_internal;
+}
+
+- (NSArray *)valuesForAttribute:(ODAttributeType)inAttribute error:(NSError **)outError {
+    if (outError) *outError = nil;
+    if ([inAttribute isEqualToString:kODAttributeTypeUserShell]) {
+        const char *shellEnv = getenv("SHELL");
+        if (shellEnv && strlen(shellEnv) > 0) {
+            return @[ [NSString stringWithUTF8String:shellEnv] ];
+        }
+        struct passwd *pw = getpwuid(getuid());
+        if (pw && pw->pw_shell && strlen(pw->pw_shell) > 0) {
+            return @[ [NSString stringWithUTF8String:pw->pw_shell] ];
+        }
+        return @[ @"/bin/bash" ];
+    }
+    if ([inAttribute isEqualToString:kODAttributeTypeRecordName]) {
+        return @[ (NSString *)_internal ?: (NSUserName() ?: @"root") ];
+    }
+    return @[];
+}
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {

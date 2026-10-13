@@ -87,6 +87,10 @@
 	}
 	return instance;
 }
++ (BOOL)sharedPreviewPanelExists
+{
+	return NO;
+}
 - (void)makeKeyAndOrderFront:(id)sender
 {
 	(void)sender;

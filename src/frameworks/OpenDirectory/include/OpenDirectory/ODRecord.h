@@ -29,7 +29,10 @@
     @discussion  This class is used to read, update and modify records within the directory.  outError is optional parameter,
                  nil can be passed if error details are not needed.
 */
-@interface ODRecord : NSObject
+@interface ODRecord : NSObject {
+@private
+	void *_internal;
+}
 
 /*!
     @method     setNodeCredentials:password:error:

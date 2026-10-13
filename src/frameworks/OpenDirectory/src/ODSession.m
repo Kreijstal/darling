@@ -18,10 +18,34 @@
 */
 
 #import <OpenDirectory/ODSession.h>
-
 #import <Foundation/Foundation.h>
 
+static ODSession *sDefaultSession = nil;
+
 @implementation ODSession
+
++ (ODSession *)defaultSession {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sDefaultSession = [[self alloc] init];
+    });
+    return sDefaultSession;
+}
+
++ (instancetype)sessionWithOptions:(NSDictionary *)inOptions error:(NSError **)outError {
+    if (outError) *outError = nil;
+    return [self defaultSession];
+}
+
+- (instancetype)initWithOptions:(NSDictionary *)inOptions error:(NSError **)outError {
+    if (outError) *outError = nil;
+    return [self init];
+}
+
+- (NSArray *)nodeNamesAndReturnError:(NSError **)outError {
+    if (outError) *outError = nil;
+    return @[@"/Local/Default"];
+}
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {

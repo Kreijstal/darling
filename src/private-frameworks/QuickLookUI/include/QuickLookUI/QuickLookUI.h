@@ -39,6 +39,7 @@
 
 @interface QLPreviewPanel : NSObject
 + (QLPreviewPanel*)sharedPreviewPanel;
++ (BOOL)sharedPreviewPanelExists;
 - (void)makeKeyAndOrderFront:(id)sender;
 - (void)orderOut:(id)sender;
 @end

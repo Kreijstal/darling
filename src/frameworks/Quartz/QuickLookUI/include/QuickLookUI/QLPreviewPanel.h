@@ -20,4 +20,8 @@
 #import <AppKit/AppKit.h>
 
 @interface QLPreviewPanel : NSPanel
+
++ (QLPreviewPanel *) sharedPreviewPanel;
++ (BOOL) sharedPreviewPanelExists;
+
 @end

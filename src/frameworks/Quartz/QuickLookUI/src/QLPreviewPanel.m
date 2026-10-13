@@ -19,5 +19,20 @@
 
 #import <QuickLookUI/QLPreviewPanel.h>
 
+static QLPreviewPanel *sSharedPreviewPanel = nil;
+
 @implementation QLPreviewPanel
+
++ (QLPreviewPanel *) sharedPreviewPanel {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sSharedPreviewPanel = [[self alloc] init];
+    });
+    return sSharedPreviewPanel;
+}
+
++ (BOOL) sharedPreviewPanelExists {
+    return (sSharedPreviewPanel != nil);
+}
+
 @end

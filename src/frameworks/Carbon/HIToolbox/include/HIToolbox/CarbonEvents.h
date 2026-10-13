@@ -43,6 +43,10 @@ void RunApplicationEventLoop(void);
 OSStatus RegisterEventHotKey(UInt32 inHotKeyCode, UInt32 inHotKeyModifiers, EventHotKeyID inHotKeyID, EventTargetRef inTarget, OptionBits inOptions, EventHotKeyRef *outRef);
 OSStatus UnregisterEventHotKey(EventHotKeyRef inHotKey);
 
+Boolean IsSecureEventInputEnabled(void);
+OSStatus EnableSecureEventInput(void);
+OSStatus DisableSecureEventInput(void);
+
 #ifdef __cplusplus
 }
 #endif

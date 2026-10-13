@@ -35,6 +35,7 @@
 #include <CFOpenDirectory/CFOpenDirectoryPriv.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CFOpenDirectory/CFOpenDirectoryConstants.h>
+#include <CoreFoundation/CFRuntime.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,6 +61,7 @@ static const char * const passwdPaths[] = {
 // full "scheme$salt$hash" string, because crypt(3) needs the scheme and salt
 // and a verifier has nothing else to go on.
 struct __ODRecord {
+    CFRuntimeBase _base;
     CFStringRef name;          // primary name, e.g. "cristi"
     CFStringRef authAuthority; // full hash string from the passwd file
     CFStringRef uniqueId;      // uid
@@ -69,12 +71,50 @@ struct __ODRecord {
 };
 
 struct __ODNode {
+    CFRuntimeBase _base;
     CFStringRef name;
 };
 
 struct __ODSession {
-    int placeholder;
+    CFRuntimeBase _base;
 };
+
+static CFTypeID sODRecordTypeID = 0;
+static void _ODRecordFinalize(CFTypeRef cf) {
+    struct __ODRecord *record = (struct __ODRecord *)cf;
+    if (record->name) CFRelease(record->name);
+    if (record->authAuthority) CFRelease(record->authAuthority);
+    if (record->uniqueId) CFRelease(record->uniqueId);
+    if (record->homeDirectory) CFRelease(record->homeDirectory);
+    if (record->nfsHomeDirectory) CFRelease(record->nfsHomeDirectory);
+    if (record->userShell) CFRelease(record->userShell);
+}
+static const CFRuntimeClass sODRecordClass = {
+    0, "ODRecord", NULL, NULL, _ODRecordFinalize, NULL, NULL, NULL, NULL
+};
+
+static CFTypeID sODNodeTypeID = 0;
+static void _ODNodeFinalize(CFTypeRef cf) {
+    struct __ODNode *node = (struct __ODNode *)cf;
+    if (node->name) CFRelease(node->name);
+}
+static const CFRuntimeClass sODNodeClass = {
+    0, "ODNode", NULL, NULL, _ODNodeFinalize, NULL, NULL, NULL, NULL
+};
+
+static CFTypeID sODSessionTypeID = 0;
+static const CFRuntimeClass sODSessionClass = {
+    0, "ODSession", NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
+
+static void initCFTypes(void) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sODRecordTypeID = _CFRuntimeRegisterClass(&sODRecordClass);
+        sODNodeTypeID = _CFRuntimeRegisterClass(&sODNodeClass);
+        sODSessionTypeID = _CFRuntimeRegisterClass(&sODSessionClass);
+    });
+}
 
 static CFStringRef copyCFString(const char *s)
 {
@@ -197,9 +237,9 @@ static CFStringRef copyAuthAuthorityForRecord(const char *recordName)
 
             if (hash == NULL || hash[0] == '\0' || hash[0] == '*' ||
                 hash[0] == '!')
-                break;   // account exists but cannot authenticate
-
-            result = copyCFString(hash);
+                result = copyCFString("");
+            else
+                result = copyCFString(hash);
             break;
         }
 
@@ -228,7 +268,10 @@ static ODRecordRef createLocalRecord(const char *recordName)
     if (authority == NULL)
         return NULL;
 
-    struct __ODRecord *record = calloc(1, sizeof(*record));
+    initCFTypes();
+    struct __ODRecord *record = (struct __ODRecord *)_CFRuntimeCreateInstance(
+        kCFAllocatorDefault, sODRecordTypeID,
+        sizeof(struct __ODRecord) - sizeof(CFRuntimeBase), NULL);
     if (record == NULL) {
         CFRelease(authority);
         return NULL;
@@ -238,14 +281,17 @@ static ODRecordRef createLocalRecord(const char *recordName)
     record->authAuthority = authority;
     // Retain the extra fields; copyAuthAuthorityForRecord set them alongside the
     // hash, so they belong to this same passwd entry.
-    record->uniqueId = (g_uniqueId != NULL) ? CFRetain(g_uniqueId) : NULL;
-    record->homeDirectory = (g_homeDirectory != NULL) ? CFRetain(g_homeDirectory) : NULL;
-    record->nfsHomeDirectory = (g_nfsHomeDirectory != NULL) ? CFRetain(g_nfsHomeDirectory) : NULL;
-    record->userShell = (g_userShell != NULL) ? CFRetain(g_userShell) : NULL;
+    record->uniqueId = g_uniqueId;
+    record->homeDirectory = g_homeDirectory;
+    record->nfsHomeDirectory = g_nfsHomeDirectory;
+    record->userShell = g_userShell;
+    g_uniqueId = NULL;
+    g_homeDirectory = NULL;
+    g_nfsHomeDirectory = NULL;
+    g_userShell = NULL;
 
     if (record->name == NULL) {
-        CFRelease(authority);
-        free(record);
+        CFRelease(record);
         return NULL;
     }
 
@@ -269,7 +315,10 @@ ODSessionRef ODSessionCreate(CFAllocatorRef allocator, CFDictionaryRef options, 
     (void) allocator;
     (void) options;
 
-    struct __ODSession *session = calloc(1, sizeof(*session));
+    initCFTypes();
+    struct __ODSession *session = (struct __ODSession *)_CFRuntimeCreateInstance(
+        allocator, sODSessionTypeID,
+        sizeof(struct __ODSession) - sizeof(CFRuntimeBase), NULL);
     if (session == NULL) {
         setODError(error, "ODSessionCreate: out of memory");
         return NULL;
@@ -297,7 +346,10 @@ ODNodeRef ODNodeCreateWithNodeType(CFAllocatorRef allocator, ODSessionRef sessio
         return NULL;
     }
 
-    struct __ODNode *node = calloc(1, sizeof(*node));
+    initCFTypes();
+    struct __ODNode *node = (struct __ODNode *)_CFRuntimeCreateInstance(
+        allocator, sODNodeTypeID,
+        sizeof(struct __ODNode) - sizeof(CFRuntimeBase), NULL);
     if (node == NULL) {
         setODError(error, "ODNodeCreateWithNodeType: out of memory");
         return NULL;
@@ -305,7 +357,7 @@ ODNodeRef ODNodeCreateWithNodeType(CFAllocatorRef allocator, ODSessionRef sessio
 
     node->name = copyCFString("local");
     if (node->name == NULL) {
-        free(node);
+        CFRelease(node);
         setODError(error, "ODNodeCreateWithNodeType: out of memory");
         return NULL;
     }

@@ -181,3 +181,18 @@ void GetKeys (KeyMap theKeys)
 {
 
 }
+
+Boolean IsSecureEventInputEnabled(void)
+{
+    return false;
+}
+
+OSStatus EnableSecureEventInput(void)
+{
+    return 0;
+}
+
+OSStatus DisableSecureEventInput(void)
+{
+    return 0;
+}

@@ -43,4 +43,7 @@ add_framework(OpenDirectory
         Foundation
 )
 
+target_compile_options(OpenDirectory PRIVATE -Wno-incomplete-implementation -Wno-objc-property-implementation)
+
+
 reexport(OpenDirectory CFOpenDirectory ${CMAKE_BINARY_DIR}/src/frameworks/OpenDirectory/CFOpenDirectory/CFOpenDirectory)

@@ -18,8 +18,50 @@
 */
 
 #import <OpenDirectory/ODNode.h>
+#import <OpenDirectory/ODRecord.h>
+#import <Foundation/Foundation.h>
+
+@interface ODRecord ()
+- (instancetype)initWithRecordType:(ODRecordType)inRecordType recordName:(NSString *)inRecordName attributes:(id)inAttributes;
+@end
 
 @implementation ODNode
+
++ (instancetype)nodeWithSession:(ODSession *)inSession type:(ODNodeType)inType error:(NSError **)outError {
+    if (outError) *outError = nil;
+    return [[[self alloc] initWithSession:inSession name:@"/Local/Default" error:outError] autorelease];
+}
+
++ (instancetype)nodeWithSession:(ODSession *)inSession name:(NSString *)inName error:(NSError **)outError {
+    if (outError) *outError = nil;
+    return [[[self alloc] initWithSession:inSession name:inName error:outError] autorelease];
+}
+
+- (instancetype)initWithSession:(ODSession *)inSession type:(ODNodeType)inType error:(NSError **)outError {
+    return [self initWithSession:inSession name:@"/Local/Default" error:outError];
+}
+
+- (instancetype)initWithSession:(ODSession *)inSession name:(NSString *)inName error:(NSError **)outError {
+    self = [super init];
+    if (self) {
+        _internal = (void *)[inName copy];
+    }
+    return self;
+}
+
+- (NSString *)nodeName {
+    return (NSString *)_internal;
+}
+
+- (void)dealloc {
+    [(id)_internal release];
+    [super dealloc];
+}
+
+- (ODRecord *)recordWithRecordType:(ODRecordType)inRecordType name:(NSString *)inRecordName attributes:(id)inAttributes error:(NSError **)outError {
+    if (outError) *outError = nil;
+    return [[[ODRecord alloc] initWithRecordType:inRecordType recordName:inRecordName attributes:inAttributes] autorelease];
+}
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
