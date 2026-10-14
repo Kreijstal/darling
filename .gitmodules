@@ -55,6 +55,7 @@
 [submodule "src/external/bomutils"]
 	path = src/external/bomutils
 	url = ../bomutils.git
+	branch = feature/simplified-bom-for-darling
 [submodule "src/external/installer"]
 	path = src/external/installer
 	url = ../darling-installer.git
