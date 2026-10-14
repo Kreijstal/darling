@@ -207,6 +207,24 @@ int main(int argc, char** argv, char** envp)
 			fprintf(stderr, "mldr: failed to raise core rlimit: %s\n", strerror(errno));
 	}
 
+	// Cap RLIMIT_NOFILE to macOS standard (1024 soft limit, 10240 max) so apps enumerating up to getdtablesize()
+	// (like iTerm2, shells, and cleanup routines) do not loop over 524,288 descriptors and freeze for 25+ seconds!
+	struct rlimit nofile_limit;
+	if (getrlimit(RLIMIT_NOFILE, &nofile_limit) == 0) {
+		int changed = 0;
+		if (nofile_limit.rlim_max > 10240) {
+			nofile_limit.rlim_max = 10240;
+			changed = 1;
+		}
+		if (nofile_limit.rlim_cur > 1024) {
+			nofile_limit.rlim_cur = 1024;
+			changed = 1;
+		}
+		if (changed && setrlimit(RLIMIT_NOFILE, &nofile_limit) != 0) {
+			fprintf(stderr, "mldr: warning: failed to cap RLIMIT_NOFILE: %s\n", strerror(errno));
+		}
+	}
+
 	void** sp;
 	int pushCount = 0;
 	char *filename, *p = NULL;
