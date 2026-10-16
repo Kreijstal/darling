@@ -6,7 +6,7 @@ checked in review:
 1. the clean-room boundary: **no disassembly, no decompilation, no reading machine code**
 2. the commit standard in [Commit standard](#2-commit-standard)
 
-Section 1 is identical across every Darling repository, because the boundary does not change per
+Section 1 is intended to be identical across every Darling repository, because the boundary does not change per
 project. Section 2 is the same standard everywhere and differs only in the scope vocabulary under
 "Format". Section 3 is specific to this checkout.
 
@@ -328,8 +328,10 @@ disagree, CLAUDE.md wins.
   serialise every build, install or prefix boot under that host's lock. On the maintainers' host it
   is `flock -w 1800 /tmp/agent-locks/darling-heavy-build.lock <command>`, with `ninja -j1` when
   `MemAvailable` in `/proc/meminfo` is low (not `MemFree`, see `docs/agent-knowledge.md`).
-- **No prebuilt runtime exists.** The `v0.1.*` releases are GitHub-generated release notes (a "What's
-  Changed" PR list, checked via the releases API for `v0.1.20260921`) with no assets. Build from source; update this bullet when a CI runtime release exists.
+- **No prebuilt runtime exists.** The 19 `v0.1.*` releases on the fork have no assets (checked with
+  `gh release view`); their bodies are a "Full Changelog" link, except `v0.1.20260921`, which carries
+  a generated "What's Changed" PR list. Build from source; update this bullet when a release ships
+  a runtime.
 - **Recipe: build a private runtime from default branches and run it.**
   1. Use an independent clone with every submodule at its own default branch, not a worktree.
   2. Take the heavy-build lock if your host has one.

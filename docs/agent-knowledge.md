@@ -24,9 +24,10 @@ belongs in each agent's own scratch `STATUS.md`.
 ## Tools that mislead here
 
 - **Which binaries these tools may touch** (`AGENTS.md` section 1, "Binaries you may point tools
-  at"): `nm`, `objdump`, `strings` and debuggers on our own build output only. On guest app
-  binaries, only `nm` and `otool -L`, for demand analysis (ladder rung 5). Nothing on a binary from
-  a macOS install.
+  at"): `nm`, `objdump`, `strings` and debuggers on our own build output only. On guest
+  applications, only `nm -u`, `llvm-nm -u -m` (both flags together) and `otool -L` / `llvm-otool -L`,
+  plus `file` and `lipo -info` / `lipo -archs`, for demand analysis (ladder rung 5). Nothing on a
+  binary from a macOS install.
 - **`ninja` can report "no work to do" on a stale binary (unverified, seen once)** when a header
   change did not invalidate what it should. `touch` the source file to force the relink.
 - **`MemFree` is the wrong memory gate.** It excludes reclaimable page cache. Read
@@ -71,20 +72,21 @@ built from this tree), never to step through guest app code or anything from a m
   processes (non-dumpable). `/proc/<pid>/maps` is readable.
 - In-guest `SIGUSR1` + `backtrace()` does not work: the guest appears not to deliver signals or
   interval timers (guest `alarm()` also never fires).
-- **objc message logging (unverified whether it is compiled in).** `instrumentObjcMessageSends()` is
+- **Clean-room limit on all of the below.** Message logging, backtraces and probes are for confirming
+  which of *our* framework entry points are reached. Never use them to record the internal call
+  sequence of a binary from a macOS install, and never turn such a record into an implementation
+  (`AGENTS.md` section 1). Probe our own build output; for guest apps use demand analysis only
+  (`nm -u`, `llvm-nm -u -m` (both flags together), `otool -L`).
+- **objc message logging, for Darling-built test harness programs only, never a guest or Apple stock
+  app (unverified whether it is compiled in).** `instrumentObjcMessageSends()` is
   an empty stub unless `SUPPORT_MESSAGE_LOGGING`, which `objc-config.h` gates on `TARGET_OS_OSX`.
   `basic-headers/TargetConditionals.h` defines `TARGET_OS_OSX` as 1 under `__APPLE_CC__`, so it may
   already be on; check with `clang -E -dM` and the objc4 flags before changing anything. When
   enabled, objc4 writes every msgSend to `/tmp/msgSends-<pid>` inside the prefix. Foundation honours
   `NSObjCMessageLoggingEnabled=YES`.
-- **Clean-room limit on all of the above.** Message logging, guest backtraces and probes are for
-  confirming which of *our* framework entry points are reached. Never use them to record the internal
-  call sequence of a binary from a macOS install, and never turn such a record into an implementation
-  (`AGENTS.md` section 1). Probe our own build output; for guest apps use demand analysis only
-  (`nm -u`, `otool -L`).
 
-Getting a trace therefore needs a host change - relaxed `ptrace_scope`, a non-daemonising launcher, or
-root - not a change to this source tree.
+A guest trace is not available and is not a goal. Do not relax `ptrace_scope` or use root to get one:
+that conflicts with the shared-checkout rules and with `AGENTS.md` section 1.
 
 ## Building stub frameworks
 
@@ -99,12 +101,17 @@ A stub satisfies the loader so the next, more specific error can appear.
           -o '<prefix><guest path>' stub.c
 
 Details that each cost an attempt: `ld64.lld` worked (the build's own cctools ld64 was not
-tried); `-nostdlib` is required or it looks for a `-lSystem` that does not exist here; `-platform_version` is a *linker* flag, so pass it as
+tried); `-nostdlib` is required or it looks for a `-lSystem` that does not exist here;
+`-platform_version` is a *linker* flag, so pass it as
 `-Wl,-platform_version,...`; dependency flags (`-MD`, `-MT`, `-MF`) hijack the `-o` output name, so
 whitelist the flags you keep rather than stripping the ones you do not; the path dyld reports is a
 **guest** path and must be created under the prefix on the **host**; create the *dirname* of the binary
 path, not the path itself. A ~120-byte result is a bare Mach-O header that will never load - a real
 stub is tens of kilobytes.
+
+Stub contents (names, constants, layouts) need a section 1 source: ladder rungs 1 to 3, a repeatable
+observation, or a guest app's import names only. Never populate a stub from the implementation of an
+Apple binary.
 
 **Stub only private shims.** Stubbing a framework the app genuinely calls in converts a clean
 "library not loaded" into undefined symbols later, which is a worse failure. The signal that stubbing
@@ -112,14 +119,16 @@ has run out of road is a missing **symbol** rather than a missing library.
 
 ## Working in these trees
 
-- **Prebuilt runtime: planned, not available.** No CI runtime image exists yet, so a full build
+- **Prebuilt runtime: planned, not available.** `actions.yaml` defines deb, dsc and source-artifact
+  jobs, but the fork has no workflow runs and none of its 19 releases has assets, so a full build
   from source is the only route (`AGENTS.md` section 3). One measurement on an 8-core aarch64 host:
   about 28k ninja steps, 15-24 minutes wall; re-measure before quoting. Rebuild only what you
   changed, in a private prefix, under the heavy-build lock.
 - When an image or prefix fails to load a wrapped library, compare the host soname it was generated
   against with the host's: `strings <dylib> | grep '\.so\.'` on our own build output shows it.
 - A prefix must be initialised by the launcher - point `DPREFIX` at an absent or empty directory and
-  let it bootstrap. A hand-assembled prefix is rejected ("non-empty but is not an initialized Darling prefix").
+  let it bootstrap. A hand-assembled prefix is rejected ("non-empty but is not an initialized
+  Darling prefix").
   A prefix holds only deltas; one that has grown to gigabytes is accumulated cruft.
 - Install frameworks from the build into the prefix explicitly rather than assuming the payload has
   them - verify the binary exists and is the right size, since an empty framework directory or a
