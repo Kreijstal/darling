@@ -309,11 +309,11 @@ Skipping hooks is not a workflow.
 
 ## 3. This repository
 
-The superproject. A Mach-O loader (`mldr`) plus `darlingserver` plus 149 submodules under
+The superproject. A Mach-O loader (`mldr`) plus `darlingserver` plus the submodules under
 `src/external/`, wired by `src/CMakeLists.txt`. Default branch `master`; submodule default branches
 vary (most `master`, some `main`, such as `darling-xnu` and `darlingserver`, a few pinned to a
-release branch), so any script assuming one name silently skips the others. All 149 submodule URLs
-in `.gitmodules` are relative (`../<name>` or `../<name>.git`; two have no `.git` suffix).
+release branch), so any script assuming one name silently skips the others. Every submodule URL
+in `.gitmodules` is relative (`../<name>` or `../<name>.git`; a couple have no `.git` suffix).
 
 Operational notes (worktrees and submodules, `ninja -n`, running a build without installing it,
 containers and prefixes, diagnosing) are in [CLAUDE.md](CLAUDE.md). Where this section and CLAUDE.md
