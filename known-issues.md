@@ -35,8 +35,9 @@ Existing defects that the reviews read past. None is introduced or fixed by the
 PRs that surfaced them.
 
 - `src/startup/mldr/mldr.c:847` (`socket_bitmap_put`): `index = bitmap->highest -
-  socket` underflows for a socket number above `highest`, and the bit is then
-  cleared at a wild index.
+  socket` underflows for a socket number above `highest`, and a socket below the
+  bitmap's range gives an index past `bit_length`; in both cases the bit is
+  cleared at an out-of-bounds index.
 - `src/frameworks/CoreServices/src/LaunchServices/LSInfo.m` (lines 112, 122, 144,
   253, 281, 298): `if (*outError)` dereferences `outError` without checking that
   it is non-NULL.
@@ -51,11 +52,13 @@ PRs that surfaced them.
   `CVTransferFunctionGetIntegerCodePointForString`.
 - `src/frameworks/CoreServices/src/CarbonCore/UnicodeUtilities.cpp`
   (`UCKeyTranslate`): returns raw `UCKeyOutput` values, including state and
-  sequence markers, as characters, and a modifier byte above the table size falls
-  back to the default table without any documented basis.
-- `src/frameworks/CoreServices/src/FSEvents/FSEventsImpl.m`: `IN_Q_OVERFLOW` is
-  dropped instead of being reported as a must-scan or user-dropped event, and a
-  path that does not exist when the stream starts is never watched later.
-- `src/sandbox/sandbox.c`: `sandbox_init` and its siblings return 0 after setting
-  the error text "Not implemented", so a client sees success and an error message
-  together, and believes it is sandboxed.
+  sequence markers, as characters.
+- `src/frameworks/CoreServices/src/FSEvents/FSEventsImpl.m`: when
+  `inotify_add_watch` fails for a path, the watch descriptor -1 is stored in the
+  watch map, so an inotify queue overflow (which reports `wd == -1`) is
+  attributed as an event on the last unwatchable path; and a path that does not
+  exist when the stream starts is never watched later.
+- `src/sandbox/sandbox.c`: `sandbox_init` and its siblings write `*errorbuf`
+  without a NULL check (a NULL `errorbuf` crashes) and also on success, and they
+  return 0 after setting the text "Not implemented", so a client sees success and
+  an error message together, and believes it is sandboxed.
