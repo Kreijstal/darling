@@ -28,3 +28,34 @@
 - Confirmed NOT caused by the FreeType glyph-raster cache (commit 38757104):
   `showGlyphs:` advance semantics are byte-identical (`cached->advance >> 6`).
 - TextEdit typing works on Wayland but not X11 (separate, also open).
+
+## Found while reviewing the darling-lol port PRs (2026-10)
+
+Existing defects that the reviews read past. None is introduced or fixed by the
+PRs that surfaced them.
+
+- `src/startup/mldr/mldr.c:847` (`socket_bitmap_put`): `index = bitmap->highest -
+  socket` underflows for a socket number above `highest`, and the bit is then
+  cleared at a wild index.
+- `src/frameworks/CoreServices/src/LaunchServices/LSInfo.m` (lines 112, 122, 144,
+  253, 281, 298): `if (*outError)` dereferences `outError` without checking that
+  it is non-NULL.
+- `src/frameworks/CoreServices/src/LaunchServices/LSOpen.m:35`:
+  `LSOpenURLsWithRole` is a stub that returns `unimpErr`, so `open <path>` cannot
+  launch anything.
+- `src/frameworks/VideoToolbox/src/VideoToolbox.m:35-36`:
+  `kVTProfileLevel_H264_Baseline_AutoLevel` and `kVTProfileLevel_H264_Main_AutoLevel`
+  share the value "AutoLevel", so an encoder cannot tell them apart.
+- `src/frameworks/CoreVideo/src/CVPixelBuffer.c`: transfer function code point 13
+  (sRGB) has no string in `CVTransferFunctionGetStringForIntegerCodePoint` and
+  `CVTransferFunctionGetIntegerCodePointForString`.
+- `src/frameworks/CoreServices/src/CarbonCore/UnicodeUtilities.cpp`
+  (`UCKeyTranslate`): returns raw `UCKeyOutput` values, including state and
+  sequence markers, as characters, and a modifier byte above the table size falls
+  back to the default table without any documented basis.
+- `src/frameworks/CoreServices/src/FSEvents/FSEventsImpl.m`: `IN_Q_OVERFLOW` is
+  dropped instead of being reported as a must-scan or user-dropped event, and a
+  path that does not exist when the stream starts is never watched later.
+- `src/sandbox/sandbox.c`: `sandbox_init` and its siblings return 0 after setting
+  the error text "Not implemented", so a client sees success and an error message
+  together, and believes it is sandboxed.
