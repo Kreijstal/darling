@@ -21,7 +21,6 @@
 #include <sandbox/sandbox.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 
 static int verbose = 0;
@@ -31,93 +30,56 @@ static void initme(void) {
     verbose = getenv("STUB_VERBOSE") != NULL;
 }
 
-/* Extension token family. Darling does not enforce sandbox profiles, so
- * clients that issue, consume and release extensions around child setup get
- * placeholder non-zero tokens and every call succeeds without effect.
- * (These live in libsandbox.dylib on macOS, hence here and not in
- * libsystem_sandbox.) */
-static int64_t sandbox_extension_next_token = 1;
+/* There is no seatbelt compiler or enforcement here. Compiling a profile and
+ * applying one fail with an error instead of pretending a sandbox is in force,
+ * so a client such as a renderer does not run believing it is confined.
+ * Shapes follow the documented SPI (profile and params are opaque here). */
+#define SANDBOX_UNSUPPORTED "sandboxing is not supported on Darling"
 
-int64_t sandbox_extension_issue_file(const char *path, uint32_t flags)
+static void set_unsupported(char **error)
 {
-    if (verbose) puts("STUB: sandbox_extension_issue_file called");
-    (void)path; (void)flags;
-    return sandbox_extension_next_token++;
+    if (error != NULL)
+        *error = strdup(SANDBOX_UNSUPPORTED);
 }
 
-int64_t sandbox_extension_issue_mach(const char *name, uint32_t flags)
-{
-    if (verbose) puts("STUB: sandbox_extension_issue_mach called");
-    (void)name; (void)flags;
-    return sandbox_extension_next_token++;
-}
-
-int sandbox_extension_consume(int64_t token)
-{
-    if (verbose) puts("STUB: sandbox_extension_consume called");
-    (void)token;
-    return 0;
-}
-
-int sandbox_extension_release(int64_t token)
-{
-    if (verbose) puts("STUB: sandbox_extension_release called");
-    (void)token;
-    return 0;
-}
-
-/* Compile/apply family. There is no seatbelt compiler here, so
- * "compiling" a profile yields a dummy handle and applying succeeds.
- * Signatures match Apple's (the old stubs had wrong shapes). */
-
-void* sandbox_compile_string(const char *profile, char **errorbuf)
-{
-    if (verbose) puts("STUB: sandbox_compile_string called");
-    if (errorbuf != NULL) *errorbuf = NULL;
-    (void)profile;
-    return strdup("darling-sandbox-stub");
-}
-
-void* sandbox_compile_file(const char *path, char **errorbuf)
-{
-    if (verbose) puts("STUB: sandbox_compile_file called");
-    if (errorbuf != NULL) *errorbuf = NULL;
-    (void)path;
-    return strdup("darling-sandbox-stub");
-}
-
-void* sandbox_compile_named(const char *name, char **errorbuf)
-{
-    if (verbose) puts("STUB: sandbox_compile_named called");
-    if (errorbuf != NULL) *errorbuf = NULL;
-    (void)name;
-    return strdup("darling-sandbox-stub");
-}
-
-void* sandbox_compile_entitlements(void *entitlements, char **errorbuf)
-{
-    if (verbose) puts("STUB: sandbox_compile_entitlements called");
-    if (errorbuf != NULL) *errorbuf = NULL;
-    (void)entitlements;
-    return strdup("darling-sandbox-stub");
-}
-
-int sandbox_apply(void *handle)
+int sandbox_apply(void *profile)
 {
     if (verbose) puts("STUB: sandbox_apply called");
-    (void)handle;
-    return 0;
-}
-
-void sandbox_free_profile(void *handle)
-{
-    if (verbose) puts("STUB: sandbox_free_profile called");
-    free(handle);
+    (void)profile;
+    return -1;
 }
 
 void* sandbox_apply_container(void)
 {
     if (verbose) puts("STUB: sandbox_apply_container called");
+    return NULL;
+}
+
+void* sandbox_compile_entitlements(void)
+{
+    if (verbose) puts("STUB: sandbox_compile_entitlements called");
+    return NULL;
+}
+
+void* sandbox_compile_file(const char *path, void *params, char **error)
+{
+    if (verbose) puts("STUB: sandbox_compile_file called");
+    (void)path; (void)params;
+    set_unsupported(error);
+    return NULL;
+}
+
+void* sandbox_compile_named(void)
+{
+    if (verbose) puts("STUB: sandbox_compile_named called");
+    return NULL;
+}
+
+void* sandbox_compile_string(const char *data, void *params, char **error)
+{
+    if (verbose) puts("STUB: sandbox_compile_string called");
+    (void)data; (void)params;
+    set_unsupported(error);
     return NULL;
 }
 
@@ -131,6 +93,20 @@ void* sandbox_create_params(void)
 {
     if (verbose) puts("STUB: sandbox_create_params called");
     return NULL;
+}
+
+/* sandbox_create_params returns NULL, so there is never anything to free. */
+void sandbox_free_params(void *params)
+{
+    if (verbose) puts("STUB: sandbox_free_params called");
+    (void)params;
+}
+
+/* sandbox_compile_* never return a profile, so there is never anything to free. */
+void sandbox_free_profile(void *profile)
+{
+    if (verbose) puts("STUB: sandbox_free_profile called");
+    (void)profile;
 }
 
 void* sandbox_inspect_pid(void)

@@ -10,12 +10,8 @@ const enum sandbox_filter_type SANDBOX_CHECK_NO_REPORT = SANDBOX_FILTER_NONE;
 
 int sandbox_init(const char *profile, uint64_t flags, char **errorbuf)
 {
-	/* Darling does not enforce seatbelt profiles, so this succeeds without
-	 * effect. errorbuf may be NULL, and a successful call reports no error
-	 * (the old code dereferenced NULL and left a "Not implemented" message
-	 * next to a success return). */
 	if (errorbuf != NULL) {
-		*errorbuf = NULL;
+		*errorbuf = strdup("Not implemented");
 	}
 	return 0;
 }
@@ -57,18 +53,16 @@ void sandbox_free_error(char *errorbuf)
 
 int sandbox_init_with_parameters(const char *profile, uint64_t flags, const char *const parameters[], char **errorbuf)
 {
-	/* No enforcement; see sandbox_init. */
 	if (errorbuf != NULL) {
-		*errorbuf = NULL;
+		*errorbuf = strdup("Not implemented");
 	}
 	return 0;
 }
 
 int sandbox_init_with_extensions(const char *profile, uint64_t flags, const char *const extensions[], char **errorbuf)
 {
-	/* No enforcement; see sandbox_init. Extensions are accepted and ignored. */
 	if (errorbuf != NULL) {
-		*errorbuf = NULL;
+		*errorbuf = strdup("Not implemented");
 	}
 	return 0;
 }
@@ -96,56 +90,42 @@ int sandbox_unsuspend(void)
 
 int sandbox_issue_extension(const char *path, char **ext_token)
 {
-	/* No enforcement: hand out a placeholder token that callers can consume
-	 * and release. */
-	if (ext_token != NULL) {
-		*ext_token = strdup("darling-sandbox-stub");
-	}
-	return 0;
+	return -1;
 }
 
 int sandbox_issue_fs_extension(const char *path, uint64_t flags, char **ext_token)
 {
-	if (ext_token != NULL) {
-		*ext_token = strdup("darling-sandbox-stub");
-	}
-	return 0;
+	return -1;
 }
 
 int sandbox_issue_fs_rw_extension(const char *path, char **ext_token)
 {
-	if (ext_token != NULL) {
-		*ext_token = strdup("darling-sandbox-stub");
-	}
-	return 0;
+	return -1;
 }
 
 int sandbox_issue_mach_extension(const char *name, char **ext_token)
 {
-	if (ext_token != NULL) {
-		*ext_token = strdup("darling-sandbox-stub");
-	}
-	return 0;
+	return -1;
 }
 
 int sandbox_consume_extension(const char *path, const char *ext_token)
 {
-	return 0;
+	return -1;
 }
 
 int sandbox_consume_fs_extension(const char *ext_token, char **path)
 {
-	return 0;
+	return -1;
 }
 
 int sandbox_consume_mach_extension(const char *ext_token, char **name)
 {
-	return 0;
+	return -1;
 }
 
 int sandbox_release_fs_extension(const char *ext_token)
 {
-	return 0;
+	return -1;
 }
 
 int sandbox_container_path_for_pid(pid_t pid, char *buffer, size_t bufsize)
@@ -156,7 +136,7 @@ int sandbox_container_path_for_pid(pid_t pid, char *buffer, size_t bufsize)
 int sandbox_wakeup_daemon(char **errorbuf)
 {
 	if (errorbuf != NULL) {
-		*errorbuf = NULL;
+		*errorbuf = strdup("Not implemented");
 	}
 	return -1;
 }
