@@ -31,8 +31,9 @@
 
 ## Found while reviewing the darling-lol port PRs (2026-10)
 
-Existing defects that the reviews read past. None is introduced or fixed by the
-PRs that surfaced them.
+Existing defects that the reviews read past. None is introduced by the PRs
+that surfaced them, and all entries describe master; the stored -1 watch in the
+FSEvents entry is fixed by darling#1227 once it merges.
 
 - `src/startup/mldr/mldr.c:847` (`socket_bitmap_put`): `index = bitmap->highest -
   socket` underflows for a socket number above `highest`, and a socket below the
@@ -58,7 +59,9 @@ PRs that surfaced them.
   watch map, so an inotify queue overflow (which reports `wd == -1`) is
   attributed as an event on the last unwatchable path; and a path that does not
   exist when the stream starts is never watched later.
-- `src/sandbox/sandbox.c`: `sandbox_init` and its siblings write `*errorbuf`
-  without a NULL check (a NULL `errorbuf` crashes) and also on success, and they
-  return 0 after setting the text "Not implemented", so a client sees success and
+- `src/sandbox/sandbox.c`: `sandbox_init`, `sandbox_init_with_parameters`,
+  `sandbox_init_with_extensions` and `sandbox_wakeup_daemon` write `*errorbuf`
+  without a NULL check (a NULL `errorbuf` crashes) and also on success, and the first
+  three return 0 after setting the text "Not implemented" (`sandbox_wakeup_daemon`
+  returns -1), so a client sees success and
   an error message together, and believes it is sandboxed.
