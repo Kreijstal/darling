@@ -642,3 +642,9 @@ void CGLGetVersion(GLint *majorvers, GLint *minorvers) {
     if (minorvers)
         *minorvers = 0;
 }
+
+CGLError CGLSetDrawableRefreshRate(CGLContextObj context, uint32_t millihertz) {
+    (void)context;
+    (void)millihertz;
+    return kCGLNoError;
+}
