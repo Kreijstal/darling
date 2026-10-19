@@ -18,6 +18,7 @@
 */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <vDSP/vDSP.h>
 #include <stdlib.h>
 #include <math.h>
@@ -38,6 +39,10 @@ FFTSetup vDSP_create_fftsetup(vDSP_Length __Log2n, FFTRadix __Radix)
 
 	const size_t n = (size_t) 1 << __Log2n;
 	const size_t half = n > 1 ? n / 2 : 1;
+
+	// 2^30 points need 2^32 bytes of twiddles, which wraps a 32-bit size_t.
+	if (half > (SIZE_MAX - sizeof(struct OpaqueFFTSetup)) / (2 * sizeof(float)))
+		return NULL;
 	struct OpaqueFFTSetup *setup = malloc(sizeof(*setup) + 2 * half * sizeof(float));
 
 	if (!setup)
