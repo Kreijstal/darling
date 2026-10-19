@@ -170,9 +170,9 @@ static const char *dwb_socket_path(void)
 
 	_host = [[WKWebViewHostState alloc] init];
 	_lastURL = @"";
-	/* Idle means "finished", not "0% done" - a view that has never loaded is at 1.0
-	 * until a load starts, which is what -estimatedProgress resets to 0.0. */
-	_estimatedProgress = 1.0;
+	/* A view that has never loaded reports 0.0, as WKWebView does; it reaches 1.0 when a
+	 * load finishes, fails or is stopped. */
+	_estimatedProgress = 0.0;
 	_configuration = (configuration != nil) ? [configuration retain] : nil;
 
 	/* One pull, at load, showed a single frame and then nothing: no repaints, no
