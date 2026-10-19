@@ -20,6 +20,7 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <LaunchServices/LaunchServices.h>
 #include <CarbonCore/MacErrors.h>
+#include "LSHostOpen.h"
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
@@ -290,12 +291,12 @@ CFURLRef LSCopyDefaultApplicationURLForContentType(CFStringRef inContentType, LS
 
 CFURLRef LSCopyDefaultApplicationURLForURL(CFURLRef inURL, LSRolesMask inRoleMask, CFErrorRef  _Nullable *outError)
 {
-	CFURLRef retval;
+	CFURLRef retval = NULL;
 	OSStatus status = LSGetApplicationForURL(inURL, inRoleMask, NULL, &retval);
 
 	if (status != noErr)
 	{
-		if (*outError)
+		if (outError)
 			*outError = CFErrorCreate(NULL, kCFErrorDomainOSStatus, status, NULL);
 		return NULL;
 	}
@@ -309,6 +310,11 @@ CFURLRef LSCopyDefaultApplicationURLForURL(CFURLRef inURL, LSRolesMask inRoleMas
 
 OSStatus LSGetApplicationForURL(CFURLRef inURL, LSRolesMask inRoleMask, FSRef *outAppRef, CFURLRef *outAppURL)
 {
+	/* A web or mail link has the host's handler or none: an extension lookup would map
+	   https://x/a.html to a Mac application. */
+	if (_LSIsHostOpenURL(inURL))
+		return _LSGetHostHandlerForURL(inURL, outAppRef, outAppURL);
+
 	NSString* extension = [(NSURL*) inURL pathExtension];
 	return LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator, (CFStringRef) extension, inRoleMask, outAppRef, outAppURL);
 }
