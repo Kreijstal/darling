@@ -18,6 +18,7 @@
 */
 
 #import <AVFoundation/AVCaptureDevice.h>
+#include <dispatch/dispatch.h>
 
 @implementation AVCaptureDevice
 
