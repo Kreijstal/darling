@@ -587,6 +587,7 @@ CGLError CGLFlushDrawable(CGLContextObj context) {
         return kCGLBadContext;
     if (context->egl_surface == EGL_NO_SURFACE)
         return kCGLBadDrawable;
+    glFinish();
     return eglSwapBuffers(context->egl_display, context->egl_surface) ? kCGLNoError : kCGLBadDrawable;
 }
 

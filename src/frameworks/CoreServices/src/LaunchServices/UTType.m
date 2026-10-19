@@ -34,13 +34,24 @@ UTTypeCreatePreferredIdentifierForTag(
   _Nullable CFStringRef inConformingToUTI)
 {
 	CFArrayRef array = UTTypeCreateAllIdentifiersForTag(inTagClass, inTag, inConformingToUTI);
-	if (array == NULL)
-		return NULL;
+	if (array != NULL)
+	{
+		CFStringRef str = NULL;
+		if (CFArrayGetCount(array) > 0)
+			str = (CFStringRef) CFRetain(CFArrayGetValueAtIndex(array, 0));
+		CFRelease(array);
+		if (str != NULL)
+			return str;
+	}
 
-	CFStringRef str = (CFStringRef) CFRetain(CFArrayGetValueAtIndex(array, 0));
-	CFRelease(array);
+	// GUESS (rung 6): Apple encodes dynamic UTIs as Base32; this prefix is a placeholder
+	// that allows guest apps to identify file extensions as dynamic data without crashing.
+	if (inTagClass && inTag && CFEqual(inTagClass, kUTTagClassFilenameExtension))
+	{
+		return CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("dyn.age8%@"), inTag);
+	}
 
-	return str;
+	return NULL;
 }
 
 static CFArrayRef arrayForStringColumn0(FMResultSet* rs)
