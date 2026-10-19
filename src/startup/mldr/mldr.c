@@ -21,6 +21,7 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -1110,8 +1111,24 @@ static void setup_space(struct load_results* lr, bool is_64_bit) {
 	}
 };
 
+#ifdef __x86_64__
+/* Darling's x86_64 guests keep their TSD in %gs (libsyscall/os/tsd.h); on macOS
+ * the kernel installs the initial thread's TSD before dyld runs, and nothing in
+ * Darling does that for the main thread.  ARCH_SET_GS is 0x1001 (ARCH_SET_FS,
+ * 0x1002, would clobber the host's own TLS). */
+__attribute__((noinline))
+static void install_guest_tsd_page(void)
+{
+	void* tsd = mmap(NULL, 4096, PROT_READ | PROT_WRITE,
+	                 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (tsd != MAP_FAILED)
+		syscall(SYS_arch_prctl, 0x1001 /* ARCH_SET_GS */, tsd);
+}
+#endif
+
 static void start_thread(struct load_results* lr) {
 #ifdef __x86_64__
+	install_guest_tsd_page();
 	__asm__ volatile(
 		"mov %1, %%rsp\n"
 		"jmpq *%0"

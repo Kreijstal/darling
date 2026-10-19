@@ -79,3 +79,6 @@ debian/*.substvars
 cmake-build-*
 wayland-protocols-pkg/
 build/
+/.stage/
+/.uikit-prefix/
+/build17/
