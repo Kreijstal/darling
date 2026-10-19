@@ -863,6 +863,8 @@ static const char *dwb_socket_path(void)
 - (void) stopLoading
 {
 	_loading = NO;
+	/* Stopped is over, like a failure: progress must not stay at 0.0. */
+	_estimatedProgress = 1.0;
 }
 
 - (id) navigationDelegate
