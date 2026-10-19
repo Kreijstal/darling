@@ -30,6 +30,7 @@ struct OpaqueFFTSetup
 	float *sine;
 };
 
+// Only radix 2 is implemented; radix 3 and 5 return NULL, as does a Log2n above 30.
 FFTSetup vDSP_create_fftsetup(vDSP_Length __Log2n, FFTRadix __Radix)
 {
 	if (__Radix != kFFTRadix2 || __Log2n > 30)
