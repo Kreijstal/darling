@@ -30,11 +30,14 @@ Dir.mktmpdir('sandbox-') do |dir|
     int main(void) {
       char *err = NULL;
       /* a NULL errorbuf used to be dereferenced */
-      sandbox_init("p", 0, NULL);
-      sandbox_init_with_parameters("p", 0, NULL, NULL);
-      sandbox_init_with_extensions("p", 0, NULL, NULL);
+      /* return 0 is deliberate: guest helpers that ignore the error must keep running */
+      assert(sandbox_init("p", 0, NULL) == 0);
+      assert(sandbox_init_with_parameters("p", 0, NULL, NULL) == 0);
+      assert(sandbox_init_with_extensions("p", 0, NULL, NULL) == 0);
       assert(sandbox_wakeup_daemon(NULL) == -1);
-      sandbox_init("p", 0, &err); assert(err && !strcmp(err, "Not implemented")); sandbox_free_error(err);
+      assert(sandbox_init("p", 0, &err) == 0); assert(err && !strcmp(err, "Not implemented")); sandbox_free_error(err); err = NULL;
+      assert(sandbox_init_with_parameters("p", 0, NULL, &err) == 0); assert(err && !strcmp(err, "Not implemented")); sandbox_free_error(err); err = NULL;
+      assert(sandbox_init_with_extensions("p", 0, NULL, &err) == 0); assert(err && !strcmp(err, "Not implemented")); sandbox_free_error(err); err = NULL;
       /* compiling reports failure and why; the caller's params are never written */
       void *params = (void *) 0x1234;
       assert(sandbox_compile_string("(version 1)", params, &err) == NULL);
