@@ -454,7 +454,7 @@ static const char *dwb_socket_path(void)
 	 * didStartProvisionalNavigation sees this load rather than the previous one. */
 	if (_currentRequest != request) {
 		[_currentRequest release];
-		_currentRequest = [request retain];
+		_currentRequest = [request copy];
 	}
 
 	/* webView:didStartProvisionalNavigation:, before the host is told to load.
@@ -468,6 +468,8 @@ static const char *dwb_socket_path(void)
 		_loading = NO;
 		/* The load is over, unsuccessfully; progress must not stay at 0.0 forever. */
 		_estimatedProgress = 1.0;
+		[_currentRequest release];
+		_currentRequest = nil;
 		/* A failed navigation must not look like success. The host tells us
 		 * why - an unreachable origin, a refused connection - and the guest
 		 * needs that, because the previous behaviour was to report success and
@@ -490,6 +492,9 @@ static const char *dwb_socket_path(void)
 	 * for good. The premise was asserted rather than read off the host code. */
 	_loading = NO;
 	[self announceNavigationFinished];
+	/* -request is the in-flight request; nothing is in flight now. */
+	[_currentRequest release];
+	_currentRequest = nil;
 	return nil;
 }
 
@@ -865,6 +870,8 @@ static const char *dwb_socket_path(void)
 	_loading = NO;
 	/* Stopped is over, like a failure: progress must not stay at 0.0. */
 	_estimatedProgress = 1.0;
+	[_currentRequest release];
+	_currentRequest = nil;
 }
 
 - (id) navigationDelegate
