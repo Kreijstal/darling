@@ -28,3 +28,42 @@
 - Confirmed NOT caused by the FreeType glyph-raster cache (commit 38757104):
   `showGlyphs:` advance semantics are byte-identical (`cached->advance >> 6`).
 - TextEdit typing works on Wayland but not X11 (separate, also open).
+
+## Found while reviewing the darling-lol port PRs (2026-10)
+
+Existing defects that the reviews read past. None is introduced by the PRs
+that surfaced them, and all entries describe master; the stored -1 watch in the
+FSEvents entry is fixed by VibeDarling/darling#1227 once it merges.
+
+- `src/startup/mldr/mldr.c:847` (`socket_bitmap_put`): `index = bitmap->highest -
+  socket` underflows for a socket number above `highest`, and a socket below the
+  bitmap's range gives an index past `bit_length`; in both cases the bit is
+  cleared at an out-of-bounds index.
+- `src/frameworks/CoreServices/src/LaunchServices/LSInfo.m` (lines 112, 122, 144,
+  253, 281, 298): `if (*outError)` dereferences `outError` without checking that
+  it is non-NULL.
+- `src/frameworks/CoreServices/src/LaunchServices/LSOpen.m:35`:
+  `LSOpenURLsWithRole` is a stub that prints a STUB message and returns
+  `unimpErr`.
+- `src/frameworks/VideoToolbox/src/VideoToolbox.m:35-36`:
+  `kVTProfileLevel_H264_Baseline_AutoLevel` and `kVTProfileLevel_H264_Main_AutoLevel`
+  share the value "AutoLevel", so an encoder cannot tell them apart.
+- `src/frameworks/CoreVideo/src/CVPixelBuffer.c:467,490`: transfer function code
+  point 13 (sRGB) has no string in `CVTransferFunctionGetStringForIntegerCodePoint`
+  and `CVTransferFunctionGetIntegerCodePointForString` (needs the constant added
+  by VibeDarling/darling#1217).
+- `src/frameworks/CoreServices/src/CarbonCore/UnicodeUtilities.cpp`
+  (`UCKeyTranslate`): returns raw `UCKeyOutput` values, including state and
+  sequence markers, as characters.
+- `src/frameworks/CoreServices/src/FSEvents/FSEventsImpl.m`: when
+  `inotify_add_watch` fails for a path, the watch descriptor -1 is stored in the
+  watch map, so an inotify queue overflow (which reports `wd == -1`) is
+  attributed as an event on the last unwatchable path; and a path that does not
+  exist when the stream starts is never watched later.
+- `src/sandbox/sandbox.c`: `sandbox_init`, `sandbox_init_with_parameters`,
+  `sandbox_init_with_extensions` and `sandbox_wakeup_daemon` write `*errorbuf`
+  without a NULL check (a NULL `errorbuf` crashes) and also on success. The first
+  three return 0 after setting the error string "Not implemented"
+  (`sandbox_wakeup_daemon` returns -1), so the stubs report success together with
+  an error message. VibeDarling/darling#1212 adds the NULL guards while
+  deliberately keeping `return 0`.
