@@ -778,6 +778,43 @@ static void ensureHomebrewSymlinks(const char* prefixPath)
 		symlink("nanobrew/prefix", optHomebrew);
 	}
 
+	// 1b. Ensure /opt/nb -> nanobrew/prefix (required for Nanobrew short-prefix Mach-O relocated dylibs)
+	char optNb[4096];
+	snprintf(optNb, sizeof(optNb), "%s/opt/nb", prefixPath);
+	if (lstat(optNb, &st) == 0)
+	{
+		if (S_ISLNK(st.st_mode))
+		{
+			char target[4096];
+			ssize_t len = readlink(optNb, target, sizeof(target) - 1);
+			if (len >= 0)
+			{
+				target[len] = '\0';
+				if (strcmp(target, "nanobrew/prefix") != 0 && strcmp(target, "/opt/nanobrew/prefix") != 0)
+				{
+					if (unlink(optNb) == 0)
+					{
+						if (symlink("nanobrew/prefix", optNb) != 0)
+							fprintf(stderr, "ensureHomebrewSymlinks: failed to recreate /opt/nb: %s\n", strerror(errno));
+					}
+					else
+					{
+						fprintf(stderr, "ensureHomebrewSymlinks: failed to unlink stale /opt/nb: %s\n", strerror(errno));
+					}
+				}
+			}
+		}
+		else
+		{
+			fprintf(stderr, "ensureHomebrewSymlinks: %s exists but is not a symlink\n", optNb);
+		}
+	}
+	else
+	{
+		if (symlink("nanobrew/prefix", optNb) != 0)
+			fprintf(stderr, "ensureHomebrewSymlinks: failed to create /opt/nb: %s\n", strerror(errno));
+	}
+
 	// 2. Ensure /usr/local, /usr/local/bin, /usr/local/opt, /usr/local/Cellar
 	char usrLocalDir[4096];
 	snprintf(usrLocalDir, sizeof(usrLocalDir), "%s/usr/local", prefixPath);
@@ -2667,6 +2704,8 @@ void setupShellspawnEnv(int sockfd)
 		"LC_NUMERIC",
 		"LC_COLLATE",
 		"LC_MESSAGES",
+		"DYLD_FALLBACK_LIBRARY_PATH",
+		"DYLD_FALLBACK_FRAMEWORK_PATH",
 	};
 
 	char buffer2[4096];
@@ -2728,6 +2767,31 @@ void setupShellspawnEnv(int sockfd)
 	pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, "TERM=xterm-256color");
 	pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, "LANG=en_US.UTF-8");
 	pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, "CURL_SSL_BACKEND=openssl");
+
+	// Default fallback paths matching Darwin dyld specifications (man dyld), augmented with Nanobrew
+	char* envFallbackLib = NULL;
+	int retLib = asprintf(&envFallbackLib, "DYLD_FALLBACK_LIBRARY_PATH=/Users/%s/lib:/usr/local/lib:/usr/lib:/opt/nanobrew/prefix/lib", login ? login : "unknown");
+	if (retLib >= 0 && envFallbackLib != NULL)
+	{
+		pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, envFallbackLib);
+		free(envFallbackLib);
+	}
+	else
+	{
+		fprintf(stderr, "setupShellspawnEnv: failed to allocate DYLD_FALLBACK_LIBRARY_PATH\n");
+	}
+
+	char* envFallbackFw = NULL;
+	int retFw = asprintf(&envFallbackFw, "DYLD_FALLBACK_FRAMEWORK_PATH=/Users/%s/Library/Frameworks:/Library/Frameworks:/Network/Library/Frameworks:/System/Library/Frameworks:/opt/nanobrew/prefix/Frameworks", login ? login : "unknown");
+	if (retFw >= 0 && envFallbackFw != NULL)
+	{
+		pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, envFallbackFw);
+		free(envFallbackFw);
+	}
+	else
+	{
+		fprintf(stderr, "setupShellspawnEnv: failed to allocate DYLD_FALLBACK_FRAMEWORK_PATH\n");
+	}
 
 	for (char** var_ptr = environ; *var_ptr != NULL; ++var_ptr) {
 		const char* var = *var_ptr;
