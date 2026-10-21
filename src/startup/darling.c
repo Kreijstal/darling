@@ -2450,24 +2450,23 @@ static void shellLoop(int sockfd, int master)
 			while (rd == sizeof(buf));
 		}
 
-		if (pfds[1].revents & POLLIN)
+		if (pfds[1].revents & (POLLIN | POLLHUP | POLLERR))
 		{
-			int rd = 0;
+			int rd;
 			do
 			{
-				if (ioctl(STDIN_FILENO, FIONREAD, &rd) < 0) {
-					perror("ioctl");
-					exit(1);
-				}
-				if (rd > sizeof(buf)) {
-					rd = sizeof(buf);
-				}
-				rd = read(STDIN_FILENO, buf, rd);
+				int to_read = sizeof(buf);
+				if (ioctl(STDIN_FILENO, FIONREAD, &to_read) < 0 || to_read <= 0 || to_read > sizeof(buf))
+					to_read = sizeof(buf);
+
+				rd = read(STDIN_FILENO, buf, to_read);
 				if (rd > 0)
 					write(master, buf, rd);
-				else {
-					perror("read");
-					exit(1);
+				else
+				{
+					// EOF or error on stdin: stop polling stdin
+					pfds[1].fd = -1;
+					break;
 				}
 			}
 			while (rd == sizeof(buf));
@@ -2537,7 +2536,12 @@ static void setupPtys(int fds[3], int* master)
 	{
 		orig_termios = termios;
 
-		ioctl(0, TIOCGWINSZ, &win);
+		memset(&win, 0, sizeof(win));
+		if (ioctl(0, TIOCGWINSZ, &win) < 0 || win.ws_col == 0 || win.ws_row == 0)
+		{
+			win.ws_col = 80;
+			win.ws_row = 24;
+		}
 
 		termios.c_lflag &= ~(ICANON | ISIG | IEXTEN | ECHO);
 		termios.c_iflag &= ~(BRKINT | ICRNL | IGNBRK | IGNCR | INLCR |
@@ -2554,6 +2558,13 @@ static void setupPtys(int fds[3], int* master)
 		ioctl(*master, TIOCSWINSZ, &win);
 
 		atexit(restoreTermios);
+	}
+	else
+	{
+		memset(&win, 0, sizeof(win));
+		win.ws_col = 80;
+		win.ws_row = 24;
+		ioctl(*master, TIOCSWINSZ, &win);
 	}
 }
 
@@ -2758,15 +2769,30 @@ void setupFDs(int fds[3], int* master)
 {
 	*master = -1;
 
-	if (isatty(STDIN_FILENO))
+	bool want_pty = isatty(STDIN_FILENO);
+	bool force_all = false;
+	const char* force_pty = getenv("DARLING_FORCE_PTY");
+	if (force_pty && (strcmp(force_pty, "1") == 0 || strcasecmp(force_pty, "true") == 0))
+	{
+		want_pty = true;
+		force_all = true;
+	}
+
+	if (want_pty)
+	{
+		// setupPtys() initializes all fds (fds[2] = fds[1] = fds[0] = slave)
 		setupPtys(fds, master);
+	}
 	else
 		fds[0] = dup(STDIN_FILENO); // dup() because we close() after spawning
-	
-	if (*master == -1 || !isatty(STDOUT_FILENO))
-		fds[1] = STDOUT_FILENO;
-	if (*master == -1 || !isatty(STDERR_FILENO))
-		fds[2] = STDERR_FILENO;
+
+	if (!force_all)
+	{
+		if (*master == -1 || !isatty(STDOUT_FILENO))
+			fds[1] = STDOUT_FILENO;
+		if (*master == -1 || !isatty(STDERR_FILENO))
+			fds[2] = STDERR_FILENO;
+	}
 }
 
 void spawnGo(int sockfd, int fds[3], int master)

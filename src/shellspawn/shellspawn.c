@@ -33,6 +33,12 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/event.h>
 #include <sys/ioctl.h>
 #include <signal.h>
+#include <termios.h>
+#if defined(__APPLE__) || defined(__DARLING__)
+#include <util.h>
+#else
+#include <pty.h>
+#endif
 #include "shellspawn.h"
 #include "duct_signals.h"
 
@@ -285,6 +291,24 @@ void spawnShell(int fd)
 	argv = (char**) realloc(argv, sizeof(char*) * (argc + 1));
 	argv[argc] = NULL;
 
+	int ctty_master = -1;
+	int ctty_slave = -1;
+
+	// If stdin is not a terminal (e.g. piped input, test suite, non-interactive),
+	// allocate a fallback PTY to serve as the session's controlling terminal so
+	// that open("/dev/tty") and terminal size queries succeed without hijacking
+	// the standard input/output pipes.
+	if (!isatty(shellfd[0]))
+	{
+		struct winsize ws = { .ws_row = 24, .ws_col = 80, .ws_xpixel = 0, .ws_ypixel = 0 };
+		if (openpty(&ctty_master, &ctty_slave, NULL, NULL, &ws) == 0)
+		{
+			fcntl(ctty_master, F_SETFD, FD_CLOEXEC);
+			fcntl(ctty_slave, F_SETFD, FD_CLOEXEC);
+			fcntl(ctty_master, F_SETFL, fcntl(ctty_master, F_GETFL) | O_NONBLOCK);
+		}
+	}
+
 	if (pipe(pipefd) == -1)
 		goto err;
 
@@ -298,7 +322,19 @@ void spawnShell(int fd)
 		dup2(shellfd[1], STDOUT_FILENO);
 		dup2(shellfd[2], STDERR_FILENO);
 
-		ioctl(STDIN_FILENO, TIOCSCTTY, STDIN_FILENO);
+		if (ctty_slave != -1)
+		{
+			ioctl(ctty_slave, TIOCSCTTY, 0);
+		}
+		else
+		{
+			ioctl(STDIN_FILENO, TIOCSCTTY, STDIN_FILENO);
+		}
+
+		if (ctty_slave != -1)
+			close(ctty_slave);
+		if (ctty_master != -1)
+			close(ctty_master);
 
 		close(fd);
 		close(shellfd[0]);
@@ -323,6 +359,12 @@ void spawnShell(int fd)
 		exit(EXIT_FAILURE);
 	}
 
+	if (ctty_slave != -1)
+	{
+		close(ctty_slave);
+		ctty_slave = -1;
+	}
+
 	close(shellfd[0]);
 	close(shellfd[1]);
 	close(shellfd[2]);
@@ -345,9 +387,13 @@ void spawnShell(int fd)
 
 	if (DBG) { puts("shellspawn: execv succeeded, entering poll loop"); fflush(stdout); }
 
-	struct pollfd pfd_in[1];
+	struct pollfd pfd_in[2];
+	memset(pfd_in, 0, sizeof(pfd_in));
 	pfd_in[0].fd = fd;
 	pfd_in[0].events = POLLIN;
+	pfd_in[1].fd = ctty_master;
+	pfd_in[1].events = (ctty_master != -1) ? POLLIN : 0;
+	int poll_cnt = (ctty_master != -1) ? 2 : 1;
 
 	while (true)
 	{
@@ -364,12 +410,23 @@ void spawnShell(int fd)
 			goto done_reaped;
 		}
 
-		int pret = poll(pfd_in, 1, 50);
+		int pret = poll(pfd_in, poll_cnt, 50);
 		if (pret < 0)
 		{
 			if (errno == EINTR)
 				continue;
 			break;
+		}
+
+		if (pret > 0 && ctty_master != -1 && (pfd_in[1].revents & (POLLIN | POLLHUP | POLLERR)))
+		{
+			char drain_buf[512];
+			while (read(ctty_master, drain_buf, sizeof(drain_buf)) > 0);
+			if (pfd_in[1].revents & (POLLHUP | POLLERR))
+			{
+				pfd_in[1].fd = -1;
+				pfd_in[1].events = 0;
+			}
 		}
 
 		if (pret > 0 && (pfd_in[0].revents & (POLLIN | POLLHUP | POLLERR)))
@@ -446,11 +503,21 @@ done_reaped:
 
 	if (DBG) printf("Shell terminated with exit code %d\n", wstatus);
 	close(fd);
+	if (ctty_master != -1)
+	{
+		close(ctty_master);
+		ctty_master = -1;
+	}
 
 	reapAll();
 	return;
 err:
 	if (DBG) fprintf(stderr, "Error spawning shell: %s\n", strerror(errno));
+
+	if (ctty_master != -1)
+		close(ctty_master);
+	if (ctty_slave != -1)
+		close(ctty_slave);
 
 	for (int i = 0; i < 3; i++)
 	{
