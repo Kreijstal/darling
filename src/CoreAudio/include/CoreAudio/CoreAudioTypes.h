@@ -575,5 +575,14 @@ typedef long MPEG4ObjectID; enum
     kMPEG4Object_HVXC = 9
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+const char* GetMacOSStatusErrorString(OSStatus err);
+const char* GetMacOSStatusCommentString(OSStatus err);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 

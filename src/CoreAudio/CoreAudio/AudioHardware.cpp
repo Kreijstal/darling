@@ -19,6 +19,8 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <CoreAudio/AudioHardware.h>
 #include "AudioHardwareImpl.h"
+#include <ctype.h>
+#include <arpa/inet.h>
 #include "pulse/AudioHardwareImplPA.h"
 #include "pulse/AudioHardwareImplPAOutput.h"
 #include "pulse/AudioHardwareImplPAInput.h"
@@ -321,4 +323,23 @@ OSStatus AudioDeviceGetNearestStartTime(AudioObjectID inDevice,
 		return kAudioHardwareBadObjectError;
 	
 	return obj->getNearestStartTime(ioRequestedStartTime, inFlags);
+}
+
+extern "C" const char* GetMacOSStatusErrorString(OSStatus err)
+{
+	static __thread char str[32];
+	char fourcc[5];
+	*(uint32_t*)fourcc = htonl((uint32_t)err);
+	fourcc[4] = '\0';
+	if (isprint((unsigned char)fourcc[0]) && isprint((unsigned char)fourcc[1]) && isprint((unsigned char)fourcc[2]) && isprint((unsigned char)fourcc[3])) {
+		snprintf(str, sizeof(str), "'%s'", fourcc);
+	} else {
+		snprintf(str, sizeof(str), "%d", (int)err);
+	}
+	return str;
+}
+
+extern "C" const char* GetMacOSStatusCommentString(OSStatus err)
+{
+	return "";
 }
