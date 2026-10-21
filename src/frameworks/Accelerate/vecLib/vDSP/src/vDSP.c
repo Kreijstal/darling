@@ -269,12 +269,6 @@ void* vDSP_convD(void)
     return NULL;
 }
 
-void* vDSP_create_fftsetup(void)
-{
-    if (verbose) puts("STUB: vDSP_create_fftsetup called");
-    return NULL;
-}
-
 void* vDSP_create_fftsetupD(void)
 {
     if (verbose) puts("STUB: vDSP_create_fftsetupD called");
@@ -296,12 +290,6 @@ void* vDSP_desamp(void)
 void* vDSP_desampD(void)
 {
     if (verbose) puts("STUB: vDSP_desampD called");
-    return NULL;
-}
-
-void* vDSP_destroy_fftsetup(void)
-{
-    if (verbose) puts("STUB: vDSP_destroy_fftsetup called");
     return NULL;
 }
 
@@ -560,12 +548,6 @@ void* vDSP_fft_zopt(void)
 void* vDSP_fft_zoptD(void)
 {
     if (verbose) puts("STUB: vDSP_fft_zoptD called");
-    return NULL;
-}
-
-void* vDSP_fft_zrip(void)
-{
-    if (verbose) puts("STUB: vDSP_fft_zrip called");
     return NULL;
 }
 
