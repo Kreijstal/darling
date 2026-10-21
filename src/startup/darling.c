@@ -2812,6 +2812,9 @@ void setupShellspawnEnv(int sockfd)
 		"LC_MESSAGES",
 		"DYLD_FALLBACK_LIBRARY_PATH",
 		"DYLD_FALLBACK_FRAMEWORK_PATH",
+		/* Host ELF loader vars; must not reach Darwin dyld */
+		"LD_LIBRARY_PATH",
+		"LD_PRELOAD",
 	};
 
 	char buffer2[4096];
