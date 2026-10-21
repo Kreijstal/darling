@@ -815,6 +815,112 @@ static void ensureHomebrewSymlinks(const char* prefixPath)
 			fprintf(stderr, "ensureHomebrewSymlinks: failed to create /opt/nb: %s\n", strerror(errno));
 	}
 
+	// 1c. Ensure fallback interpreters for Perl and Python in opt/ if not provided by formulas
+	char perlOptDir[4096];
+	snprintf(perlOptDir, sizeof(perlOptDir), "%s/opt/nanobrew/prefix/opt/perl", prefixPath);
+	createDir(perlOptDir);
+	char perlBinDir[4096];
+	snprintf(perlBinDir, sizeof(perlBinDir), "%s/opt/nanobrew/prefix/opt/perl/bin", prefixPath);
+	createDir(perlBinDir);
+	char perlBin[4096];
+	snprintf(perlBin, sizeof(perlBin), "%s/perl", perlBinDir);
+	const char* perlCandidates[] = {
+		"/opt/nanobrew/prefix/bin/perl",
+		"/usr/bin/perl",
+		"/Volumes/SystemRoot/usr/bin/perl",
+		NULL
+	};
+	const char* perlTarget = NULL;
+	for (int i = 0; perlCandidates[i] != NULL; i++)
+	{
+		char perlCheck[4096];
+		snprintf(perlCheck, sizeof(perlCheck), "%s%s", prefixPath, perlCandidates[i]);
+		if (access(perlCheck, X_OK) == 0)
+		{
+			perlTarget = perlCandidates[i];
+			break;
+		}
+	}
+	if (perlTarget != NULL)
+	{
+		if (lstat(perlBin, &st) != 0)
+		{
+			if (symlink(perlTarget, perlBin) != 0)
+				fprintf(stderr, "ensureHomebrewSymlinks: failed to create perl symlink: %s\n", strerror(errno));
+		}
+	}
+
+	char pyOptDir[4096];
+	snprintf(pyOptDir, sizeof(pyOptDir), "%s/opt/nanobrew/prefix/opt/python", prefixPath);
+	createDir(pyOptDir);
+	char pyBinDir[4096];
+	snprintf(pyBinDir, sizeof(pyBinDir), "%s/opt/nanobrew/prefix/opt/python/bin", prefixPath);
+	createDir(pyBinDir);
+
+	const char* pyCandidates[] = {
+		"/Library/Developer/CommandLineTools/usr/bin/python3",
+		"/opt/nanobrew/prefix/bin/python3",
+		"/usr/bin/python3",
+		"/Volumes/SystemRoot/usr/bin/python3",
+		NULL
+	};
+	const char* pyTarget = NULL;
+	for (int i = 0; pyCandidates[i] != NULL; i++)
+	{
+		char pyCheck[4096];
+		snprintf(pyCheck, sizeof(pyCheck), "%s%s", prefixPath, pyCandidates[i]);
+		if (access(pyCheck, X_OK) == 0)
+		{
+			pyTarget = pyCandidates[i];
+			break;
+		}
+	}
+
+	char pyBin[4096];
+	snprintf(pyBin, sizeof(pyBin), "%s/python3", pyBinDir);
+	char pyBin2[4096];
+	snprintf(pyBin2, sizeof(pyBin2), "%s/python", pyBinDir);
+
+	if (pyTarget != NULL)
+	{
+		if (lstat(pyBin, &st) != 0)
+		{
+			if (symlink(pyTarget, pyBin) != 0)
+				fprintf(stderr, "ensureHomebrewSymlinks: failed to create python3 symlink: %s\n", strerror(errno));
+		}
+		if (lstat(pyBin2, &st) != 0)
+		{
+			if (symlink(pyTarget, pyBin2) != 0)
+				fprintf(stderr, "ensureHomebrewSymlinks: failed to create python symlink: %s\n", strerror(errno));
+		}
+
+		// Ensure system /usr/bin/python3 points to available python interpreter
+		char usrBinPy3[4096];
+		snprintf(usrBinPy3, sizeof(usrBinPy3), "%s/usr/bin/python3", prefixPath);
+		if (lstat(usrBinPy3, &st) != 0)
+		{
+			if (symlink(pyTarget, usrBinPy3) != 0)
+				fprintf(stderr, "ensureHomebrewSymlinks: failed to create /usr/bin/python3 symlink: %s\n", strerror(errno));
+		}
+	}
+
+	// 1d. Auto-link OpenJDK into /Library/Java/JavaVirtualMachines if installed
+	char openjdkDir[4096];
+	snprintf(openjdkDir, sizeof(openjdkDir), "%s/opt/nanobrew/prefix/opt/openjdk/libexec/openjdk.jdk", prefixPath);
+	if (access(openjdkDir, F_OK) == 0)
+	{
+		char jvmDir[4096];
+		snprintf(jvmDir, sizeof(jvmDir), "%s/Library/Java/JavaVirtualMachines", prefixPath);
+		createDir(jvmDir);
+		char jvmLink[4096];
+		snprintf(jvmLink, sizeof(jvmLink), "%s/openjdk.jdk", jvmDir);
+		if (lstat(jvmLink, &st) != 0)
+		{
+			if (symlink("/opt/nanobrew/prefix/opt/openjdk/libexec/openjdk.jdk", jvmLink) != 0)
+				fprintf(stderr, "ensureHomebrewSymlinks: failed to link openjdk: %s\n", strerror(errno));
+		}
+	}
+
 	// 2. Ensure /usr/local, /usr/local/bin, /usr/local/opt, /usr/local/Cellar
 	char usrLocalDir[4096];
 	snprintf(usrLocalDir, sizeof(usrLocalDir), "%s/usr/local", prefixPath);
@@ -2814,6 +2920,16 @@ void setupShellspawnEnv(int sockfd)
 	}
 
 	pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, "SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk");
+
+	static const char kDefaultJavaHome[] = "/opt/nanobrew/prefix/opt/openjdk/libexec/openjdk.jdk/Contents/Home";
+	char openjdkHome[4096];
+	snprintf(openjdkHome, sizeof(openjdkHome), "%s%s", prefix, kDefaultJavaHome);
+	if (access(openjdkHome, F_OK) == 0 && getenv("JAVA_HOME") == NULL)
+	{
+		char envJavaHome[4096];
+		snprintf(envJavaHome, sizeof(envJavaHome), "JAVA_HOME=%s", kDefaultJavaHome);
+		pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, envJavaHome);
+	}
 }
 
 void setupWorkingDir(int sockfd)

@@ -2,69 +2,62 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
 #include <limits.h>
 
-int main(int argc, char** argv)
+static bool isSymlinkToXcrun(const char* path)
 {
-#if DEBUG
-	printf("Invoked with:");
-	for (int i = 0; i < argc; i++)
-	{
-		printf(" %s", argv[i]);
-	}
-	printf("\n");
-#endif
+	struct stat st;
+	if (lstat(path, &st) != 0 || !S_ISLNK(st.st_mode))
+		return false;
 
-	if (argc < 2)
-	{
-		fprintf(stderr, "xcrun: error: no tool specified\n");
-		return 1;
-	}
+	char target[PATH_MAX];
+	ssize_t len = readlink(path, target, sizeof(target) - 1);
+	if (len <= 0)
+		return false;
+	target[len] = '\0';
 
-	const char* toolName = argv[1];
+	char* base = strrchr(target, '/');
+	const char* targetName = base ? base + 1 : target;
+	return (strcmp(targetName, "xcrun") == 0);
+}
 
-	int prefixLength = 0;
-	char* lastSlash = strrchr(argv[0], '/');
-	if (lastSlash != NULL)
-	{
-		prefixLength = (int)(lastSlash - argv[0] + 1);
-	}
-
-	char *toolPath = calloc(prefixLength + strlen(toolName) + 1, sizeof(char));
-	if (!toolPath)
-	{
-		fprintf(stderr, "xcrun: error: out of memory\n");
-		return 1;
-	}
-	if (prefixLength > 0)
-	{
-		strncpy(toolPath, argv[0], prefixLength);
-	}
-	strcpy(toolPath + prefixLength, toolName);
-
-#if DEBUG
-	printf("Executing %s\n", toolPath);
-#endif
-
-	argv++;
-	argv[0] = toolPath;
-
-	execvp(argv[0], argv);
-
-	// If toolPath execution failed, fallback to searching PATH for the tool.
-	// Guard against infinite recursion when invoked from shims.
+static char* findToolInCandidates(const char* toolName)
+{
 	if (getenv("__XCRUN_FALLBACK") != NULL)
-	{
-		fprintf(stderr, "xcrun: error: tool '%s' not found (recursion prevented)\n", toolName);
-		return 1;
-	}
+		return NULL;
 	setenv("__XCRUN_FALLBACK", "1", 1);
 
-	// If toolName contains a slash, try direct execution
 	if (strchr(toolName, '/') != NULL && access(toolName, X_OK) == 0)
+		return strdup(toolName);
+
+	const char* standardDirs[] = {
+		"/Library/Developer/CommandLineTools/usr/bin",
+		"/Library/Developer/Toolchains/swift.xctoolchain/usr/bin",
+		"/usr/libexec/DeveloperTools",
+		"/opt/nanobrew/prefix/bin",
+		"/opt/homebrew/bin",
+		"/usr/local/bin",
+		"/usr/bin",
+		"/bin",
+		"/Volumes/SystemRoot/usr/bin",
+		"/Volumes/SystemRoot/bin",
+		NULL
+	};
+
+	char candidate[PATH_MAX];
+
+	for (int i = 0; standardDirs[i] != NULL; i++)
 	{
-		argv[0] = (char*) toolName;
-		execv(toolName, argv);
+		snprintf(candidate, sizeof(candidate), "%s/%s", standardDirs[i], toolName);
+		if (access(candidate, X_OK) == 0)
+		{
+			if (isSymlinkToXcrun(candidate))
+				continue;
+			return strdup(candidate);
+		}
 	}
 
 	const char* pathEnv = getenv("PATH");
@@ -76,23 +69,16 @@ int main(int argc, char** argv)
 			char* dir = strtok(pathCopy, ":");
 			while (dir != NULL)
 			{
-				// Skip directories that contain xcrun-shims or recursion targets
-				if (strcmp(dir, "/usr/bin") != 0 &&
-				    strcmp(dir, "/bin") != 0 &&
-				    strcmp(dir, "/usr/sbin") != 0 &&
-				    strcmp(dir, "/sbin") != 0 &&
-				    strncmp(dir, "/Library/Developer", 18) != 0)
+				snprintf(candidate, sizeof(candidate), "%s/%s", dir, toolName);
+				if (access(candidate, X_OK) == 0)
 				{
-					char candidate[PATH_MAX];
-					int written = snprintf(candidate, sizeof(candidate), "%s/%s", dir, toolName);
-					if (written > 0 && (size_t)written < sizeof(candidate))
+					if (isSymlinkToXcrun(candidate))
 					{
-						if (access(candidate, X_OK) == 0)
-						{
-							argv[0] = candidate;
-							execv(candidate, argv);
-						}
+						dir = strtok(NULL, ":");
+						continue;
 					}
+					free(pathCopy);
+					return strdup(candidate);
 				}
 				dir = strtok(NULL, ":");
 			}
@@ -100,24 +86,90 @@ int main(int argc, char** argv)
 		}
 	}
 
-	// Also check /Library/Developer/Toolchains/swift.xctoolchain/usr/bin if available
-	char swiftToolchainPath[PATH_MAX];
-	snprintf(swiftToolchainPath, sizeof(swiftToolchainPath), "/Library/Developer/Toolchains/swift.xctoolchain/usr/bin/%s", toolName);
-	if (access(swiftToolchainPath, X_OK) == 0)
+	return NULL;
+}
+
+int main(int argc, char** argv)
+{
+	if (argc < 2)
 	{
-		argv[0] = swiftToolchainPath;
-		execv(swiftToolchainPath, argv);
+		fprintf(stderr, "xcrun: error: no tool specified\n");
+		return 1;
 	}
 
-	// Also check /usr/libexec/DeveloperTools if available
-	char devToolsPath[PATH_MAX];
-	snprintf(devToolsPath, sizeof(devToolsPath), "/usr/libexec/DeveloperTools/%s", toolName);
-	if (access(devToolsPath, X_OK) == 0)
+	bool findOnly = false;
+	const char* toolName = NULL;
+	int toolArgIndex = 1;
+
+	for (int i = 1; i < argc; i++)
 	{
-		argv[0] = devToolsPath;
-		execv(devToolsPath, argv);
+		if (strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "--find") == 0 || strcmp(argv[i], "-find") == 0)
+		{
+			findOnly = true;
+		}
+		else if (strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--run") == 0 || strcmp(argv[i], "-run") == 0)
+		{
+			// run mode (default)
+		}
+		else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0)
+		{
+			printf("xcrun version 64\n");
+			return 0;
+		}
+		else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
+		{
+			printf("Usage: xcrun [-f|--find] [-r|--run] [-sdk <sdk>] <tool> [args...]\n");
+			return 0;
+		}
+		else if (strcmp(argv[i], "-sdk") == 0 || strcmp(argv[i], "--sdk") == 0 ||
+		         strcmp(argv[i], "-toolchain") == 0 || strcmp(argv[i], "--toolchain") == 0)
+		{
+			if (++i >= argc)
+				break;
+		}
+		else if (argv[i][0] == '-')
+		{
+			continue;
+		}
+		else
+		{
+			toolName = argv[i];
+			toolArgIndex = i;
+			break;
+		}
 	}
 
+	if (!toolName)
+	{
+		fprintf(stderr, "xcrun: error: no tool specified\n");
+		return 1;
+	}
+
+	char* resolvedPath = findToolInCandidates(toolName);
+	char** toolArgv = argv + toolArgIndex;
+
+	if (findOnly)
+	{
+		if (resolvedPath != NULL)
+		{
+			puts(resolvedPath);
+			free(resolvedPath);
+			return 0;
+		}
+		fprintf(stderr, "xcrun: error: cannot find tool '%s'\n", toolName);
+		return 1;
+	}
+
+	if (resolvedPath != NULL)
+	{
+		toolArgv[0] = resolvedPath;
+		execv(resolvedPath, toolArgv);
+		perror("xcrun: execv");
+		free(resolvedPath);
+		return 1;
+	}
+
+	// Automatic on-demand CLT installation for clang/make
 	if (strcmp(toolName, "clang") == 0 || strcmp(toolName, "clang++") == 0 ||
 	    strcmp(toolName, "cc") == 0 || strcmp(toolName, "c++") == 0 ||
 	    strcmp(toolName, "make") == 0 || strcmp(toolName, "gnumake") == 0)
@@ -128,10 +180,13 @@ int main(int argc, char** argv)
 			int status = system("/usr/libexec/darling/clt_install.py");
 			if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
 			{
-				if (access(toolPath, X_OK) == 0)
+				unsetenv("__XCRUN_FALLBACK");
+				resolvedPath = findToolInCandidates(toolName);
+				if (resolvedPath != NULL)
 				{
-					argv[0] = toolPath;
-					execv(toolPath, argv);
+					toolArgv[0] = resolvedPath;
+					execv(resolvedPath, toolArgv);
+					free(resolvedPath);
 				}
 			}
 			fprintf(stderr, "xcrun: automatic installation of developer tools failed.\n");
@@ -143,6 +198,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	// Automatic on-demand Swift installation
 	if (strcmp(toolName, "swift") == 0 || strcmp(toolName, "swiftc") == 0 ||
 	    strncmp(toolName, "swift-", 6) == 0)
 	{
@@ -153,10 +209,13 @@ int main(int argc, char** argv)
 			int status = system("/usr/libexec/darling/swift_install.sh");
 			if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
 			{
-				if (access(swiftToolchainPath, X_OK) == 0)
+				unsetenv("__XCRUN_FALLBACK");
+				resolvedPath = findToolInCandidates(toolName);
+				if (resolvedPath != NULL)
 				{
-					argv[0] = swiftToolchainPath;
-					execv(swiftToolchainPath, argv);
+					toolArgv[0] = resolvedPath;
+					execv(resolvedPath, toolArgv);
+					free(resolvedPath);
 				}
 			}
 			fprintf(stderr, "xcrun: automatic installation of Swift toolchain failed.\n");
@@ -173,4 +232,3 @@ int main(int argc, char** argv)
 	fprintf(stderr, "xcrun: error: cannot find tool '%s'\n", toolName);
 	return 1;
 }
-
