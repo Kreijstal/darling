@@ -669,12 +669,13 @@ static void ensureShSymlink(const char* prefixPath)
 	}
 }
 
-static void relativizeNanobrewSymlinks(const char* dirPath)
+static void relativizeNanobrewSymlinks(const char* prefixPath, const char* dirPath)
 {
 	DIR* dir = opendir(dirPath);
 	if (!dir) return;
 
 	struct dirent* de;
+	size_t pfxPathLen = strlen(prefixPath);
 	while ((de = readdir(dir)) != NULL)
 	{
 		if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
@@ -690,14 +691,35 @@ static void relativizeNanobrewSymlinks(const char* dirPath)
 			if (tlen > 0)
 			{
 				itemTarget[tlen] = '\0';
-				const char* pfxMatch = "/opt/nanobrew/prefix/";
-				size_t pfxLen = strlen(pfxMatch);
-				if (strncmp(itemTarget, pfxMatch, pfxLen) == 0)
+				const char* relPfx = NULL;
+				// Branch 1: Link points to host path (e.g. /home/user/.darling/opt/nanobrew/prefix/...).
+				// Strip prefixPath to convert it to a guest-relative or guest-absolute path.
+				// Branch 2: Link is already guest-absolute (/opt/nanobrew/prefix/...) and should be relativized.
+				if (strncmp(itemTarget, prefixPath, pfxPathLen) == 0 && itemTarget[pfxPathLen] == '/')
 				{
-					char relTarget[4096];
-					snprintf(relTarget, sizeof(relTarget), "../%s", itemTarget + pfxLen);
-					unlink(binItem);
-					symlink(relTarget, binItem);
+					relPfx = itemTarget + pfxPathLen;
+				}
+				else if (strncmp(itemTarget, "/opt/nanobrew/prefix/", 21) == 0)
+				{
+					relPfx = itemTarget;
+				}
+
+				if (relPfx != NULL)
+				{
+					const char* pfxMatch = "/opt/nanobrew/prefix/";
+					size_t pfxLen = strlen(pfxMatch);
+					if (strncmp(relPfx, pfxMatch, pfxLen) == 0)
+					{
+						char relTarget[4096];
+						snprintf(relTarget, sizeof(relTarget), "../%s", relPfx + pfxLen);
+						unlink(binItem);
+						symlink(relTarget, binItem);
+					}
+					else
+					{
+						unlink(binItem);
+						symlink(relPfx, binItem);
+					}
 				}
 			}
 		}
@@ -737,17 +759,28 @@ static void ensureSystemLibBridge(const char* prefixPath, const char* libName)
 
 static void ensureHomebrewSymlinks(const char* prefixPath)
 {
-	char nanobrewBin[4096];
-	snprintf(nanobrewBin, sizeof(nanobrewBin), "%s/opt/nanobrew/prefix/bin", prefixPath);
+	char nanobrewPrefix[4096];
+	snprintf(nanobrewPrefix, sizeof(nanobrewPrefix), "%s/opt/nanobrew/prefix", prefixPath);
 
 	struct stat st;
-	if (stat(nanobrewBin, &st) != 0 || !S_ISDIR(st.st_mode))
+	if (stat(nanobrewPrefix, &st) != 0 || !S_ISDIR(st.st_mode))
 		return;
+
+	char nanobrewBin[4096];
+	snprintf(nanobrewBin, sizeof(nanobrewBin), "%s/opt/nanobrew/prefix/bin", prefixPath);
+	createDir(nanobrewBin);
 
 	char nanobrewOpt[4096];
 	snprintf(nanobrewOpt, sizeof(nanobrewOpt), "%s/opt/nanobrew/prefix/opt", prefixPath);
-	relativizeNanobrewSymlinks(nanobrewBin);
-	relativizeNanobrewSymlinks(nanobrewOpt);
+	createDir(nanobrewOpt);
+
+	char nanobrewLib[4096];
+	snprintf(nanobrewLib, sizeof(nanobrewLib), "%s/opt/nanobrew/prefix/lib", prefixPath);
+	createDir(nanobrewLib);
+
+	relativizeNanobrewSymlinks(prefixPath, nanobrewBin);
+	relativizeNanobrewSymlinks(prefixPath, nanobrewOpt);
+	relativizeNanobrewSymlinks(prefixPath, nanobrewLib);
 
 	// 1. Ensure /opt/homebrew -> nanobrew/prefix
 	char optDir[4096];
@@ -2788,6 +2821,34 @@ int connectToShellspawn(void)
 	return sockfd;
 }
 
+static void appendOptLibraryPaths(const char* prefixPath, char** outPath)
+{
+	char optDir[4096];
+	snprintf(optDir, sizeof(optDir), "%s/opt/nanobrew/prefix/opt", prefixPath);
+	DIR* d = opendir(optDir);
+	if (!d) return;
+
+	struct dirent* de;
+	while ((de = readdir(d)) != NULL)
+	{
+		if (de->d_name[0] == '.') continue;
+		char libSubdir[4096];
+		snprintf(libSubdir, sizeof(libSubdir), "%s/%s/lib", optDir, de->d_name);
+		struct stat st;
+		if (stat(libSubdir, &st) == 0 && S_ISDIR(st.st_mode))
+		{
+			char* prev = *outPath;
+			char* updated = NULL;
+			if (asprintf(&updated, "%s:/opt/nanobrew/prefix/opt/%s/lib", prev, de->d_name) >= 0)
+			{
+				*outPath = updated;
+				free(prev);
+			}
+		}
+	}
+	closedir(d);
+}
+
 void setupShellspawnEnv(int sockfd)
 {
 	static const char* skip_vars[] = {
@@ -2882,6 +2943,7 @@ void setupShellspawnEnv(int sockfd)
 	int retLib = asprintf(&envFallbackLib, "DYLD_FALLBACK_LIBRARY_PATH=/Users/%s/lib:/usr/local/lib:/usr/lib:/opt/nanobrew/prefix/lib", login ? login : "unknown");
 	if (retLib >= 0 && envFallbackLib != NULL)
 	{
+		appendOptLibraryPaths(prefix, &envFallbackLib);
 		pushShellspawnCommand(sockfd, SHELLSPAWN_SETENV, envFallbackLib);
 		free(envFallbackLib);
 	}
