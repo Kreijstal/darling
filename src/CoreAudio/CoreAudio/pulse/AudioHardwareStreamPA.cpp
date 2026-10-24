@@ -83,7 +83,7 @@ AudioHardwareStreamPA::AudioHardwareStreamPA(AudioHardwareImplPA* hw, AudioDevic
 			battr.fragsize = uint32_t(-1);
 			battr.maxlength = uint32_t(-1);
 			battr.minreq = uint32_t(-1);
-			battr.prebuf = uint32_t(-1);
+			battr.prebuf = 0;
 			battr.tlength = uint32_t(-1);
 
 			pa_cvolume cvol;
@@ -109,11 +109,6 @@ AudioHardwareStreamPA::AudioHardwareStreamPA(AudioHardwareImplPA* hw, AudioDevic
 			pa_stream_connect_record(m_stream, nullptr, &battr,
 				pa_stream_flags_t(PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_ADJUST_LATENCY | PA_STREAM_AUTO_TIMING_UPDATE)
 			);
-		}
-
-		if (m_running && pa_stream_get_state(m_stream) == PA_STREAM_READY)
-		{
-			pa_stream_cork(m_stream, false, nullptr, nullptr);
 		}
 
 		if (loop) loop->unlock();
@@ -143,7 +138,8 @@ void AudioHardwareStreamPA::start()
 	m_running = true;
 	if (m_stream)
 	{
-		while (pa_stream_get_state(m_stream) == PA_STREAM_CREATING)
+		int waitCycles = 20; // 20 * 50ms = 1000ms max wait
+		while (pa_stream_get_state(m_stream) == PA_STREAM_CREATING && waitCycles-- > 0)
 		{
 			if (loop) loop->wait();
 			else break;
@@ -198,7 +194,12 @@ void AudioHardwareStreamPA::paStreamWriteCB(pa_stream* s, size_t length, void* s
 		if (op2) pa_operation_unref(op2);
 	}
 
-	AudioTimeStamp fake = {0};
+	AudioTimeStamp nowTs = {0};
+	nowTs.mFlags = kAudioTimeStampHostTimeValid | kAudioTimeStampSampleTimeValid;
+	nowTs.mHostTime = AudioGetCurrentHostTime();
+	nowTs.mSampleTime = This->m_sampleTime;
+
+	AudioTimeStamp outTs = nowTs;
 	AudioBufferList* abl = static_cast<AudioBufferList*>(alloca(sizeof(AudioBufferList) + sizeof(AudioBuffer)));
 
 	size_t done = 0;
@@ -224,7 +225,10 @@ void AudioHardwareStreamPA::paStreamWriteCB(pa_stream* s, size_t length, void* s
 		abl->mBuffers[0].mData = pdata;
 		abl->mBuffers[0].mDataByteSize = rqsize;
 
-		OSStatus status = This->m_callback(This->m_paHw->id(), &fake, nullptr, nullptr, abl, &fake, This->m_clientData);
+		OSStatus status = This->m_callback(This->m_paHw->id(), &nowTs, nullptr, nullptr, abl, &outTs, This->m_clientData);
+
+		UInt32 bpf = This->m_paHw->asbd().mBytesPerFrame ? This->m_paHw->asbd().mBytesPerFrame : 8;
+		This->m_sampleTime += (Float64)(rqsize / bpf);
 
 		if (status != noErr || !abl->mBuffers[0].mDataByteSize)
 		{

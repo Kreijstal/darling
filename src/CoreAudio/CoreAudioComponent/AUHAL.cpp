@@ -18,6 +18,7 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "AUHAL.h"
+#include <CoreAudio/HostTime.h>
 #include <iostream>
 
 #pragma GCC visibility push(default)
@@ -69,6 +70,16 @@ bool AUHAL::ValidFormat(AudioUnitScope inScope, AudioUnitElement inElement, cons
 
 UInt32 AUHAL::GetChannelLayoutTags(AudioUnitScope scope, AudioUnitElement element, AudioChannelLayoutTag *outLayoutTags)
 {
+	if (scope == kAudioUnitScope_Input)
+	{
+		if (outLayoutTags)
+		{
+			outLayoutTags[0] = kAudioChannelLayoutTag_Mono;
+			outLayoutTags[1] = kAudioChannelLayoutTag_Stereo;
+		}
+		return 2;
+	}
+
 	if (outLayoutTags)
 	{
 		outLayoutTags[0] = kAudioChannelLayoutTag_Mono;
@@ -417,7 +428,18 @@ OSStatus AUHAL::doPlayback(const AudioTimeStamp* inNow, AudioBufferList* outOutp
 	if (!input)
 		return kAudioUnitErr_InvalidElement;
 
-	result = input->PullInputWithBufferList(flags, *inNow, kOutputBus, nFrames, outOutputData);
+	AudioTimeStamp renderTs = {0};
+	if (inOutputTime && (inOutputTime->mFlags & kAudioTimeStampHostTimeValid))
+		renderTs = *inOutputTime;
+	else if (inNow && (inNow->mFlags & kAudioTimeStampHostTimeValid))
+		renderTs = *inNow;
+	else
+	{
+		renderTs.mFlags = kAudioTimeStampHostTimeValid;
+		renderTs.mHostTime = AudioGetCurrentHostTime();
+	}
+
+	result = input->PullInputWithBufferList(flags, renderTs, kOutputBus, nFrames, outOutputData);
 
 	if (origChannels == 2 && clientChannels == 1 && result == noErr)
 	{

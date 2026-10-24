@@ -23,6 +23,7 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <pulse/pulseaudio.h>
 #include <CoreAudio/CoreAudioTypes.h>
 #include <CoreAudio/AudioHardware.h>
+#include <CoreAudio/HostTime.h>
 #include "AudioHardwareImplPA.h"
 #include <condition_variable>
 
@@ -48,6 +49,7 @@ protected:
 	bool m_isInput = false;
 
 	bool m_running = false;
+	Float64 m_sampleTime = 0.0;
 	std::recursive_mutex m_stopMutex;
 };
 
