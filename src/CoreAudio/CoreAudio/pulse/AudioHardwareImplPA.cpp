@@ -33,6 +33,7 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <poll.h>
 #include <sys/time.h>
 #include <dirent.h>
 
@@ -250,7 +251,7 @@ void AudioHardwareImplPA::getPAContext(void (^cb)(pa_context*))
 				snprintf(hostSocketPath, sizeof(hostSocketPath), "/Volumes/SystemRoot/run/user/%u/pulse/native", uid);
 				if (access(hostSocketPath, R_OK | W_OK) == 0)
 				{
-					snprintf(serverBuf, sizeof(serverBuf), "/run/user/%u/pulse/native", uid);
+					snprintf(serverBuf, sizeof(serverBuf), "unix:/run/user/%u/pulse/native", uid);
 					server = serverBuf;
 				}
 
@@ -406,9 +407,11 @@ void AudioHardwareImplPA::getPAContext(void (^cb)(pa_context*))
 				// 3. Local /run fallback
 				if (!server)
 				{
-					snprintf(serverBuf, sizeof(serverBuf), "/run/user/%u/pulse/native", uid);
-					if (access(serverBuf, R_OK | W_OK) == 0)
+					char directSocket[512];
+					snprintf(directSocket, sizeof(directSocket), "/run/user/%u/pulse/native", uid);
+					if (access(directSocket, R_OK | W_OK) == 0)
 					{
+						snprintf(serverBuf, sizeof(serverBuf), "unix:%s", directSocket);
 						server = serverBuf;
 					}
 				}
@@ -419,9 +422,9 @@ void AudioHardwareImplPA::getPAContext(void (^cb)(pa_context*))
 					int fd = socket(AF_INET, SOCK_STREAM, 0);
 					if (fd >= 0)
 					{
-						struct timeval tv = {0, 50000}; // 50ms timeout
-						setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-						setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+						int flags = fcntl(fd, F_GETFL, 0);
+						if (flags != -1)
+							fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 						struct sockaddr_in sa;
 						memset(&sa, 0, sizeof(sa));
 						sa.sin_family = AF_INET;
@@ -430,6 +433,19 @@ void AudioHardwareImplPA::getPAContext(void (^cb)(pa_context*))
 						if (connect(fd, (struct sockaddr*)&sa, sizeof(sa)) == 0)
 						{
 							server = "tcp:127.0.0.1:4713";
+						}
+						else if (errno == EINPROGRESS)
+						{
+							struct pollfd pfd = { fd, POLLOUT, 0 };
+							if (poll(&pfd, 1, 50) > 0)
+							{
+								int so_error = 0;
+								socklen_t len = sizeof(so_error);
+								if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len) == 0 && so_error == 0)
+								{
+									server = "tcp:127.0.0.1:4713";
+								}
+							}
 						}
 						close(fd);
 					}

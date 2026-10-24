@@ -62,6 +62,49 @@ bool AUHAL::StreamFormatWritable(AudioUnitScope scope, AudioUnitElement element)
 	return !m_running;
 }
 
+bool AUHAL::ValidFormat(AudioUnitScope inScope, AudioUnitElement inElement, const CAStreamBasicDescription & inNewFormat)
+{
+	return inNewFormat.mFormatID == kAudioFormatLinearPCM && inNewFormat.mSampleRate > 0 && inNewFormat.mChannelsPerFrame > 0;
+}
+
+UInt32 AUHAL::GetChannelLayoutTags(AudioUnitScope scope, AudioUnitElement element, AudioChannelLayoutTag *outLayoutTags)
+{
+	if (outLayoutTags)
+	{
+		outLayoutTags[0] = kAudioChannelLayoutTag_Mono;
+		outLayoutTags[1] = kAudioChannelLayoutTag_Stereo;
+		outLayoutTags[2] = kAudioChannelLayoutTag_Quadraphonic;
+		outLayoutTags[3] = kAudioChannelLayoutTag_AudioUnit_5_1;
+		outLayoutTags[4] = kAudioChannelLayoutTag_AudioUnit_7_1;
+		outLayoutTags[5] = kAudioChannelLayoutTag_UseChannelDescriptions;
+	}
+	return 6;
+}
+
+UInt32 AUHAL::GetAudioChannelLayout(AudioUnitScope scope, AudioUnitElement element, AudioChannelLayout *outLayoutPtr, Boolean &outWritable)
+{
+	outWritable = true;
+	if (outLayoutPtr)
+	{
+		memset(outLayoutPtr, 0, sizeof(AudioChannelLayout));
+		outLayoutPtr->mChannelLayoutTag = m_channelLayoutTag;
+	}
+	return sizeof(AudioChannelLayout);
+}
+
+OSStatus AUHAL::SetAudioChannelLayout(AudioUnitScope scope, AudioUnitElement element, const AudioChannelLayout *inLayout)
+{
+	if (inLayout)
+		m_channelLayoutTag = inLayout->mChannelLayoutTag;
+	return noErr;
+}
+
+OSStatus AUHAL::RemoveAudioChannelLayout(AudioUnitScope scope, AudioUnitElement element)
+{
+	m_channelLayoutTag = kAudioChannelLayoutTag_Stereo;
+	return noErr;
+}
+
 OSStatus AUHAL::Version()
 {
 	return 1;
@@ -72,9 +115,18 @@ OSStatus AUHAL::Render(AudioUnitRenderActionFlags& ioActionFlags, const AudioTim
 {
 	std::unique_lock<std::mutex> lk(m_dataAvailableMutex);
 
-	m_dataAvailableCV.wait(lk, [=]{ return m_dataAvailable; });
+	if (!m_dataAvailableCV.wait_for(lk, std::chrono::milliseconds(500), [=]{ return m_dataAvailable; }))
+	{
+		return kAudioUnitErr_CannotDoInCurrentContext;
+	}
 
-	AudioBufferList& abl = GetOutput(kInputBus)->GetBufferList();
+	AUIOElement* inputBus = GetOutput(kInputBus);
+	if (!inputBus)
+		return kAudioUnitErr_InvalidElement;
+
+	AudioBufferList& abl = inputBus->GetBufferList();
+	if (abl.mNumberBuffers < 1)
+		return kAudioUnitErr_CannotDoInCurrentContext;
 
 	// TODO: Prepare for non-interleaved audio
 	UInt32 howMuch = std::min<UInt32>(abl.mBuffers[0].mDataByteSize, m_bufferUsed);
@@ -265,12 +317,12 @@ OSStatus AUHAL::GetProperty(AudioUnitPropertyID inID, AudioUnitScope inScope, Au
 			if (inElement == kOutputBus)
 			{
 				UInt32 value = m_enableOutput;
-				memcpy(&outData, &value, sizeof(value));
+				memcpy(outData, &value, sizeof(value));
 			}
 			else if (inElement == kInputBus)
 			{
 				UInt32 value = m_enableInput;
-				memcpy(&outData, &value, sizeof(value));
+				memcpy(outData, &value, sizeof(value));
 			}
 			else
 				return kAudioUnitErr_InvalidElement;
@@ -334,6 +386,9 @@ OSStatus AUHAL::doPlayback(const AudioTimeStamp* inNow, AudioBufferList* outOutp
 		return kAudioUnitErr_NoConnection;
 	}
 
+	if (!outOutputData || outOutputData->mNumberBuffers < 1)
+		return kAudioUnitErr_InvalidParameter;
+
 	OSStatus result = noErr;
 	AudioUnitRenderActionFlags flags = kAudioUnitRenderAction_PreRender;
 	const CAStreamBasicDescription& desc = GetStreamFormat(kAudioUnitScope_Input, kOutputBus);
@@ -358,7 +413,11 @@ OSStatus AUHAL::doPlayback(const AudioTimeStamp* inNow, AudioBufferList* outOutp
 	if (nFrames == 0)
 		return noErr;
 
-	result = GetInput(kOutputBus)->PullInputWithBufferList(flags, *inNow, kOutputBus, nFrames, outOutputData);
+	AUInputElement* input = GetInput(kOutputBus);
+	if (!input)
+		return kAudioUnitErr_InvalidElement;
+
+	result = input->PullInputWithBufferList(flags, *inNow, kOutputBus, nFrames, outOutputData);
 
 	if (origChannels == 2 && clientChannels == 1 && result == noErr)
 	{

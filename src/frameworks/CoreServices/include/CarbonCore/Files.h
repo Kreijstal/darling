@@ -80,6 +80,9 @@ OSErr GetForkPhysicalInfo(FSIORefNum forkRefNum, SInt32* fileDescriptor, UInt32*
 
 OSErr FSGetVolumeInfo(FSVolumeRefNum volume, ItemCount volumeIndex, FSVolumeRefNum *actualVolume, FSVolumeInfoBitmap whichInfo, FSVolumeInfo *info, HFSUniStr255 *volumeName, FSRef *rootDirectory);
 
+OSStatus FSCopyObjectSync(const FSRef *source, const FSRef *destinationDir, CFStringRef copyName, FSRef *newRef, OptionBits whichInfo);
+OSStatus FSMoveObjectSync(const FSRef *source, const FSRef *destinationDir, CFStringRef moveName, FSRef *newRef, OptionBits whichInfo);
+
 #ifdef __cplusplus
 }
 #endif
