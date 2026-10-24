@@ -61,7 +61,13 @@ AudioHardwareStreamPA::AudioHardwareStreamPA(AudioHardwareImplPA* hw, AudioDevic
 			pa_stream_state_t state = pa_stream_get_state(s);
 			if (state == PA_STREAM_READY)
 			{
-				pa_stream_cork(s, 0, nullptr, nullptr);
+				if (This->m_running)
+				{
+					pa_operation* op = pa_stream_cork(s, 0, nullptr, nullptr);
+					if (op) pa_operation_unref(op);
+					pa_operation* op2 = pa_stream_trigger(s, nullptr, nullptr);
+					if (op2) pa_operation_unref(op2);
+				}
 			}
 			else if (state == PA_STREAM_FAILED)
 			{
@@ -80,11 +86,14 @@ AudioHardwareStreamPA::AudioHardwareStreamPA(AudioHardwareImplPA* hw, AudioDevic
 			battr.prebuf = uint32_t(-1);
 			battr.tlength = uint32_t(-1);
 
+			pa_cvolume cvol;
+			pa_cvolume_set(&cvol, spec.channels, PA_VOLUME_NORM);
+
 			pa_stream_set_write_callback(m_stream, paStreamWriteCB, this);
 
 			pa_stream_connect_playback(m_stream, nullptr, &battr,
-				pa_stream_flags_t(PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_ADJUST_LATENCY | PA_STREAM_AUTO_TIMING_UPDATE),
-				nullptr, nullptr);
+				pa_stream_flags_t(PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_ADJUST_LATENCY | PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_START_UNMUTED),
+				&cvol, nullptr);
 		}
 		else
 		{
@@ -134,7 +143,18 @@ void AudioHardwareStreamPA::start()
 	m_running = true;
 	if (m_stream)
 	{
-		pa_stream_cork(m_stream, 0, nullptr, nullptr);
+		while (pa_stream_get_state(m_stream) == PA_STREAM_CREATING)
+		{
+			if (loop) loop->wait();
+			else break;
+		}
+		if (pa_stream_get_state(m_stream) == PA_STREAM_READY)
+		{
+			pa_operation* op = pa_stream_cork(m_stream, 0, nullptr, nullptr);
+			if (op) pa_operation_unref(op);
+			pa_operation* op2 = pa_stream_trigger(m_stream, nullptr, nullptr);
+			if (op2) pa_operation_unref(op2);
+		}
 	}
 
 	if (loop) loop->unlock();
@@ -160,13 +180,22 @@ void AudioHardwareStreamPA::paStreamWriteCB(pa_stream* s, size_t length, void* s
 
 	if (!This->m_running)
 	{
-		pa_stream_cork(This->m_stream, 1, nullptr, nullptr);
+		void* pdata = nullptr;
+		size_t rqsize = length;
+		if (pa_stream_begin_write(This->m_stream, &pdata, &rqsize) == 0 && pdata && rqsize > 0)
+		{
+			memset(pdata, 0, rqsize);
+			pa_stream_write(This->m_stream, pdata, rqsize, nullptr, 0, PA_SEEK_RELATIVE);
+		}
 		return;
 	}
 
 	if (pa_stream_is_corked(This->m_stream))
 	{
-		pa_stream_cork(This->m_stream, 0, nullptr, nullptr);
+		pa_operation* op = pa_stream_cork(This->m_stream, 0, nullptr, nullptr);
+		if (op) pa_operation_unref(op);
+		pa_operation* op2 = pa_stream_trigger(This->m_stream, nullptr, nullptr);
+		if (op2) pa_operation_unref(op2);
 	}
 
 	AudioTimeStamp fake = {0};

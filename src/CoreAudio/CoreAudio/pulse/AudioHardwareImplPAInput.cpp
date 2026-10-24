@@ -29,17 +29,32 @@ AudioHardwareImplPAInput::AudioHardwareImplPAInput(AudioObjectID myId)
 OSStatus AudioHardwareImplPAInput::getPropertyData(const AudioObjectPropertyAddress* inAddress, UInt32 inQualifierDataSize,
 	const void* inQualifierData, UInt32* ioDataSize, void* outData)
 {
+	if (inAddress->mSelector == kAudioDevicePropertyStreams)
+	{
+		if (inAddress->mScope == kAudioDevicePropertyScopeInput || inAddress->mScope == kAudioObjectPropertyScopeGlobal)
+		{
+			if (AudioStreamID* sid = static_cast<AudioStreamID*>(outData); sid && *ioDataSize >= sizeof(AudioStreamID))
+			{
+				*sid = 1;
+			}
+			*ioDataSize = sizeof(AudioStreamID);
+			return kAudioHardwareNoError;
+		}
+		*ioDataSize = 0;
+		return kAudioHardwareNoError;
+	}
+
 	if (inAddress->mSelector == kAudioDevicePropertyStreamConfiguration)
 	{
 		size_t size = sizeof(AudioBufferList);
 
-		if (inAddress->mScope == kAudioDevicePropertyScopeOutput)
+		if (inAddress->mScope == kAudioDevicePropertyScopeInput)
 			size += 1* sizeof(AudioBuffer);
 
 		// Number of returned buffers is the number of channels
 		if (AudioBufferList* abl = static_cast<AudioBufferList*>(outData); abl && *ioDataSize >= size)
 		{
-			if (inAddress->mScope == kAudioDevicePropertyScopeOutput)
+			if (inAddress->mScope == kAudioDevicePropertyScopeInput)
 			{
 				abl->mNumberBuffers = 1;
 				abl->mBuffers[0].mNumberChannels = 2;

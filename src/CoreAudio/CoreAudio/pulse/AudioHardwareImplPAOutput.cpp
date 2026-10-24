@@ -29,6 +29,33 @@ AudioHardwareImplPAOutput::AudioHardwareImplPAOutput(AudioObjectID myId, const c
 OSStatus AudioHardwareImplPAOutput::getPropertyData(const AudioObjectPropertyAddress* inAddress, UInt32 inQualifierDataSize,
 	const void* inQualifierData, UInt32* ioDataSize, void* outData)
 {
+	if (inAddress->mSelector == kAudioDevicePropertyStreams)
+	{
+		if (inAddress->mScope == kAudioDevicePropertyScopeOutput || inAddress->mScope == kAudioObjectPropertyScopeGlobal)
+		{
+			if (AudioStreamID* sid = static_cast<AudioStreamID*>(outData); sid && *ioDataSize >= sizeof(AudioStreamID))
+			{
+				*sid = 1;
+			}
+			*ioDataSize = sizeof(AudioStreamID);
+			return kAudioHardwareNoError;
+		}
+		*ioDataSize = 0;
+		return kAudioHardwareNoError;
+	}
+	if (inAddress->mSelector == kAudioDevicePropertyPreferredChannelLayout)
+	{
+		size_t size = sizeof(AudioChannelLayout);
+		if (outData && *ioDataSize >= size)
+		{
+			AudioChannelLayout* acl = static_cast<AudioChannelLayout*>(outData);
+			memset(acl, 0, size);
+			acl->mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;
+		}
+		*ioDataSize = size;
+		return kAudioHardwareNoError;
+	}
+
 	if (inAddress->mSelector == kAudioDevicePropertyStreamConfiguration)
 	{
 		size_t size = sizeof(AudioBufferList);

@@ -26,6 +26,7 @@ typedef void (^AudioObjectPropertyListenerBlock)(UInt32 inNumberAddresses,
 #endif
 
 typedef AudioObjectID AudioDeviceID;
+typedef AudioObjectID AudioStreamID;
 
 enum
 {
