@@ -47,6 +47,7 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include "prefix-state.h"
 #include "profile-prefix.h"
 #include "proc-dir.h"
+#include "trustd-account.h"
 
 // Between Linux 4.9 and 4.11, a strange bug has been introduced
 // which prevents connecting to Unix sockets if the socket was
@@ -2032,6 +2033,11 @@ int main(int argc, char ** argv)
 	ensureCupsSymlink(prefix);
 	ensureKeychains(prefix);
 	ensureSystemVersion(prefix);
+	if (darlingEnsureTrustdAccount(prefix) < 0)
+	{
+		fprintf(stderr, "Cannot initialize the prefix _trustd identity: %s\n", strerror(errno));
+		return 1;
+	}
 	restoreRootIds();
 
 	int c;
