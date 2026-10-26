@@ -634,3 +634,9 @@ if (COMPONENT_jsc)
 endif()
 
 #add_subdirectory(external/WebCore)
+
+# Fallback images must be registered after every implemented framework target.
+if(COMPONENT_gui_stubs)
+    set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "gui_stubs")
+    add_subdirectory(frameworks/load-only)
+endif()
