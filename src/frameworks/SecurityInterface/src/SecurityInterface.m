@@ -67,3 +67,9 @@ void* _CommonCocoaPanels_SecEditTrustSheet(void) {
     if (verbose) puts("STUB: _CommonCocoaPanels_SecEditTrustSheet called");
     return NULL;
 }
+
+@interface SFCertificateData : NSObject
+@end
+
+@implementation SFCertificateData
+@end

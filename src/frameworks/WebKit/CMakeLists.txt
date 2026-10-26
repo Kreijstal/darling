@@ -17,6 +17,7 @@ add_framework(WebKit
     FAT
     CURRENT_VERSION
     VERSION ${FRAMEWORK_VERSION}
+    LINK_FLAGS "-Wl,-reexport_library,${CMAKE_BINARY_DIR}/src/external/objc4/runtime/libobjc.A.dylib"
 
     SOURCES
         src/WebKit.m
@@ -54,6 +55,7 @@ add_framework(WebKit
         src/WebView.m
         src/WebDownload.m
         src/WebHistory.m
+        src/WebHistoryItem.m
         src/WebPolicyDelegate.m
         src/WebScriptObject.m
         src/WKCustomProtocolLoader.m

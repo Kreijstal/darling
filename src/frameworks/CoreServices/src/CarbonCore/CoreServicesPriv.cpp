@@ -9,3 +9,16 @@ Boolean _CSCheckFix(CFStringRef str)
 	return 0;
 }
 
+extern "C" int _CSGetProcessorArchitecture(void)
+{
+#if defined(__x86_64__)
+	return 0x01000007; // CPU_TYPE_X86_64
+#elif defined(__i386__)
+	return 7; // CPU_TYPE_I386
+#elif defined(__arm64__) || defined(__aarch64__)
+	return 0x0100000c; // CPU_TYPE_ARM64
+#else
+	return 7;
+#endif
+}
+

@@ -30,3 +30,4 @@ _nextafterd
 _nextafterf
 _remquo
 _remquo$fenv_access_off
+__CSGetProcessorArchitecture
