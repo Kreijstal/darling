@@ -237,7 +237,8 @@
 	url = ../darling-Heimdal.git
 [submodule "src/external/cocotron"]
 	path = src/external/cocotron
-	url = ../darling-cocotron.git
+	url = https://github.com/Kreijstal/darling-cocotron.git
+	branch = ios
 [submodule "src/external/libtelnet"]
 	path = src/external/libtelnet
 	url = ../darling-libtelnet.git
@@ -393,7 +394,8 @@
 	url = ../darling-Libsystem.git
 [submodule "src/external/dyld"]
 	path = src/external/dyld
-	url = ../darling-dyld.git
+	url = https://github.com/Kreijstal/darling-dyld.git
+	branch = ios
 [submodule "src/external/AvailabilityVersions"]
 	path = src/external/AvailabilityVersions
 	url = ../darling-AvailabilityVersions
