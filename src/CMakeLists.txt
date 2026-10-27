@@ -548,6 +548,7 @@ if (COMPONENT_gui)
 	add_subdirectory(external/cups)
 	add_subdirectory(pboard)
 	add_subdirectory(frontboardd)
+	add_subdirectory(SpringBoard)
 
 	# /Applications
 	add_subdirectory(external/TextEdit)
