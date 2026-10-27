@@ -458,7 +458,8 @@
 	url = ../darling-metal.git
 [submodule "src/external/xnu"]
 	path = src/external/xnu
-	url = ../darling-xnu.git
+	url = https://github.com/Kreijstal/darling-xnu.git
+	branch = ios
 [submodule "src/external/libpcap"]
 	path = src/external/libpcap
 	url = ../darling-libpcap.git
