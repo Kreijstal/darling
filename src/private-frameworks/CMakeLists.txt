@@ -77,6 +77,8 @@ if (COMPONENT_system)
 	add_subdirectory(FrontBoardServices)
 	add_subdirectory(GraphicsServices)
 	add_subdirectory(RunningBoardServices)
+	add_subdirectory(SpringBoardServices)
+	add_subdirectory(WebKitLegacy)
 endif()
 
 # this is for all the other stubbed frameworks
