@@ -20,26 +20,105 @@
 #import <StoreKit/SKPaymentQueue.h>
 #import <darling-stub-forwarding.h>
 
-@implementation SKPaymentQueue
+extern NSString *const SKErrorDomain;
 
-- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
-{
-    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+@implementation SKPaymentQueue {
+    NSMutableArray *_observers;
 }
 
-- (void)forwardInvocation:(NSInvocation *)anInvocation
++ (instancetype)defaultQueue
 {
-    DarlingStubForwardInvocation(self, anInvocation);
+    static SKPaymentQueue *queue;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        queue = [[SKPaymentQueue alloc] init];
+    });
+    return queue;
 }
 
-+ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
++ (BOOL)canMakePayments
 {
-    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+    return NO;
 }
 
-+ (void)forwardInvocation:(NSInvocation *)anInvocation
+- (instancetype)init
 {
-    DarlingStubForwardInvocation(self, anInvocation);
+    if ((self = [super init]) != nil)
+        _observers = [[NSMutableArray alloc] init];
+    return self;
+}
+
+- (void)dealloc
+{
+    [_observers release];
+    [super dealloc];
+}
+
+- (NSArray *)transactions
+{
+    return @[];
+}
+
+// Observers are not retained, as on iOS.
+- (void)addTransactionObserver:(id)observer
+{
+    if (observer != nil && [_observers indexOfObjectIdenticalTo:observer] == NSNotFound)
+        [_observers addObject:[NSValue valueWithNonretainedObject:observer]];
+}
+
+- (void)removeTransactionObserver:(id)observer
+{
+    for (NSValue *value in [[_observers copy] autorelease])
+        if ([value nonretainedObjectValue] == observer)
+            [_observers removeObject:value];
+}
+
+- (void)addPayment:(SKPayment *)payment
+{
+    NSLog(@"SKPaymentQueue: there is no App Store to buy %@ from", payment);
+}
+
+- (void)restoreCompletedTransactions
+{
+    NSError *error = [NSError errorWithDomain:SKErrorDomain code:0 userInfo:@{ NSLocalizedDescriptionKey: @"Cannot connect to the App Store." }];
+    NSArray *observers = [[_observers copy] autorelease];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        for (NSValue *value in observers) {
+            id observer = [value nonretainedObjectValue];
+            if ([observer respondsToSelector:@selector(paymentQueue:restoreCompletedTransactionsFailedWithError:)])
+                [observer paymentQueue:self restoreCompletedTransactionsFailedWithError:error];
+        }
+    });
+}
+
+- (void)restoreCompletedTransactionsWithApplicationUsername:(NSString *)username
+{
+    [self restoreCompletedTransactions];
+}
+
+- (void)finishTransaction:(SKPaymentTransaction *)transaction
+{
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)selector
+{
+    return [super methodSignatureForSelector:selector] ?: DarlingStubMethodSignature(selector);
+}
+
+- (void)forwardInvocation:(NSInvocation *)invocation
+{
+    DarlingStubForwardInvocation(self, invocation);
+}
+
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)selector
+{
+    return [super methodSignatureForSelector:selector] ?: DarlingStubMethodSignature(selector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)invocation
+{
+    DarlingStubForwardInvocation(self, invocation);
 }
 
 @end
