@@ -202,14 +202,17 @@ int main(int argc, char ** argv)
 	unsetenv("DARLING_ROOTLESS");
 
 	{
-		char exePath[4096], installPrefix[4096];
+		char exePath[4096], defaultPrefix[4096], installPrefix[4096];
 		ssize_t len = readlink("/proc/self/exe", exePath, sizeof(exePath) - 1);
 
 		exePath[len > 0 ? len : 0] = '\0';
-		if (!launcherInstallPrefix(g_mode, INSTALL_PREFIX, len > 0 ? exePath : NULL, installPrefix, sizeof(installPrefix))
+		if (!launcherInstallPrefix(g_mode, INSTALL_PREFIX, len > 0 ? exePath : NULL, defaultPrefix, sizeof(defaultPrefix))
+			|| !launcherHostPath(g_mode, defaultPrefix, getenv("DARLING_INSTALL_PREFIX"), installPrefix, sizeof(installPrefix))
 			|| snprintf(g_serverPath, sizeof(g_serverPath), "%s/bin/darlingserver", installPrefix) >= (int) sizeof(g_serverPath)
 			|| snprintf(g_libexecPath, sizeof(g_libexecPath), "%s/libexec/darling", installPrefix) >= (int) sizeof(g_libexecPath)
-			|| snprintf(g_mldrPath, sizeof(g_mldrPath), "%s/usr/libexec/darling/mldr", g_libexecPath) >= (int) sizeof(g_mldrPath))
+			|| snprintf(g_mldrPath, sizeof(g_mldrPath), "%s/usr/libexec/darling/mldr", g_libexecPath) >= (int) sizeof(g_mldrPath)
+			|| !launcherHostPath(g_mode, g_serverPath, getenv("DARLING_SERVER_PATH"), g_serverPath, sizeof(g_serverPath))
+			|| !launcherHostPath(g_mode, g_mldrPath, getenv("DARLING_MLDR_PATH"), g_mldrPath, sizeof(g_mldrPath)))
 		{
 			fprintf(stderr, "The installation path is too long.\n");
 			return 1;

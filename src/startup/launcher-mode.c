@@ -73,6 +73,23 @@ bool launcherInstallPrefix(enum launcher_mode mode, const char* compiledPrefix, 
 	return true;
 }
 
+bool launcherHostPath(enum launcher_mode mode, const char* defaultPath,
+	const char* overridePath, char* out, size_t size)
+{
+	const char* selected = defaultPath;
+	if (mode != LAUNCHER_MODE_ROOT && mode != LAUNCHER_MODE_ROOTLESS && mode != LAUNCHER_MODE_NONROOT)
+		return false;
+	if (mode != LAUNCHER_MODE_ROOT && overridePath != NULL && overridePath[0] != '\0')
+		selected = overridePath;
+	if (selected == NULL || out == NULL || size == 0)
+		return false;
+	size_t length = strlen(selected);
+	if (length >= size)
+		return false;
+	memmove(out, selected, length + 1);
+	return true;
+}
+
 const char* launcherPickLoginName(const char* login, const char* userEnv, bool userEnvIsUid,
 	const char* lognameEnv, bool lognameEnvIsUid, const char* fallback)
 {

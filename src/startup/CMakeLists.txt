@@ -109,6 +109,10 @@ add_executable(launcher_mode_test ${CMAKE_SOURCE_DIR}/tests/launcher/mode.c laun
 target_include_directories(launcher_mode_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME launcher_mode COMMAND launcher_mode_test)
 
+add_executable(launcher_host_path_test ${CMAKE_SOURCE_DIR}/tests/launcher/host-path.c launcher-mode.c)
+target_include_directories(launcher_host_path_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME launcher_host_path COMMAND launcher_host_path_test)
+
 # how the rootless launcher examines and joins the container's namespaces
 add_executable(launcher_rootless_ns_test ${CMAKE_SOURCE_DIR}/tests/launcher/rootless-ns.c launcher-server.c)
 target_include_directories(launcher_rootless_ns_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

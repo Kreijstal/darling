@@ -83,6 +83,12 @@ enum launcher_mode launcherSelectMode(bool privileged, const char* nonRoot, cons
 // compiledPrefix. Writes the result into out; returns false if it does not fit.
 bool launcherInstallPrefix(enum launcher_mode mode, const char* compiledPrefix, const char* exePath, char* out, size_t size);
 
+// Unprivileged hosts may keep their runtime and native programs in separate
+// directories. An environment override is ignored in root mode. Copies the
+// selected path without truncation; out may also be defaultPath.
+bool launcherHostPath(enum launcher_mode mode, const char* defaultPath,
+	const char* overridePath, char* out, size_t size);
+
 // The user name to give the container for uid. login is what getpwuid(uid) found
 // (NULL if nothing), userEnv and lognameEnv are $USER and $LOGNAME, userEnvIsUid and
 // lognameEnvIsUid say whether the passwd entry of that name has this uid, and fallback

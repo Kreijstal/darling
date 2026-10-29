@@ -1,3 +1,41 @@
+#if defined(__ANDROID__)
+#include <fcntl.h>
+#include <unistd.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+static const char* _darling_get_shm_dir(void) {
+	// A host directory: TMPDIR may be the guest's.
+	const char* dir = getenv("DARLING_SHM_DIR");
+	if (dir && dir[0]) return dir;
+	const char* tmp = getenv("TMPDIR");
+	if (tmp && tmp[0]) return tmp;
+	const char* pfx = getenv("TERMUX_PREFIX");
+	if (!pfx || !pfx[0]) pfx = getenv("PREFIX");
+#ifdef TERMUX_PREFIX
+	if (!pfx || !pfx[0]) pfx = TERMUX_PREFIX;
+#endif
+	if (pfx && pfx[0]) {
+		static char buf[PATH_MAX];
+		snprintf(buf, sizeof(buf), "%s/tmp", pfx);
+		if (access(buf, W_OK) == 0)
+			return buf;
+	}
+	return "/tmp";
+}
+static int darling_android_shm_open(const char *name, int oflag, mode_t mode) {
+	char path[PATH_MAX];
+	if (name[0] == '/') name++;
+	snprintf(path, sizeof(path), "%s/shm-%s", _darling_get_shm_dir(), name);
+	return open(path, oflag | O_CLOEXEC, mode);
+}
+static int darling_android_shm_unlink(const char *name) {
+	char path[PATH_MAX];
+	if (name[0] == '/') name++;
+	snprintf(path, sizeof(path), "%s/shm-%s", _darling_get_shm_dir(), name);
+	return unlink(path);
+}
+#endif
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -121,8 +159,13 @@ void elfcalls_make(struct elf_calls* calls)
 	*((void**)&calls->sem_close) = sem_close;
 	*((void**)&calls->sem_unlink) = sem_unlink;
 
+#if defined(__ANDROID__)
+	*((void**)&calls->shm_open) = darling_android_shm_open;
+	*((void**)&calls->shm_unlink) = darling_android_shm_unlink;
+#else
 	*((void**)&calls->shm_open) = shm_open;
 	*((void**)&calls->shm_unlink) = shm_unlink;
+#endif
 
 	calls->dserver_socket_address = __dserver_socket_address;
 	calls->dserver_per_thread_socket = __darling_thread_rpc_socket;
