@@ -549,6 +549,7 @@ if (COMPONENT_gui)
 	add_subdirectory(pboard)
 	add_subdirectory(frontboardd)
 	add_subdirectory(SpringBoard)
+	add_subdirectory(CydiaSubstrate)
 
 	# /Applications
 	add_subdirectory(external/TextEdit)
