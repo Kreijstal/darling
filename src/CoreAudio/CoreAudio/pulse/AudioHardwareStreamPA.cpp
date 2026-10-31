@@ -26,6 +26,7 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <type_traits>
 #include <limits>
+#include <unistd.h>
 
 AudioHardwareStreamPA::AudioHardwareStreamPA(AudioHardwareImplPA* hw, AudioDeviceIOProc callback, void* clientData, bool isInput)
 : AudioHardwareStream(hw, isInput), m_paHw(hw), m_callback(callback), m_clientData(clientData), m_isInput(isInput)
@@ -79,12 +80,15 @@ AudioHardwareStreamPA::AudioHardwareStreamPA(AudioHardwareImplPA* hw, AudioDevic
 
 		if (!isInput)
 		{
+			// A few periods of latency, as a device's IOProc has: PulseAudio's default
+			// is about two seconds.
+			const uint32_t period = m_bufferSize ? m_bufferSize : 4096;
 			struct pa_buffer_attr battr;
 			battr.fragsize = uint32_t(-1);
 			battr.maxlength = uint32_t(-1);
-			battr.minreq = uint32_t(-1);
+			battr.minreq = period;
 			battr.prebuf = 0;
-			battr.tlength = uint32_t(-1);
+			battr.tlength = period * 3;
 
 			pa_cvolume cvol;
 			pa_cvolume_set(&cvol, spec.channels, PA_VOLUME_NORM);
@@ -117,11 +121,17 @@ AudioHardwareStreamPA::AudioHardwareStreamPA(AudioHardwareImplPA* hw, AudioDevic
 
 AudioHardwareStreamPA::~AudioHardwareStreamPA()
 {
+	stopRendering();
+
 	PAThreadedMainLoop* loop = m_paHw ? m_paHw->loop() : nullptr;
 	if (loop) loop->lock();
 
 	if (m_stream)
 	{
+		// PulseAudio's thread may still report on the stream after this is gone.
+		pa_stream_set_state_callback(m_stream, nullptr, nullptr);
+		pa_stream_set_write_callback(m_stream, nullptr, nullptr);
+		pa_stream_set_read_callback(m_stream, nullptr, nullptr);
 		pa_stream_disconnect(m_stream);
 		pa_stream_unref(m_stream);
 		m_stream = nullptr;
@@ -132,6 +142,17 @@ AudioHardwareStreamPA::~AudioHardwareStreamPA()
 
 void AudioHardwareStreamPA::start()
 {
+	if (!m_isInput && !m_renderThreadStarted)
+	{
+		m_rendering = true;
+		m_renderThreadStarted = pthread_create(&m_renderThread, nullptr, renderThread, this) == 0;
+		if (!m_renderThreadStarted)
+		{
+			m_rendering = false;
+			std::cerr << "[CoreAudio PA] Cannot start the render thread\n";
+		}
+	}
+
 	PAThreadedMainLoop* loop = m_paHw ? m_paHw->loop() : nullptr;
 	if (loop) loop->lock();
 
@@ -152,6 +173,7 @@ void AudioHardwareStreamPA::start()
 			if (op2) pa_operation_unref(op2);
 		}
 	}
+	if (loop) loop->signal(0);
 
 	if (loop) loop->unlock();
 }
@@ -168,95 +190,113 @@ void AudioHardwareStreamPA::stop()
 	}
 
 	if (loop) loop->unlock();
+
+	stopRendering();
 }
 
+void AudioHardwareStreamPA::stopRendering()
+{
+	if (!m_renderThreadStarted)
+		return;
+	m_rendering = false;
+	m_renderThreadStarted = false;
+	if (PAThreadedMainLoop* loop = m_paHw ? m_paHw->loop() : nullptr)
+	{
+		loop->lock();
+		loop->signal(0);
+		loop->unlock();
+	}
+	// The IOProc may stop the device itself, on the render thread.
+	if (pthread_equal(pthread_self(), m_renderThread))
+		pthread_detach(m_renderThread);
+	else
+		pthread_join(m_renderThread, nullptr);
+}
+
+void* AudioHardwareStreamPA::renderThread(void* self)
+{
+	pthread_setname_np("CoreAudio render");
+	static_cast<AudioHardwareStreamPA*>(self)->render();
+	return nullptr;
+}
+
+// Renders a period at a time, and writes it as the stream takes it. When the
+// IOProc is late, PulseAudio plays silence (prebuf is 0) and then goes on.
+void AudioHardwareStreamPA::render()
+{
+	const size_t period = m_bufferSize ? m_bufferSize : 4096;
+	std::vector<uint8_t> chunk(period);
+	AudioBufferList* abl = static_cast<AudioBufferList*>(alloca(sizeof(AudioBufferList) + sizeof(AudioBuffer)));
+	const UInt32 bpf = m_paHw->asbd().mBytesPerFrame ? m_paHw->asbd().mBytesPerFrame : 8;
+	PAThreadedMainLoop* loop = m_paHw->loop();
+
+	if (!loop || !m_stream)
+		return;
+
+	while (m_rendering)
+	{
+		loop->lock();
+		while (m_rendering && !m_running)
+			loop->wait();
+		loop->unlock();
+		if (!m_rendering)
+			break;
+
+		AudioTimeStamp nowTs = {0};
+		nowTs.mFlags = kAudioTimeStampHostTimeValid | kAudioTimeStampSampleTimeValid;
+		nowTs.mHostTime = AudioGetCurrentHostTime();
+		nowTs.mSampleTime = m_sampleTime;
+		AudioTimeStamp outTs = nowTs;
+
+		abl->mNumberBuffers = 1;
+		abl->mBuffers[0].mNumberChannels = m_paHw->asbd().mChannelsPerFrame ? m_paHw->asbd().mChannelsPerFrame : 2;
+		abl->mBuffers[0].mData = chunk.data();
+		abl->mBuffers[0].mDataByteSize = period;
+
+		OSStatus status = m_callback(m_paHw->id(), &nowTs, nullptr, nullptr, abl, &outTs, m_clientData);
+		m_sampleTime += (Float64)(period / bpf);
+
+		if (status != noErr || !abl->mBuffers[0].mDataByteSize)
+			memset(chunk.data(), 0, period);
+		else if (abl->mBuffers[0].mDataByteSize < period)
+			memset(chunk.data() + abl->mBuffers[0].mDataByteSize, 0, period - abl->mBuffers[0].mDataByteSize);
+		abl->mBuffers[0].mDataByteSize = period;
+
+		if (m_convertSignedUnsigned)
+			transformSignedUnsigned(abl);
+
+		loop->lock();
+		for (size_t done = 0; done < period && m_running && m_rendering; )
+		{
+			if (pa_stream_get_state(m_stream) != PA_STREAM_READY)
+			{
+				if (!PA_STREAM_IS_GOOD(pa_stream_get_state(m_stream)))
+					break;
+				loop->wait();
+				continue;
+			}
+			size_t writable = pa_stream_writable_size(m_stream);
+			if (writable == (size_t) -1)
+				break;
+			if (writable == 0)
+			{
+				loop->wait();
+				continue;
+			}
+			size_t n = std::min(writable, period - done);
+			if (pa_stream_write(m_stream, chunk.data() + done, n, nullptr, 0, PA_SEEK_RELATIVE) < 0)
+				break;
+			done += n;
+		}
+		loop->unlock();
+	}
+}
+
+// On PulseAudio's thread: only libpulse (see m_rendering).
 void AudioHardwareStreamPA::paStreamWriteCB(pa_stream* s, size_t length, void* self)
 {
 	AudioHardwareStreamPA* This = static_cast<AudioHardwareStreamPA*>(self);
-
-	if (!This->m_running)
-	{
-		void* pdata = nullptr;
-		size_t rqsize = length;
-		if (pa_stream_begin_write(This->m_stream, &pdata, &rqsize) == 0 && pdata && rqsize > 0)
-		{
-			memset(pdata, 0, rqsize);
-			pa_stream_write(This->m_stream, pdata, rqsize, nullptr, 0, PA_SEEK_RELATIVE);
-		}
-		return;
-	}
-
-	if (pa_stream_is_corked(This->m_stream))
-	{
-		pa_operation* op = pa_stream_cork(This->m_stream, 0, nullptr, nullptr);
-		if (op) pa_operation_unref(op);
-		pa_operation* op2 = pa_stream_trigger(This->m_stream, nullptr, nullptr);
-		if (op2) pa_operation_unref(op2);
-	}
-
-	AudioTimeStamp nowTs = {0};
-	nowTs.mFlags = kAudioTimeStampHostTimeValid | kAudioTimeStampSampleTimeValid;
-	nowTs.mHostTime = AudioGetCurrentHostTime();
-	nowTs.mSampleTime = This->m_sampleTime;
-
-	AudioTimeStamp outTs = nowTs;
-	AudioBufferList* abl = static_cast<AudioBufferList*>(alloca(sizeof(AudioBufferList) + sizeof(AudioBuffer)));
-
-	size_t done = 0;
-
-	while (done < length && This->m_running)
-	{
-		abl->mNumberBuffers = 1;
-		abl->mBuffers[0].mNumberChannels = This->m_paHw->asbd().mChannelsPerFrame ? This->m_paHw->asbd().mChannelsPerFrame : 2;
-
-		size_t rqsize = std::min<UInt32>(This->m_bufferSize, length - done);
-		void* pdata = nullptr;
-		int err = pa_stream_begin_write(This->m_stream, &pdata, &rqsize);
-		if (err < 0 || !pdata || rqsize == 0)
-		{
-			if (err < 0)
-			{
-				std::cerr << "[CoreAudio PA] pa_stream_begin_write failed: " << err << std::endl;
-				pa_stream_cork(This->m_stream, true, nullptr, nullptr);
-			}
-			break;
-		}
-
-		abl->mBuffers[0].mData = pdata;
-		abl->mBuffers[0].mDataByteSize = rqsize;
-
-		OSStatus status = This->m_callback(This->m_paHw->id(), &nowTs, nullptr, nullptr, abl, &outTs, This->m_clientData);
-
-		UInt32 bpf = This->m_paHw->asbd().mBytesPerFrame ? This->m_paHw->asbd().mBytesPerFrame : 8;
-		This->m_sampleTime += (Float64)(rqsize / bpf);
-
-		if (status != noErr || !abl->mBuffers[0].mDataByteSize)
-		{
-			memset(pdata, 0, rqsize);
-		}
-		else if (abl->mBuffers[0].mDataByteSize < rqsize)
-		{
-			memset((uint8_t*)pdata + abl->mBuffers[0].mDataByteSize, 0, rqsize - abl->mBuffers[0].mDataByteSize);
-		}
-
-		if (This->m_convertSignedUnsigned)
-			This->transformSignedUnsigned(abl);
-
-		int rv = pa_stream_write(This->m_stream, pdata, rqsize, nullptr, 0, PA_SEEK_RELATIVE);
-		if (rv != 0)
-		{
-			std::cerr << "[CoreAudio PA] pa_stream_write failed: " << rv << std::endl;
-			break;
-		}
-
-		if (!This->m_running)
-		{
-			pa_stream_cork(This->m_stream, true, nullptr, nullptr);
-			break;
-		}
-
-		done += rqsize;
-	}
+	pa_threaded_mainloop_signal(This->m_paHw->loop()->get(), 0);
 }
 
 void AudioHardwareStreamPA::paStreamReadCB(pa_stream* s, size_t length, void* self)

@@ -26,6 +26,8 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <CoreAudio/HostTime.h>
 #include "AudioHardwareImplPA.h"
 #include <condition_variable>
+#include <atomic>
+#include <pthread.h>
 
 class AudioHardwareStreamPA : public AudioHardwareStream
 {
@@ -39,6 +41,9 @@ protected:
 	void transformSignedUnsigned(AudioBufferList* abl) const;
 	static void paStreamWriteCB(pa_stream* s, size_t length, void* self);
 	static void paStreamReadCB(pa_stream* s, size_t length, void* self);
+	static void* renderThread(void* self);
+	void render();
+	void stopRendering();
 protected:
 	AudioHardwareImplPA* m_paHw = nullptr;
 	AudioDeviceIOProc m_callback;
@@ -48,9 +53,17 @@ protected:
 	bool m_convertSignedUnsigned = false;
 	bool m_isInput = false;
 
-	bool m_running = false;
+	std::atomic<bool> m_running{false};
 	Float64 m_sampleTime = 0.0;
 	std::recursive_mutex m_stopMutex;
+
+	// Output is rendered by a thread of ours, which writes to the stream under the main
+	// loop's lock as it takes data, as libpulse's threaded main loop intends. PulseAudio's
+	// thread is not a Darwin thread, so Darwin code (the IOProc, malloc, locks) must not
+	// run on it: its write callback only wakes the render thread.
+	std::atomic<bool> m_rendering{false};
+	pthread_t m_renderThread;
+	bool m_renderThreadStarted = false;
 };
 
 #endif /* AUDIOHARDWARESTREAMPA_H */
