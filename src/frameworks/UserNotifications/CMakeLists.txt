@@ -16,6 +16,8 @@ generate_sdk_framework(UserNotifications
     HEADER "include/UserNotifications"
 )
 
+set_source_files_properties(src/UNUserNotifications.m src/UNLite.m PROPERTIES COMPILE_FLAGS -fobjc-arc)
+
 add_framework(UserNotifications
 	FAT
 	CURRENT_VERSION
@@ -23,6 +25,8 @@ add_framework(UserNotifications
 
 	SOURCES
 		src/UserNotifications.m
+		src/UNUserNotifications.m
+		src/UNLite.m
 		src/UNLocalizedStringFactory.m
 		src/UNNotificationTrigger.m
 		src/UNCalendarNotificationTrigger.m

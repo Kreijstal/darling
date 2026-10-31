@@ -42,6 +42,7 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/wait.h>
 #include <sysexits.h>
 #include <sys/auxv.h>
+#include <sys/resource.h>
 #include "../shellspawn/shellspawn.h"
 #include "darling.h"
 #include "darling-config.h"
@@ -226,6 +227,18 @@ int main(int argc, char ** argv)
 	}
 	g_originalUid = g_invokingIds.uid;
 	g_originalGid = g_invokingIds.gid;
+
+	// mldr and darlingserver raise the soft core limit to the hard one, so
+	// that a guest that crashes leaves a core. Where that is not wanted (a
+	// phone's app storage), DARLING_NO_CORE_DUMPS lowers both to 0 here, for
+	// everything this starts.
+	if (getenv("DARLING_NO_CORE_DUMPS") != NULL)
+	{
+		struct rlimit no_core = { 0, 0 };
+		if (setrlimit(RLIMIT_CORE, &no_core) != 0)
+			fprintf(stderr, "Cannot turn core dumps off: %s\n", strerror(errno));
+	}
+
 
 	// darlingserver must start with real root ids, and creating namespaces needs
 	// them as well. From here on the launcher is fully root, so every step that

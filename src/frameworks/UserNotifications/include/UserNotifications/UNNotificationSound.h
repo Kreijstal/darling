@@ -42,6 +42,8 @@ typedef NSString *UNNotificationSoundName;
 @property(readonly) float audioVolume;
 @property(readonly, getter=isCritical) BOOL critical;
 
+@property(readonly, copy) UNNotificationSoundName name;
+
 @end
 
 #endif

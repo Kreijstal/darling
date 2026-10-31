@@ -19,6 +19,7 @@
 */
 
 #import <UserNotifications/UNCalendarNotificationTrigger.h>
+#import "UNLite.h"
 
 @implementation UNCalendarNotificationTrigger
 
@@ -45,8 +46,7 @@
 
 - (NSDate *)nextTriggerDate
 {
-    NSCalendar *calendar = [NSCalendar currentCalendar];
-    return [calendar dateFromComponents:_dateComponents];
+    return UNLiteNextDateMatching(_dateComponents, [NSDate date]);
 }
 
 - (id)copyWithZone:(NSZone *)zone

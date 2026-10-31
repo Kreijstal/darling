@@ -23,6 +23,22 @@
 
 #import <Foundation/Foundation.h>
 
+extern NSString * const UNErrorDomain;
+
+typedef NS_ENUM(NSInteger, UNErrorCode) {
+    UNErrorCodeNotificationsNotAllowed = 1,
+    UNErrorCodeAttachmentInvalidURL = 100,
+    UNErrorCodeAttachmentUnrecognizedType,
+    UNErrorCodeAttachmentInvalidFileSize,
+    UNErrorCodeAttachmentNotInDataStore,
+    UNErrorCodeAttachmentMoveIntoDataStoreFailed,
+    UNErrorCodeAttachmentCorrupt,
+    UNErrorCodeNotificationInvalidNoDate = 1400,
+    UNErrorCodeNotificationInvalidNoContent,
+    UNErrorCodeContentProvidingObjectNotAllowed = 1500,
+    UNErrorCodeContentProvidingInvalid,
+};
+
 @protocol UNUserNotificationCenterDelegate;
 @class UNUserNotificationCenter, UNNotificationSettings, UNNotificationRequest, UNNotificationCategory, UNNotification, UNNotificationResponse;
 

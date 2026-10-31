@@ -19,6 +19,7 @@
 */
 
 #import <UserNotifications/UNUserNotificationCenter.h>
+#import "UNLite.h"
 #import <UserNotifications/UNNotificationSettings.h>
 #import <UserNotifications/UNNotificationRequest.h>
 #import <UserNotifications/UNNotificationContent.h>
@@ -135,7 +136,7 @@ static xpc_connection_t get_usernoted_connection(void)
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        s_currentCenter = [[UNUserNotificationCenter alloc] init];
+        s_currentCenter = DarlingUNLiteBackendRequested() ? [DarlingUNLiteDefaultCenter() retain] : [[UNUserNotificationCenter alloc] init];
     });
     return s_currentCenter;
 }
@@ -144,7 +145,8 @@ static xpc_connection_t get_usernoted_connection(void)
 {
     self = [super init];
     if (self) {
-        get_usernoted_connection();
+        if (!DarlingUNLiteIsCenter(self))
+            get_usernoted_connection();
     }
     return self;
 }

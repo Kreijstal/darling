@@ -17,6 +17,9 @@ You should have received a copy of the GNU General Public License
 along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(__ANDROID__) && defined(__aarch64__)
+#include <android/api-level.h>
+#endif
 #include "threads.h"
 #include <pthread.h>
 #include <sys/mman.h>
@@ -441,7 +444,19 @@ void __darling_thread_rpc_socket_refresh(void) {
 static __thread void* darwin_tsd_slot;
 
 uintptr_t __darling_arm64_tsd_slot_offset(void) {
+#if defined(__ANDROID__)
+    /* Android Q reserves TP slot 2 for applications. Unlike an emulated
+     * __thread allocation, it has the fixed offset required by guest readers.
+     * The guest TSD writer consumes this same offset from loader metadata.
+     * API <29 used this slot for errno and must never be overwritten.
+     * Source: AOSP bionic android-10.0.0_r1 bionic_asm_tls.h (TLS_SLOT_APP).
+     */
+    if (android_get_device_api_level() >= 29)
+        return 2 * sizeof(void*);
+    return UINTPTR_MAX;
+#else
     return (uintptr_t)&darwin_tsd_slot - (uintptr_t)__builtin_thread_pointer();
+#endif
 }
 
 /* The C library's restartable sequences area (glibc 2.35 and later, see

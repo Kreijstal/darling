@@ -77,6 +77,10 @@ typedef NS_ENUM(NSInteger, UNShowPreviewsSetting) {
 @property(readonly) BOOL providesAppNotificationSettings;
 @property(readonly) UNNotificationSetting announcementSetting;
 
+@property(readonly) UNNotificationSetting timeSensitiveSetting;
+@property(readonly) UNNotificationSetting scheduledDeliverySetting;
+@property(readonly) UNNotificationSetting directMessagesSetting;
+
 @end
 
 #endif

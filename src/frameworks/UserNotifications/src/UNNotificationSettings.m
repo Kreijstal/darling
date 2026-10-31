@@ -114,4 +114,8 @@
     return self;
 }
 
+- (UNNotificationSetting)timeSensitiveSetting { return UNNotificationSettingEnabled; }
+- (UNNotificationSetting)scheduledDeliverySetting { return UNNotificationSettingDisabled; }
+- (UNNotificationSetting)directMessagesSetting { return UNNotificationSettingNotSupported; }
+
 @end

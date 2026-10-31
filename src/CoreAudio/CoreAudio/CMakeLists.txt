@@ -21,7 +21,12 @@ set(coreaudio_sources
     pulse/AudioHardwareStreamPAInput.cpp
     pulse/AudioHardwareStreamPAOutput.cpp
     pulse/PADispatchMainLoop.cpp
+    aaudio/AAudioLibrary.cpp
+    aaudio/AudioHardwareImplAAudio.cpp
+    aaudio/AudioHardwareStreamAAudio.cpp
 )
+
+include_directories(${CMAKE_SOURCE_DIR}/src/startup/mldr/elfcalls)
 
 add_framework(CoreAudio
 	FAT

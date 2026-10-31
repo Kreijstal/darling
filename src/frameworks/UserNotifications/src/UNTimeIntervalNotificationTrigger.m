@@ -19,6 +19,7 @@
 */
 
 #import <UserNotifications/UNTimeIntervalNotificationTrigger.h>
+#import "UNLite.h"
 
 @implementation UNTimeIntervalNotificationTrigger
 
@@ -39,6 +40,8 @@
 
 - (NSDate *)nextTriggerDate
 {
+    if (_unLiteFireDate)
+        return UNLiteNextFireDate(@{ @"type": @"interval", @"interval": @(_timeInterval), @"repeats": @(_repeats), @"fireDate": _unLiteFireDate }, [NSDate date]);
     return [NSDate dateWithTimeIntervalSinceNow:_timeInterval];
 }
 
@@ -46,6 +49,7 @@
 {
     UNTimeIntervalNotificationTrigger *copy = [super copyWithZone:zone];
     copy->_timeInterval = self.timeInterval;
+    copy->_unLiteFireDate = [_unLiteFireDate copyWithZone:zone];
     return copy;
 }
 
@@ -53,6 +57,7 @@
 {
     [super encodeWithCoder:coder];
     [coder encodeDouble:_timeInterval forKey:@"timeInterval"];
+    [coder encodeObject:_unLiteFireDate forKey:@"fireDate"];
 }
 
 - (instancetype)initWithCoder:(NSCoder *)coder
@@ -60,8 +65,15 @@
     self = [super initWithCoder:coder];
     if (self) {
         _timeInterval = [coder decodeDoubleForKey:@"timeInterval"];
+        _unLiteFireDate = [[coder decodeObjectOfClass:[NSDate class] forKey:@"fireDate"] copy];
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [_unLiteFireDate release];
+    [super dealloc];
 }
 
 @end

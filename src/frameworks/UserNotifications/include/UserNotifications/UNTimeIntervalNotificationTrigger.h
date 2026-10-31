@@ -25,6 +25,7 @@
 
 @interface UNTimeIntervalNotificationTrigger : UNNotificationTrigger {
     NSTimeInterval _timeInterval;
+    NSDate *_unLiteFireDate;
 }
 
 + (instancetype)triggerWithTimeInterval:(NSTimeInterval)timeInterval repeats:(BOOL)repeats;
