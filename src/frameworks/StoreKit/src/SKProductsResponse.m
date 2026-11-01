@@ -22,6 +22,26 @@
 
 @implementation SKProductsResponse
 
+@synthesize products = _products;
+@synthesize invalidProductIdentifiers = _invalidProductIdentifiers;
+
+- (instancetype)_initWithProducts:(NSArray *)products invalidProductIdentifiers:(NSArray *)invalid
+{
+    if ((self = [super init]) != nil)
+    {
+        _products = [products copy];
+        _invalidProductIdentifiers = [invalid copy];
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    [_products release];
+    [_invalidProductIdentifiers release];
+    [super dealloc];
+}
+
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
     return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);

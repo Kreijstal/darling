@@ -65,7 +65,7 @@
 	url = ../darling-liblzma.git
 [submodule "src/external/cfnetwork"]
 	path = src/external/cfnetwork
-	url = ../darling-cfnetwork.git
+	url = https://github.com/Kreijstal/darling-cfnetwork.git
 [submodule "src/external/text_cmds"]
 	path = src/external/text_cmds
 	url = ../darling-text_cmds.git
@@ -334,7 +334,7 @@
 	url = ../fmdb.git
 [submodule "src/external/swift"]
 	path = src/external/swift
-	url = ../darling-swift.git
+	url = https://github.com/Kreijstal/darling-swift.git
 [submodule "src/external/glut"]
 	path = src/external/glut
 	url = ../darling-glut.git

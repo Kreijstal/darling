@@ -19,8 +19,40 @@
 
 #import <StoreKit/SKProductsRequest.h>
 #import <darling-stub-forwarding.h>
+#import <StoreKit/SKProductsResponse.h>
 
-@implementation SKProductsRequest
+@interface SKRequest (Private)
+- (void)_respond;
+@end
+
+// The App Store knows no products here, so every identifier comes back invalid; apps treat
+// that like products that are not (yet) on sale.
+@implementation SKProductsRequest {
+    NSSet *_productIdentifiers;
+}
+
+@dynamic delegate;
+
+- (instancetype)initWithProductIdentifiers:(NSSet *)productIdentifiers
+{
+    if ((self = [super init]) != nil)
+        _productIdentifiers = [productIdentifiers copy];
+    return self;
+}
+
+- (void)dealloc
+{
+    [_productIdentifiers release];
+    [super dealloc];
+}
+
+- (void)_respond
+{
+    SKProductsResponse *response = [[SKProductsResponse alloc] _initWithProducts:@[] invalidProductIdentifiers:[_productIdentifiers allObjects] ?: @[]];
+    [[self delegate] productsRequest:self didReceiveResponse:response];
+    [response release];
+    [super _respond];
+}
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {

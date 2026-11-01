@@ -66,6 +66,7 @@
 #import <AVFAudio/AVAudioFormat.h>
 #import <AVFAudio/AVVCAudioDeviceManager.h>
 #import <AVFAudio/AVAudioSession.h>
+#import <AVFAudio/AVSpeechSynthesis.h>
 #import <AVFAudio/AVAudioSettings.h>
 #import <AVFAudio/AVVCAudioBuffer.h>
 #import <AVFAudio/AVSpeechSynthesis.h>

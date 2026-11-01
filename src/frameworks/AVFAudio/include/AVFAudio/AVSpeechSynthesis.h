@@ -114,8 +114,12 @@ extern NSNotificationName AVSpeechSynthesisAvailableVoicesDidChangeNotification;
 	NSMutableArray *_queue;  // utterances that have not finished; the first one is current
 	BOOL _paused;
 	BOOL _drainScheduled;
+	BOOL _usesApplicationAudioSession;
+	BOOL _mixToTelephonyUplink;
 }
 @property (nonatomic, assign, nullable) id<AVSpeechSynthesizerDelegate> delegate;
+@property (nonatomic) BOOL usesApplicationAudioSession;
+@property (nonatomic) BOOL mixToTelephonyUplink;
 @property (nonatomic, readonly, getter=isSpeaking) BOOL speaking;
 @property (nonatomic, readonly, getter=isPaused) BOOL paused;
 - (void)speakUtterance:(AVSpeechUtterance *)utterance;

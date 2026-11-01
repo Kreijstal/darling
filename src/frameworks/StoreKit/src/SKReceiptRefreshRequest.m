@@ -20,7 +20,32 @@
 #import <StoreKit/SKReceiptRefreshRequest.h>
 #import <darling-stub-forwarding.h>
 
+@interface SKRequest (Private)
+- (void)_failWithCode:(NSInteger)code description:(NSString *)description;
+@end
+
+// No App Store to fetch a receipt from: the request fails as it does offline (SKErrorUnknown).
 @implementation SKReceiptRefreshRequest
+
+@synthesize receiptProperties = _receiptProperties;
+
+- (instancetype)initWithReceiptProperties:(NSDictionary *)properties
+{
+    if ((self = [super init]) != nil)
+        _receiptProperties = [properties copy];
+    return self;
+}
+
+- (void)dealloc
+{
+    [_receiptProperties release];
+    [super dealloc];
+}
+
+- (void)_respond
+{
+    [self _failWithCode:0 description:@"Cannot connect to the App Store."];
+}
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {

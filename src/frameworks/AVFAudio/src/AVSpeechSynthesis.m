@@ -202,12 +202,17 @@ NSNotificationName AVSpeechSynthesisAvailableVoicesDidChangeNotification = @"AVS
 @implementation AVSpeechSynthesizer
 
 @synthesize delegate = _delegate;
+@synthesize usesApplicationAudioSession = _usesApplicationAudioSession;
+@synthesize mixToTelephonyUplink = _mixToTelephonyUplink;
 
 - (instancetype)init
 {
 	self = [super init];
 	if (self != nil)
+	{
 		_queue = [[NSMutableArray alloc] init];
+		_usesApplicationAudioSession = YES;
+	}
 	return self;
 }
 
