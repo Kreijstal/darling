@@ -110,6 +110,12 @@ function(_darling_swift_dylib_map_compute out)
 		string(APPEND map " -Wl,-dylib_file,/System/Library/Frameworks/${fw_name}.framework/Versions/A/${fw_name}:${fw_binary} -Wl,-dylib_file,@rpath/${fw_name}.framework/Versions/A/${fw_name}:${fw_binary} -Wl,-dylib_file,@rpath/${fw_name}.framework/${fw_name}:${fw_binary}")
 	endforeach()
 
+	# CoreData's optional source-built Swift API uses its own install name.
+	if (DARLING_COREDATA_SWIFT_SUPPLEMENT)
+		set(supplement_path "${CMAKE_BINARY_DIR}/src/external/cocotron/CoreData/swift/libDarlingCoreDataSupplement.dylib")
+		string(APPEND map " -Wl,-dylib_file,/usr/lib/swift/libDarlingCoreDataSupplement.dylib:${supplement_path} -Wl,-dylib_file,@rpath/libDarlingCoreDataSupplement.dylib:${supplement_path}")
+	endif()
+
 	set(${out} "${map}" PARENT_SCOPE)
 endfunction()
 
