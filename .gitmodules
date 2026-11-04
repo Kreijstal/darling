@@ -178,7 +178,8 @@
 	url = ../cctools-port.git
 [submodule "src/external/objc4"]
 	path = src/external/objc4
-	url = ../darling-objc4.git
+	url = https://github.com/Kreijstal/darling-objc4.git
+	branch = master
 [submodule "src/external/libplatform"]
 	path = src/external/libplatform
 	url = https://github.com/Kreijstal/darling-libplatform.git
@@ -380,7 +381,8 @@
 	url = ../darling-BerkeleyDB.git
 [submodule "src/external/libnetwork"]
 	path = src/external/libnetwork
-	url = ../darling-libnetwork.git
+	url = https://github.com/Kreijstal/darling-libnetwork.git
+	branch = master
 [submodule "src/external/openjdk"]
 	path = src/external/openjdk
 	url = ../openjdk.git
