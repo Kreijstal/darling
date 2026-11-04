@@ -21,6 +21,7 @@
 #import <darling-stub-forwarding.h>
 
 NSString * const kCIContextOutputColorSpace = @"output_color_space";
+NSString * const kCIContextPriorityRequestLow = @"priority_request_low";
 NSString * const kCIContextUseSoftwareRenderer = @"software_renderer";
 NSString * const kCIContextWorkingColorSpace = @"working_color_space";
 
