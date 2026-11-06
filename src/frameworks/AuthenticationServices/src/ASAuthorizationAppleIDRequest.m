@@ -22,6 +22,12 @@
 
 @implementation ASAuthorizationAppleIDRequest
 
+- (void)dealloc
+{
+    [_user release];
+    [super dealloc];
+}
+
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
     return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
