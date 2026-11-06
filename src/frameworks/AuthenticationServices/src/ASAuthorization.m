@@ -20,6 +20,10 @@
 #import <AuthenticationServices/ASAuthorization.h>
 #import <darling-stub-forwarding.h>
 
+NSErrorDomain const ASAuthorizationErrorDomain = @"ASAuthorizationErrorDomain";
+NSString * const ASAuthorizationScopeFullName = @"ASAuthorizationScopeFullName";
+NSString * const ASAuthorizationScopeEmail = @"ASAuthorizationScopeEmail";
+
 @implementation ASAuthorization
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
