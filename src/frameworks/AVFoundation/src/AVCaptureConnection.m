@@ -22,6 +22,25 @@
 
 @implementation AVCaptureConnection
 
+@synthesize enabled = _enabled;
+@synthesize videoOrientation = _videoOrientation;
+
+- (instancetype)init {
+    if ((self = [super init])) {
+        _enabled = YES;
+        _videoOrientation = AVCaptureVideoOrientationPortrait;
+    }
+    return self;
+}
+
+- (BOOL)isActive {
+    return NO;
+}
+
+- (BOOL)isVideoOrientationSupported {
+    return YES;
+}
+
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector {
     return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }

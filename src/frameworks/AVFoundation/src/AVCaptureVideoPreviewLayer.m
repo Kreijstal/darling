@@ -19,8 +19,41 @@
 
 #import <AVFoundation/AVCaptureVideoPreviewLayer.h>
 #import <darling-stub-forwarding.h>
+#import <AVFoundation/AVCaptureSession.h>
 
+// Draws nothing: there are no frames to show.
 @implementation AVCaptureVideoPreviewLayer
+
+@synthesize session = _session;
+@synthesize videoGravity = _videoGravity;
+
++ (instancetype)layerWithSession:(AVCaptureSession *)session {
+    return [[[self alloc] initWithSession:session] autorelease];
+}
+
+- (instancetype)init {
+    if ((self = [super init]))
+        _videoGravity = [AVLayerVideoGravityResizeAspect copy];
+    return self;
+}
+
+- (instancetype)initWithSession:(AVCaptureSession *)session {
+    if ((self = [self init]))
+        _session = [session retain];
+    return self;
+}
+
+- (void)dealloc {
+    [_session release];
+    [_videoGravity release];
+    [super dealloc];
+}
+
+// A preview connection exists only between a session's video input and the layer, and a
+// session here never has one.
+- (AVCaptureConnection *)connection {
+    return nil;
+}
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector {
     return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);

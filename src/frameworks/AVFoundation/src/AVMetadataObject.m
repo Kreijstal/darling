@@ -22,6 +22,14 @@
 
 @implementation AVMetadataObject
 
+- (CGRect)bounds {
+    return CGRectMake(0, 0, 0, 0);
+}
+
+- (AVMetadataObjectType)type {
+    return nil;
+}
+
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector {
     return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
