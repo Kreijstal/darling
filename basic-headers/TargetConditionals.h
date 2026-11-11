@@ -416,4 +416,9 @@
     
 #endif
 
+/* CoreFoundation checks this target on Darwin as well. */
+#ifndef TARGET_OS_WASI
+    #define TARGET_OS_WASI 0
+#endif
+
 #endif  /* __TARGETCONDITIONALS__ */
