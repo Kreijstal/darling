@@ -61,6 +61,10 @@ extern NSString *const kCICategoryTransition;
 
 @interface CIFilter : NSObject
 
++ (CIFilter *) filterWithName: (NSString *) name;
 - (void) setDefaults;
+
+- valueForKey: (NSString *) key;
+- (void) setValue: value forKey: (NSString *) key;
 
 @end

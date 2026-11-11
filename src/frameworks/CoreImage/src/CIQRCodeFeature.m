@@ -22,6 +22,30 @@
 
 @implementation CIQRCodeFeature
 
+- (NSString *)type {
+    return CIFeatureTypeQRCode;
+}
+
+- (CGPoint)topLeft {
+    return CGPointMake(0, 0);
+}
+
+- (CGPoint)topRight {
+    return CGPointMake(0, 0);
+}
+
+- (CGPoint)bottomLeft {
+    return CGPointMake(0, 0);
+}
+
+- (CGPoint)bottomRight {
+    return CGPointMake(0, 0);
+}
+
+- (NSString *)messageString {
+    return nil;
+}
+
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector {
     return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
