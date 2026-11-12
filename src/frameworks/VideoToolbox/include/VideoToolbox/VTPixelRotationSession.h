@@ -28,10 +28,10 @@
 extern "C" {
 #endif
 
-typedef struct OpaqueVTPixelRotationSession *VTPixelRotationSessionRef;
+typedef struct CF_BRIDGED_TYPE(id) OpaqueVTPixelRotationSession *VTPixelRotationSessionRef;
 
 OSStatus VTPixelRotationSessionCreate(CFAllocatorRef allocator,
-	VTPixelRotationSessionRef *pixelRotationSessionOut);
+	CF_RETURNS_RETAINED VTPixelRotationSessionRef *pixelRotationSessionOut);
 void VTPixelRotationSessionInvalidate(VTPixelRotationSessionRef session);
 CFTypeID VTPixelRotationSessionGetTypeID(void);
 OSStatus VTPixelRotationSessionRotateImage(VTPixelRotationSessionRef session,

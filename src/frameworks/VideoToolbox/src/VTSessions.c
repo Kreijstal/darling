@@ -100,7 +100,6 @@ Boolean VTIsHardwareDecodeSupported(CMVideoCodecType codecType)
 	return false;
 }
 
-void VTRegisterSupplementalVideoDecoderIfAvailable(CMVideoCodecType codecType) { }
 
 #pragma mark - Compression
 
@@ -150,3 +149,4 @@ OSStatus VTPixelTransferSessionTransferImage(VTPixelTransferSessionRef session, 
 {
 	return kVTInvalidSessionErr;
 }
+
