@@ -42,6 +42,14 @@ CMTimeRange;
 extern const CMTimeRange kCMTimeRangeZero;
 extern const CMTimeRange kCMTimeRangeInvalid;
 
+#define CMTIMERANGE_IS_VALID(range) ((Boolean)(CMTIME_IS_VALID((range).start) && CMTIME_IS_VALID((range).duration) \
+	&& ((range).duration.epoch == 0) && ((range).duration.value >= 0)))
+#define CMTIMERANGE_IS_INVALID(range) (!CMTIMERANGE_IS_VALID(range))
+#define CMTIMERANGE_IS_INDEFINITE(range) ((Boolean)(CMTIMERANGE_IS_VALID(range) \
+	&& (CMTIME_IS_INDEFINITE((range).start) || CMTIME_IS_INDEFINITE((range).duration))))
+#define CMTIMERANGE_IS_EMPTY(range) ((Boolean)(CMTIMERANGE_IS_VALID(range) \
+	&& CMTIME_COMPARE_INLINE((range).duration, ==, kCMTimeZero)))
+
 CMTimeRange CMTimeRangeMake(CMTime start, CMTime duration) CM_SWIFT_NAME(CMTimeRangeMake(start:duration:));
 CMTimeRange CMTimeRangeFromTimeToTime(CMTime start, CMTime end) CM_SWIFT_NAME(CMTimeRangeFromTimeToTime(start:end:));
 

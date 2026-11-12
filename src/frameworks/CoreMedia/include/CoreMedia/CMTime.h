@@ -83,6 +83,8 @@ extern const CMTime kCMTimeZero CM_SWIFT_NAME(CMTime.zero);
 #define CMTIME_IS_NUMERIC(time) ((Boolean)(((time).flags & (kCMTimeFlags_Valid | kCMTimeFlags_ImpliedValueFlagsMask)) == kCMTimeFlags_Valid))
 #define CMTIME_HAS_BEEN_ROUNDED(time) ((Boolean)(CMTIME_IS_NUMERIC(time) && (((time).flags & kCMTimeFlags_HasBeenRounded) != 0)))
 
+#define CMTIME_COMPARE_INLINE(time1, comparator, time2) ((Boolean)(CMTimeCompare(time1, time2) comparator 0))
+
 // A timescale that is not positive gives kCMTimeInvalid.
 CMTime CMTimeMake(int64_t value, int32_t timescale) CM_SWIFT_NAME(CMTimeMake(value:timescale:));
 CMTime CMTimeMakeWithEpoch(int64_t value, int32_t timescale, int64_t epoch) CM_SWIFT_NAME(CMTimeMakeWithEpoch(value:timescale:epoch:));
