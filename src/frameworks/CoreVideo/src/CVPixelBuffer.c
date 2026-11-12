@@ -591,6 +591,15 @@ CFTypeRef CVBufferGetAttachment(CVBufferRef buffer, CFStringRef key, CVAttachmen
 	return value;
 }
 
+Boolean CVBufferHasAttachment(CVBufferRef buffer, CFStringRef key)
+{
+    if (!buffer || !key) return false;
+    pthread_mutex_lock(&attachmentLock);
+    Boolean found = findAttachmentLocked(buffer, key, NULL) != NULL;
+    pthread_mutex_unlock(&attachmentLock);
+    return found;
+}
+
 CFTypeRef CVBufferCopyAttachment(CVBufferRef buffer, CFStringRef key, CVAttachmentMode* attachmentMode)
 {
 	if (!buffer || !key)
@@ -959,6 +968,21 @@ CVReturn CVPixelBufferPoolCreate(
 
 	*poolOut = pool;
 	return kCVReturnSuccess;
+}
+
+CFDictionaryRef CVPixelBufferPoolGetAttributes(CVPixelBufferPoolRef pool)
+{
+	return pool ? pool->poolAttributes : NULL;
+}
+
+CFDictionaryRef CVPixelBufferPoolGetPixelBufferAttributes(CVPixelBufferPoolRef pool)
+{
+	return pool ? pool->pixelBufferAttributes : NULL;
+}
+
+/* The pool keeps no buffers to flush: each one it makes is a new allocation. */
+void CVPixelBufferPoolFlush(CVPixelBufferPoolRef pool, CVPixelBufferPoolFlushFlags options)
+{
 }
 
 CVReturn CVPixelBufferPoolCreatePixelBuffer(

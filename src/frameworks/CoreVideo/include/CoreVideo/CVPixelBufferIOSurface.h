@@ -29,6 +29,8 @@
 __BEGIN_DECLS
 
 extern const CFStringRef kCVPixelBufferIOSurfaceOpenGLTextureCompatibilityKey;
+extern const CFStringRef kCVPixelBufferIOSurfaceOpenGLESTextureCompatibilityKey;
+extern const CFStringRef kCVPixelBufferIOSurfaceOpenGLESFBOCompatibilityKey;
 
 // The IOSurface that holds the pixels of the buffer, or NULL for a buffer that is not
 // IOSurface-backed. The surface is not retained for the caller.

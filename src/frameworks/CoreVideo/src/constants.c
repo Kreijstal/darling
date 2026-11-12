@@ -55,6 +55,8 @@ const CFStringRef kCVPixelBufferPoolAllocationThresholdKey = CFSTR("BufferPoolAl
 
 const CFStringRef kCVPixelBufferIOSurfacePropertiesKey = CFSTR("IOSurfaceProperties");
 const CFStringRef kCVPixelBufferOpenGLCompatibilityKey = CFSTR("OpenGLCompatibility");
+const CFStringRef kCVPixelBufferOpenGLESCompatibilityKey = CFSTR("OpenGLESCompatibility");
+const CFStringRef kCVOpenGLESTextureCacheMaximumTextureAgeKey = CFSTR("OpenGLESTextureCacheMaximumTextureAge");
 const CFStringRef kCVPixelBufferPixelFormatTypeKey = CFSTR("PixelFormatType");
 const CFStringRef kCVPixelBufferCGBitmapContextCompatibilityKey = CFSTR("CGBitmapContextCompatibility");
 const CFStringRef kCVPixelBufferCGImageCompatibilityKey = CFSTR("CGImageCompatibility");
@@ -63,6 +65,8 @@ const CFStringRef kCVPixelBufferBytesPerRowAlignmentKey = CFSTR("BytesPerRowAlig
 const CFStringRef kCVPixelBufferHeightKey = CFSTR("Height");
 const CFStringRef kCVPixelBufferWidthKey = CFSTR("Width");
 const CFStringRef kCVPixelBufferIOSurfaceOpenGLTextureCompatibilityKey = CFSTR("IOSurfaceOpenGLTextureCompatibility");
+const CFStringRef kCVPixelBufferIOSurfaceOpenGLESTextureCompatibilityKey = CFSTR("IOSurfaceOpenGLESTextureCompatibility");
+const CFStringRef kCVPixelBufferIOSurfaceOpenGLESFBOCompatibilityKey = CFSTR("IOSurfaceOpenGLESFBOCompatibility");
 const CFStringRef kCVPixelBufferPoolMaximumBufferAgeKey = CFSTR("MaximumBufferAge");
 const CFStringRef kCVPixelBufferPoolMinimumBufferCountKey = CFSTR("MinimumBufferCount");
 

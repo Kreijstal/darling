@@ -78,9 +78,10 @@ enum
 
 extern const CFStringRef kCVPixelBufferIOSurfacePropertiesKey;
 extern const CFStringRef kCVPixelBufferOpenGLCompatibilityKey;
-extern const CFStringRef kCVPixelBufferPixelFormatTypeKey;
-extern const CFStringRef kCVPixelBufferCGImageCompatibilityKey;
+extern const CFStringRef kCVPixelBufferOpenGLESCompatibilityKey;
 extern const CFStringRef kCVPixelBufferCGBitmapContextCompatibilityKey;
+extern const CFStringRef kCVPixelBufferCGImageCompatibilityKey;
+extern const CFStringRef kCVPixelBufferPixelFormatTypeKey;
 extern const CFStringRef kCVPixelBufferMetalCompatibilityKey;
 extern const CFStringRef kCVPixelBufferBytesPerRowAlignmentKey;
 extern const CFStringRef kCVPixelBufferHeightKey;

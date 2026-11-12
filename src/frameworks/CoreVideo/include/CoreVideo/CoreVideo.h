@@ -27,12 +27,20 @@
 #include <CoreVideo/CVReturn.h>
 #include <CoreVideo/CVBase.h>
 
+#if !TARGET_OS_IPHONE
 #include <CoreVideo/CVDisplayLink.h>
+#endif
 #include <CoreVideo/CVPixelBuffer.h>
 #include <CoreVideo/CVPixelBufferPool.h>
 #include <CoreVideo/CVMetalTexture.h>
 #include <CoreVideo/CVMetalTextureCache.h>
+#if !TARGET_OS_IPHONE
 #include <CoreVideo/CVOpenGLTexture.h>
 #include <CoreVideo/CVOpenGLTextureCache.h>
+#endif
+#if TARGET_OS_IPHONE
+#include <CoreVideo/CVOpenGLESTexture.h>
+#include <CoreVideo/CVOpenGLESTextureCache.h>
+#endif
 
 #endif

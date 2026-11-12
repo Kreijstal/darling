@@ -29,6 +29,9 @@ extern const CFStringRef kCVImageBufferAmbientViewingEnvironmentKey;
 
 extern const CFStringRef kCVImageBufferCGColorSpaceKey;
 
+extern const CFStringRef kCVImageBufferChromaLocationTopFieldKey;
+extern const CFStringRef kCVImageBufferChromaLocationBottomFieldKey;
+extern const CFStringRef kCVImageBufferChromaLocation_Left;
 extern const CFStringRef kCVImageBufferChromaLocation_Bottom;
 extern const CFStringRef kCVImageBufferChromaLocation_BottomLeft;
 extern const CFStringRef kCVImageBufferChromaLocation_Center;
