@@ -75,6 +75,14 @@ extern const CMTime kCMTimeZero CM_SWIFT_NAME(CMTime.zero);
 // Largest timescale a time can have.
 #define kCMTimeMaxTimescale 0x7fffffffL
 
+#define CMTIME_IS_VALID(time) ((Boolean)(((time).flags & kCMTimeFlags_Valid) != 0))
+#define CMTIME_IS_INVALID(time) (!CMTIME_IS_VALID(time))
+#define CMTIME_IS_POSITIVE_INFINITY(time) ((Boolean)(CMTIME_IS_VALID(time) && (((time).flags & kCMTimeFlags_PositiveInfinity) != 0)))
+#define CMTIME_IS_NEGATIVE_INFINITY(time) ((Boolean)(CMTIME_IS_VALID(time) && (((time).flags & kCMTimeFlags_NegativeInfinity) != 0)))
+#define CMTIME_IS_INDEFINITE(time) ((Boolean)(CMTIME_IS_VALID(time) && (((time).flags & kCMTimeFlags_Indefinite) != 0)))
+#define CMTIME_IS_NUMERIC(time) ((Boolean)(((time).flags & (kCMTimeFlags_Valid | kCMTimeFlags_ImpliedValueFlagsMask)) == kCMTimeFlags_Valid))
+#define CMTIME_HAS_BEEN_ROUNDED(time) ((Boolean)(CMTIME_IS_NUMERIC(time) && (((time).flags & kCMTimeFlags_HasBeenRounded) != 0)))
+
 // A timescale that is not positive gives kCMTimeInvalid.
 CMTime CMTimeMake(int64_t value, int32_t timescale) CM_SWIFT_NAME(CMTimeMake(value:timescale:));
 CMTime CMTimeMakeWithEpoch(int64_t value, int32_t timescale, int64_t epoch) CM_SWIFT_NAME(CMTimeMakeWithEpoch(value:timescale:epoch:));

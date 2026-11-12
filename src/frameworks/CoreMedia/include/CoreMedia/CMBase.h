@@ -21,6 +21,19 @@
 #define _CMBASE_H_
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <MacTypes.h>
+#include <stdint.h>
+#include <stddef.h>
+
+#ifdef __cplusplus
+#define CM_EXPORT extern "C"
+#else
+#define CM_EXPORT extern
+#endif
+#ifndef CM_NONNULL
+#define CM_NONNULL __nonnull
+#endif
+#define CM_RETURNS_RETAINED_PARAMETER CF_RETURNS_RETAINED
 
 #ifdef __cplusplus
 extern "C" {
