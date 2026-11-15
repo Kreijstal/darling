@@ -970,21 +970,6 @@ CVReturn CVPixelBufferPoolCreate(
 	return kCVReturnSuccess;
 }
 
-CFDictionaryRef CVPixelBufferPoolGetAttributes(CVPixelBufferPoolRef pool)
-{
-	return pool ? pool->poolAttributes : NULL;
-}
-
-CFDictionaryRef CVPixelBufferPoolGetPixelBufferAttributes(CVPixelBufferPoolRef pool)
-{
-	return pool ? pool->pixelBufferAttributes : NULL;
-}
-
-/* The pool keeps no buffers to flush: each one it makes is a new allocation. */
-void CVPixelBufferPoolFlush(CVPixelBufferPoolRef pool, CVPixelBufferPoolFlushFlags options)
-{
-}
-
 CVReturn CVPixelBufferPoolCreatePixelBuffer(
 	CFAllocatorRef allocator,
 	CVPixelBufferPoolRef pixelBufferPool,

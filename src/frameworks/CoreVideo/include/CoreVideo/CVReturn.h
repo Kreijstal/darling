@@ -15,7 +15,6 @@ enum
 	kCVReturnDisplayLinkAlreadyRunning = -6671,
 	kCVReturnDisplayLinkNotRunning = -6672,
 	kCVReturnDisplayLinkCallbacksNotSet = -6673,
-	kCVReturnUnsupported = -6667,
  
 	kCVReturnInvalidPixelFormat = -6680,
 	kCVReturnInvalidSize = -6681,
