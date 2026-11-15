@@ -149,4 +149,3 @@ OSStatus VTPixelTransferSessionTransferImage(VTPixelTransferSessionRef session, 
 {
 	return kVTInvalidSessionErr;
 }
-

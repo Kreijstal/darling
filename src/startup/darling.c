@@ -49,6 +49,7 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include "launcher-env.h"
 #include "launcher-ids.h"
 #include "launcher-mode.h"
+#include "launcher-access.h"
 #include "launcher-prefix.h"
 #include "launcher-pulse.h"
 #include "launcher-server.h"
@@ -131,6 +132,19 @@ static void restoreRootIds(void)
 		fprintf(stderr, "Cannot switch back to root ids: %s\n", strerror(errno));
 		exit(1);
 	}
+}
+
+static int accessEffective(const char* path, int request)
+{
+	int result = faccessat(AT_FDCWD, path, request, AT_EACCESS);
+#if defined(__ANDROID__)
+	int error = errno;
+	if (result != 0 && launcherAccessFallbackAllowed(true, g_mode, request, error,
+		getuid(), geteuid(), getgid(), getegid()))
+		return access(path, request);
+	errno = error;
+#endif
+	return result;
 }
 
 // A handle that becomes readable when the process has exited, or -1 when the
@@ -507,7 +521,7 @@ int main(int argc, char ** argv)
 		bool started = false;
 		for (int i = 0; i < 60 && !started; i++)
 		{
-			started = faccessat(AT_FDCWD, socketPath, F_OK, AT_EACCESS) == 0;
+			started = accessEffective(socketPath, F_OK) == 0;
 			if (!started)
 				sleep(1);
 		}
@@ -1569,7 +1583,7 @@ static bool commandInPath(const char* name)
 	{
 		char candidate[4096];
 		snprintf(candidate, sizeof(candidate), "%s/%s", dir, name);
-		found = faccessat(AT_FDCWD, candidate, X_OK, AT_EACCESS) == 0;
+		found = accessEffective(candidate, X_OK) == 0;
 	}
 	restoreRootIds();
 	free(copy);

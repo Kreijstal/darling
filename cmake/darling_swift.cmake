@@ -60,6 +60,18 @@ function(_darling_swift_resource_dir out)
 	set(${out} "${dir}" PARENT_SCOPE)
 endfunction()
 
+# Keep Swift backend code generation on the same ARM64 baseline as native code.
+function(_darling_swift_cpu_flags out)
+	set(flags)
+	if (TARGET_ARM64)
+		if (NOT DARLING_ARM64_CPU)
+			message(FATAL_ERROR "DARLING_ARM64_CPU must name the common ARM64 CPU baseline")
+		endif()
+		list(APPEND flags -target-cpu "${DARLING_ARM64_CPU}")
+	endif()
+	set(${out} "${flags}" PARENT_SCOPE)
+endfunction()
+
 # add_darling_swift_object(<Module> SOURCES <swift sources> [FLAGS ...] [MODULES ...])
 #
 # Compiles an implementation-detail Swift module that is not shipped as a dylib: no library evolution, no autolink
@@ -71,6 +83,7 @@ function(add_darling_swift_object module)
 		return()
 	endif()
 	_darling_swift_resource_dir(resource_dir)
+	_darling_swift_cpu_flags(cpu_flags)
 	file(MAKE_DIRECTORY "${DARLING_SWIFT_MODULE_DIR}" "${DARLING_SWIFT_MODULE_CACHE}")
 	set(obj "${CMAKE_CURRENT_BINARY_DIR}/${module}.swift.o")
 	set(swiftmodule "${DARLING_SWIFT_MODULE_DIR}/${module}.swiftmodule")
@@ -92,6 +105,7 @@ function(add_darling_swift_object module)
 			-module-cache-path "${DARLING_SWIFT_MODULE_CACHE}"
 			-swift-version 5 -module-name "${module}" -parse-as-library -O
 			${DARLING_SWIFT_SDK_SUBFRAMEWORKS}
+			${cpu_flags}
 			${SWIFTOBJ_FLAGS}
 			-emit-module-path "${swiftmodule}" -o "${obj}"
 		DEPENDS ${sources} ${module_deps}
@@ -119,6 +133,7 @@ function(add_darling_swift_library module)
 	endif()
 
 	_darling_swift_resource_dir(resource_dir)
+	_darling_swift_cpu_flags(cpu_flags)
 	file(MAKE_DIRECTORY "${DARLING_SWIFT_MODULE_DIR}" "${DARLING_SWIFT_MODULE_CACHE}")
 
 	set(target "${APPLE_ARCH_64BIT}-apple-macosx${DARLING_SWIFT_DEPLOYMENT_TARGET}")
@@ -156,6 +171,7 @@ function(add_darling_swift_library module)
 			-enable-library-evolution -parse-as-library -O
 			-define-availability "SwiftStdlib 5.7:macOS 13.0"
 			${DARLING_SWIFT_SDK_SUBFRAMEWORKS}
+			${cpu_flags}
 			${SWIFTLIB_FLAGS}
 			-emit-module-path "${swiftmodule}" -o "${obj}"
 		DEPENDS ${sources} ${module_deps}

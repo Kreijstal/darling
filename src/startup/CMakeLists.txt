@@ -113,6 +113,11 @@ add_executable(launcher_host_path_test ${CMAKE_SOURCE_DIR}/tests/launcher/host-p
 target_include_directories(launcher_host_path_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME launcher_host_path COMMAND launcher_host_path_test)
 
+add_executable(launcher_access_fallback_test ${CMAKE_SOURCE_DIR}/tests/launcher/access-fallback.c)
+target_include_directories(launcher_access_fallback_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME launcher_access_fallback COMMAND launcher_access_fallback_test)
+add_test(NAME swift_cpu_flags COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tests/cmake/swift-cpu-flags.cmake)
+
 # how the rootless launcher examines and joins the container's namespaces
 add_executable(launcher_rootless_ns_test ${CMAKE_SOURCE_DIR}/tests/launcher/rootless-ns.c launcher-server.c)
 target_include_directories(launcher_rootless_ns_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

@@ -562,10 +562,11 @@ OSStatus AUGraphAddRenderNotify(AUGraph inGraph, AURenderCallback inCallback, vo
 	std::lock_guard<std::recursive_mutex> lock(inGraph->mutex);
 	if (!inGraph->isOpen)
 		return kAUGraphErr_CannotDoInCurrentContext;
-	for (auto& item : inGraph->nodes)
-		if (auto& node = item.second; true)
+	for (auto& item : inGraph->nodes) {
+		auto& node = item.second;
 		if (node.description.componentType == kAudioUnitType_Output)
 			return AudioUnitAddRenderNotify(node.unit, inCallback, inRefCon);
+	}
 	return kAUGraphErr_OutputNodeErr;
 }
 
@@ -574,10 +575,11 @@ OSStatus AUGraphRemoveRenderNotify(AUGraph inGraph, AURenderCallback inCallback,
 	if (inGraph == nullptr || inCallback == nullptr)
 		return paramErr;
 	std::lock_guard<std::recursive_mutex> lock(inGraph->mutex);
-	for (auto& item : inGraph->nodes)
-		if (auto& node = item.second; true)
+	for (auto& item : inGraph->nodes) {
+		auto& node = item.second;
 		if (node.description.componentType == kAudioUnitType_Output && node.unit != nullptr)
 			return AudioUnitRemoveRenderNotify(node.unit, inCallback, inRefCon);
+	}
 	return kAUGraphErr_OutputNodeErr;
 }
 
