@@ -39,6 +39,21 @@
 include(CMakeParseArguments)
 include(InstallSymlink)
 
+# Either framework or overlay configuration may run first. Register the source
+# reexport once both targets exist, without requiring a prebuilt Swift image.
+function(darling_register_network_swift_reexport)
+	if (NOT TARGET Network OR NOT TARGET swiftNetwork)
+		return()
+	endif()
+	get_property(registered TARGET Network PROPERTY DARLING_SWIFT_NETWORK_REEXPORT_REGISTERED)
+	if (registered)
+		return()
+	endif()
+	add_dependencies(Network swiftNetwork)
+	target_link_options(Network PRIVATE "-Wl,-reexport_library,$<TARGET_FILE:swiftNetwork>")
+	set_property(TARGET Network PROPERTY DARLING_SWIFT_NETWORK_REEXPORT_REGISTERED TRUE)
+endfunction()
+
 set(DARLING_SWIFT_DEPLOYMENT_TARGET "26.0" CACHE INTERNAL "macOS version the Swift overlays are built for")
 set(DARLING_SWIFT_SDK "${DARLING_TOP_DIRECTORY}/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
 # Foundation's headers include <AE/AE.h>, which the SDK ships as a subframework of CoreServices.
