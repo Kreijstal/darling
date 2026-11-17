@@ -175,12 +175,6 @@ void* __darling_thread_create(unsigned long stack_size, unsigned long pth_obj_si
 	int create_error = pthread_create(&nativeLibcThread, &attr, darling_thread_entry, &args);
 	pthread_sigmask(SIG_SETMASK, &args.sigmask, NULL);
 	pthread_attr_destroy(&attr);
-	if (create_err != 0) {
-		// the new thread never runs, so nothing would ever clear `args.pth` below
-		fprintf(stderr, "mldr: pthread_create failed: %s\n", strerror(create_err));
-		return NULL;
-	}
-
 	if (create_error != 0) {
 		// The thread never started: release what was allocated for it, and
 		// do not wait for a check-in that will not happen.
@@ -451,6 +445,13 @@ void __darling_thread_rpc_socket_refresh(void) {
 static __thread void* darwin_tsd_slot;
 
 uintptr_t __darling_arm64_tsd_slot_offset(void) {
+#if defined(__ANDROID__)
+    // The NDK emulates __thread below API level 29, so the variable above is then not near the thread
+    // pointer. From API level 29 bionic gives apps TLS_SLOT_APP (slot 2), a slot of the thread
+    // pointer's own block that nothing else uses.
+    if (android_get_device_api_level() >= 29)
+        return 2 * sizeof(void*);
+#endif
     return (uintptr_t)&darwin_tsd_slot - (uintptr_t)__builtin_thread_pointer();
 }
 

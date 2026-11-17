@@ -42,6 +42,7 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/wait.h>
 #include <sysexits.h>
 #include <sys/auxv.h>
+#include <sys/resource.h>
 #include "../shellspawn/shellspawn.h"
 #include "darling.h"
 #include "darling-config.h"
@@ -53,6 +54,7 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include "launcher-pulse.h"
 #include "launcher-server.h"
 #include "launcher-tmp.h"
+#include "prefix-host-integration.h"
 #include "prefix-state.h"
 #include "profile-prefix.h"
 
@@ -74,6 +76,10 @@ static void refuseContainerOfAnotherMode(pid_t pid);
 // modes wherever this executable lives (see launcherInstallPrefix()).
 static char g_serverPath[4096];
 static char g_mldrPath[4096];
+// The mldr that host-side processes run (an Android app execs only what it ships, so it may differ
+// from the guest's own copy in the system image); empty when it is the same.
+static char g_hostMldrPath[4096];
+static char g_installPrefix[4096];
 static char g_libexecPath[4096];
 // the invoking user's name, once looked up
 static char g_loginName[256];
@@ -163,6 +169,17 @@ static void waitForProcessExit(int handle, pid_t pid)
 		usleep(10000);
 }
 
+// launcherFindOrphanedInit() for the prefix, matching launchd by the guest's mldr and, when the host
+// runs another one (DARLING_MLDR_PATH), by that as well.
+static int findOrphanedInit(pid_t* orphan)
+{
+	int scan = launcherFindOrphanedInit("/proc", prefix, g_originalUid, g_mldrPath, orphan);
+
+	if (scan == 0 && g_hostMldrPath[0] != '\0')
+		scan = launcherFindOrphanedInit("/proc", prefix, g_originalUid, g_hostMldrPath, orphan);
+	return scan;
+}
+
 // Whether the process has any effective or permitted capability. A failure to tell counts as having one.
 static bool hasCapabilities(void)
 {
@@ -186,6 +203,17 @@ int main(int argc, char ** argv)
 
 	// Whether the launcher has root's power decides the mode; the environment only chooses
 	// between the unprivileged modes (see launcherSelectMode()).
+	// mldr and darlingserver raise the soft core limit to the hard one, so that a guest that crashes
+	// leaves a core. Where that is not wanted (a phone's app storage), DARLING_NO_CORE_DUMPS lowers both
+	// to 0 here, for everything this starts.
+	if (getenv("DARLING_NO_CORE_DUMPS") != NULL)
+	{
+		struct rlimit noCore = { 0, 0 };
+
+		if (setrlimit(RLIMIT_CORE, &noCore) != 0)
+			fprintf(stderr, "Cannot turn core dumps off: %s\n", strerror(errno));
+	}
+
 	enum launcher_privilege privilege = launcherClassifyPrivilege(geteuid() == 0, getauxval(AT_SECURE) != 0, hasCapabilities());
 	if (privilege == LAUNCHER_PRIVILEGED_NOT_ROOT)
 	{
@@ -215,6 +243,42 @@ int main(int argc, char ** argv)
 			fprintf(stderr, "The installation path is too long.\n");
 			return 1;
 		}
+
+		// An Android app cannot run its programs from an install tree: it may exec only what it ships in its
+		// native library directory, and the launcher itself is not named bin/darling. The unprivileged
+		// modes may therefore be told where the installation and its programs are. A privileged launcher
+		// takes nothing of this from its caller's environment.
+		if (!privilegedMode())
+		{
+			const char* installOverride = getenv("DARLING_INSTALL_PREFIX");
+			const char* serverOverride = getenv("DARLING_SERVER_PATH");
+			const char* mldrOverride = getenv("DARLING_MLDR_PATH");
+
+			if (installOverride && installOverride[0] == '/')
+			{
+				if (snprintf(g_serverPath, sizeof(g_serverPath), "%s/bin/darlingserver", installOverride) >= (int) sizeof(g_serverPath)
+					|| snprintf(g_libexecPath, sizeof(g_libexecPath), "%s/libexec/darling", installOverride) >= (int) sizeof(g_libexecPath)
+					|| snprintf(g_mldrPath, sizeof(g_mldrPath), "%s/usr/libexec/darling/mldr", g_libexecPath) >= (int) sizeof(g_mldrPath))
+				{
+					fprintf(stderr, "The installation path is too long.\n");
+					return 1;
+				}
+				snprintf(installPrefix, sizeof(installPrefix), "%s", installOverride);
+			}
+			if (serverOverride && serverOverride[0] != '\0'
+				&& snprintf(g_serverPath, sizeof(g_serverPath), "%s", serverOverride) >= (int) sizeof(g_serverPath))
+			{
+				fprintf(stderr, "DARLING_SERVER_PATH is too long.\n");
+				return 1;
+			}
+			if (mldrOverride && mldrOverride[0] != '\0'
+				&& snprintf(g_hostMldrPath, sizeof(g_hostMldrPath), "%s", mldrOverride) >= (int) sizeof(g_hostMldrPath))
+			{
+				fprintf(stderr, "DARLING_MLDR_PATH is too long.\n");
+				return 1;
+			}
+		}
+		snprintf(g_installPrefix, sizeof(g_installPrefix), "%s", installPrefix);
 	}
 
 	if (!launcherSaveInvokingIds(&g_invokingIds))
@@ -263,6 +327,20 @@ int main(int argc, char ** argv)
 	ensureSystemAccounts();
 	ensureZoneinfoLink();
 	ensureGlobalPreferences();
+
+	// Keep the host-facing parts of the prefix current: the host's root certificates as the guest's
+	// keychains (an Android host's are in a directory, Termux's under its PREFIX), links for host paths, and
+	// the usual /bin/sh and /System/Volumes/Data. A running container has the prefix mounted, where a change
+	// made from outside is not seen reliably, so they are left for the next start.
+	if (getInitProcess() == 0)
+	{
+		useInvokingIds();
+		ensureHostRootSymlinks(prefix, g_installPrefix);
+		ensureShSymlink(prefix);
+		ensureSystemVolumesDataSymlink(prefix);
+		ensureKeychains(prefix);
+		restoreRootIds();
+	}
 
 	// The container's programs have the guest's HOME, so the PulseAudio client library cannot find the
 	// host user's server by itself on a host without XDG_RUNTIME_DIR. Name the host's locations for it.
@@ -346,8 +424,7 @@ int main(int argc, char ** argv)
 			int scan;
 
 			dropPrivileges();
-			scan = launcherFindOrphanedInit("/proc", prefix, g_originalUid,
-				g_mldrPath, &orphan);
+			scan = findOrphanedInit(&orphan);
 			if (scan > 0)
 			{
 				int orphanFd = openProcessHandle(orphan);
@@ -460,8 +537,7 @@ int main(int argc, char ** argv)
 		// prefix's sockets; starting another one would take them over.
 		pid_t orphanedInit = 0;
 		useInvokingIds();
-		scan = launcherFindOrphanedInit("/proc", prefix, g_originalUid,
-			g_mldrPath, &orphanedInit);
+		scan = findOrphanedInit(&orphanedInit);
 		restoreRootIds();
 		if (scan > 0)
 		{
@@ -623,18 +699,78 @@ static bool resolveProgramArgument(int argc, char** argv)
 	}
 
 	char *fullPath;
-	char *path = realpath(argv[argvIndex], NULL);
+	const char *prog = argv[argvIndex];
 
-	if (path == NULL)
+	// An absolute path in one of the guest's own top-level directories names a guest file, not a host one.
+	static const char* const guestRoots[] = {
+		"/Volumes/", "/bin/", "/sbin/", "/usr/", "/System/", "/Library/", "/Applications/",
+		"/private/", "/etc/", "/tmp/", "/var/", "/dev/", "/proc/",
+	};
+	bool isGuestPath = false;
+
+	if (prog[0] == '/')
 	{
-		printf("'%s' is not a supported command or a file.\n", argv[argvIndex]);
-		return false;
+		for (size_t i = 0; i < sizeof(guestRoots) / sizeof(guestRoots[0]); i++)
+		{
+			if (strncmp(prog, guestRoots[i], strlen(guestRoots[i])) == 0)
+			{
+				isGuestPath = true;
+				break;
+			}
+		}
 	}
 
-	fullPath = malloc(strlen(SYSTEM_ROOT) + strlen(path) + 1);
-	strcpy(fullPath, SYSTEM_ROOT);
-	strcat(fullPath, path);
-	free(path);
+	if (isGuestPath)
+	{
+		fullPath = strdup(prog);
+	}
+	else
+	{
+		char *path = realpath(prog, NULL);
+
+		// On Android the host's /bin is /system/bin (toybox): a program found there is not meant unless
+		// the caller named /system/ itself.
+		if (path != NULL && !(strncmp(path, "/system/", 8) == 0 && strncmp(prog, "/system/", 8) != 0))
+		{
+			fullPath = malloc(strlen(SYSTEM_ROOT) + strlen(path) + 1);
+			strcpy(fullPath, SYSTEM_ROOT);
+			strcat(fullPath, path);
+			free(path);
+		}
+		else
+		{
+			free(path);
+			if (!doExec)
+			{
+				printf("'%s' is not a supported command or a file.\n", prog);
+				return false;
+			}
+			if (prog[0] == '/')
+				fullPath = strdup(prog);
+			else
+			{
+				// a bare program name of "darling exec": the guest's own command, looked up in its bin directories
+				static const char* const binDirs[] = { "/usr/bin", "/bin", "/usr/sbin", "/sbin" };
+				char test[4096];
+
+				fullPath = NULL;
+				for (size_t i = 0; i < sizeof(binDirs) / sizeof(binDirs[0]) && fullPath == NULL; i++)
+				{
+					snprintf(test, sizeof(test), "%s%s/%s", prefix, binDirs[i], prog);
+					if (access(test, X_OK) == 0)
+					{
+						snprintf(test, sizeof(test), "%s/%s", binDirs[i], prog);
+						fullPath = strdup(test);
+					}
+				}
+				if (fullPath == NULL)
+				{
+					snprintf(test, sizeof(test), "/usr/bin/%s", prog);
+					fullPath = strdup(test);
+				}
+			}
+		}
+	}
 
 	argv[argvIndex] = fullPath;
 	resolved = true;
@@ -1241,15 +1377,30 @@ void setupFDs(int fds[3], int* master)
 {
 	*master = -1;
 
-	if (isatty(STDIN_FILENO))
+	// DARLING_FORCE_PTY runs the command on a terminal even when the caller has none (a phone's app has
+	// no tty), with its output and errors on it as well.
+	bool wantPty = isatty(STDIN_FILENO);
+	bool forceAll = false;
+	const char* forcePty = getenv("DARLING_FORCE_PTY");
+
+	if (forcePty && (strcmp(forcePty, "1") == 0 || strcasecmp(forcePty, "true") == 0))
+	{
+		wantPty = true;
+		forceAll = true;
+	}
+
+	if (wantPty)
 		setupPtys(fds, master);
 	else
 		fds[0] = dup(STDIN_FILENO); // dup() because we close() after spawning
-	
-	if (*master == -1 || !isatty(STDOUT_FILENO))
-		fds[1] = STDOUT_FILENO;
-	if (*master == -1 || !isatty(STDERR_FILENO))
-		fds[2] = STDERR_FILENO;
+
+	if (!forceAll)
+	{
+		if (*master == -1 || !isatty(STDOUT_FILENO))
+			fds[1] = STDOUT_FILENO;
+		if (*master == -1 || !isatty(STDERR_FILENO))
+			fds[2] = STDERR_FILENO;
+	}
 }
 
 void spawnGo(int sockfd, int fds[3], int master)
@@ -1343,7 +1494,11 @@ void showHelp(const char* argv0)
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Environment variables:\n"
 		"DPREFIX - specifies the location of Darling prefix as an absolute path, defaults to ~/.darling\n"
-		"DARLING_PROFILE - selects an isolated named prefix at ~/.darling.<name>\n");
+		"DARLING_PROFILE - selects an isolated named prefix at ~/.darling.<name>\n"
+		"DARLING_INSTALL_PREFIX, DARLING_SERVER_PATH, DARLING_MLDR_PATH - where the installation and its host programs\n"
+		"    are, for an unprivileged launcher that does not run from the installation (an Android app)\n"
+		"DARLING_FORCE_PTY - run the command on a terminal even when the caller has none\n"
+		"DARLING_NO_CORE_DUMPS - turn core dumps off for everything the launcher starts\n");
 }
 
 void showVersion(const char* argv0) {
