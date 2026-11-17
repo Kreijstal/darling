@@ -2,7 +2,6 @@
  This file is part of Darling.
 
  Copyright (C) 2021 Lubos Dolezel
- Copyright (C) 2026 Darling developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -22,48 +21,14 @@
 
 @implementation UNTextInputNotificationResponse
 
-@synthesize userText = _userText;
-
-+ (BOOL)supportsSecureCoding
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return YES;
+    return [NSMethodSignature signatureWithObjCTypes: "v@:"];
 }
 
-+ (instancetype)responseWithNotification:(UNNotification *)notification actionIdentifier:(NSString *)actionIdentifier userText:(nullable NSString *)userText
+- (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    UNTextInputNotificationResponse *response = [[[self alloc] init] autorelease];
-    response->_notification = [notification copy];
-    response->_actionIdentifier = [actionIdentifier copy];
-    response->_userText = [userText copy];
-    return response;
-}
-
-- (void)dealloc
-{
-    [_userText release];
-    [super dealloc];
-}
-
-- (id)copyWithZone:(NSZone *)zone
-{
-    UNTextInputNotificationResponse *copy = [super copyWithZone:zone];
-    copy->_userText = [self.userText copyWithZone:zone];
-    return copy;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-    [super encodeWithCoder:coder];
-    [coder encodeObject:_userText forKey:@"userText"];
-}
-
-- (instancetype)initWithCoder:(NSCoder *)coder
-{
-    self = [super initWithCoder:coder];
-    if (self) {
-        _userText = [[coder decodeObjectOfClass:[NSString class] forKey:@"userText"] copy];
-    }
-    return self;
+    NSLog(@"Stub called: %@ in %@", NSStringFromSelector([anInvocation selector]), [self class]);
 }
 
 @end

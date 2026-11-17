@@ -1,8 +1,7 @@
 /*
  This file is part of Darling.
 
- Copyright (C) 2021 Lubos Dolezel
- Copyright (C) 2026 Darling developers
+ Copyright (C) 2026 Darling Developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -28,54 +27,46 @@ typedef NS_ENUM(NSInteger, UNAuthorizationStatus) {
     UNAuthorizationStatusDenied,
     UNAuthorizationStatusAuthorized,
     UNAuthorizationStatusProvisional,
-    UNAuthorizationStatusEphemeral
+    UNAuthorizationStatusEphemeral,
 };
 
 typedef NS_ENUM(NSInteger, UNNotificationSetting) {
     UNNotificationSettingNotSupported = 0,
     UNNotificationSettingDisabled,
-    UNNotificationSettingEnabled
+    UNNotificationSettingEnabled,
 };
 
 typedef NS_ENUM(NSInteger, UNAlertStyle) {
     UNAlertStyleNone = 0,
     UNAlertStyleBanner,
-    UNAlertStyleAlert
+    UNAlertStyleAlert,
 };
 
 typedef NS_ENUM(NSInteger, UNShowPreviewsSetting) {
-    UNShowPreviewsSettingAlways = 0,
+    UNShowPreviewsSettingAlways,
     UNShowPreviewsSettingWhenAuthenticated,
-    UNShowPreviewsSettingNever
+    UNShowPreviewsSettingNever,
 };
 
-@interface UNNotificationSettings : NSObject <NSCopying, NSSecureCoding> {
-    UNAuthorizationStatus _authorizationStatus;
-    UNNotificationSetting _soundSetting;
-    UNNotificationSetting _badgeSetting;
-    UNNotificationSetting _alertSetting;
-    UNNotificationSetting _notificationCenterSetting;
-    UNNotificationSetting _lockScreenSetting;
-    UNNotificationSetting _carPlaySetting;
-    UNAlertStyle _alertStyle;
-    UNShowPreviewsSetting _showPreviewsSetting;
-    UNNotificationSetting _criticalAlertSetting;
-    BOOL _providesAppNotificationSettings;
-    UNNotificationSetting _announcementSetting;
-}
+@interface UNNotificationSettings : NSObject <NSCopying, NSSecureCoding>
 
-@property(readonly) UNAuthorizationStatus authorizationStatus;
-@property(readonly) UNNotificationSetting soundSetting;
-@property(readonly) UNNotificationSetting badgeSetting;
-@property(readonly) UNNotificationSetting alertSetting;
-@property(readonly) UNNotificationSetting notificationCenterSetting;
-@property(readonly) UNNotificationSetting lockScreenSetting;
-@property(readonly) UNNotificationSetting carPlaySetting;
-@property(readonly) UNAlertStyle alertStyle;
-@property(readonly) UNShowPreviewsSetting showPreviewsSetting;
-@property(readonly) UNNotificationSetting criticalAlertSetting;
-@property(readonly) BOOL providesAppNotificationSettings;
-@property(readonly) UNNotificationSetting announcementSetting;
+- (instancetype) init NS_UNAVAILABLE;
+
+@property (readonly) UNAuthorizationStatus authorizationStatus;
+@property (readonly) UNNotificationSetting soundSetting;
+@property (readonly) UNNotificationSetting badgeSetting;
+@property (readonly) UNNotificationSetting alertSetting;
+@property (readonly) UNNotificationSetting notificationCenterSetting;
+@property (readonly) UNNotificationSetting lockScreenSetting;
+@property (readonly) UNNotificationSetting carPlaySetting;
+@property (readonly) UNNotificationSetting criticalAlertSetting;
+@property (readonly) UNNotificationSetting announcementSetting;
+@property (readonly) UNNotificationSetting timeSensitiveSetting;
+@property (readonly) UNNotificationSetting scheduledDeliverySetting;
+@property (readonly) UNNotificationSetting directMessagesSetting;
+@property (readonly) UNAlertStyle alertStyle;
+@property (readonly) UNShowPreviewsSetting showPreviewsSetting;
+@property (readonly) BOOL providesAppNotificationSettings;
 
 @end
 

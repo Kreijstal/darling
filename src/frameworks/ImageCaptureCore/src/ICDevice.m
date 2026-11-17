@@ -23,9 +23,6 @@
 // Value observed on macOS 26 by printing the public constant (rung 4).
 ICDeviceTransport const ICTransportTypeMassStorage = @"ICTransportTypeMassStorage";
 
-// Value observed on macOS 26 by printing the public constant (rung 4).
-ICDeviceTransport const ICTransportTypeMassStorage = @"ICTransportTypeMassStorage";
-
 @implementation ICDevice
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector

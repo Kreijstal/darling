@@ -22,8 +22,6 @@
 
 NSString *const ASAttributeDownloadSize = @"_DownloadSize";
 
-NSString *const ASAttributeDownloadSize = @"ASAttributeDownloadSize";
-
 @implementation ASAsset
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector

@@ -2,7 +2,6 @@
  This file is part of Darling.
 
  Copyright (C) 2021 Lubos Dolezel
- Copyright (C) 2026 Darling developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -18,25 +17,8 @@
  along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _USERNOTIFICATIONS_UNTEXTINPUTNOTIFICATIONACTION_H_
-#define _USERNOTIFICATIONS_UNTEXTINPUTNOTIFICATIONACTION_H_
+#include <Foundation/Foundation.h>
 
-#import <UserNotifications/UNNotificationAction.h>
-
-@interface UNTextInputNotificationAction : UNNotificationAction {
-    NSString *_textInputButtonTitle;
-    NSString *_textInputPlaceholder;
-}
-
-+ (instancetype)actionWithIdentifier:(NSString *)identifier
-                               title:(NSString *)title
-                             options:(UNNotificationActionOptions)options
-                textInputButtonTitle:(NSString *)textInputButtonTitle
-                textInputPlaceholder:(NSString *)textInputPlaceholder;
-
-@property(readonly, copy) NSString *textInputButtonTitle;
-@property(readonly, copy) NSString *textInputPlaceholder;
+@interface UNTextInputNotificationAction : NSObject
 
 @end
-
-#endif

@@ -438,7 +438,6 @@ void generate_wrapper(std::ofstream& output, const char* soname, const std::set<
 				"#endif\n";
 		}
 		output << "WRAPGEN_RESOLVER void* " << sym << "() {\n"
-		output << "void* " << sym << "() {\n"
 			"\t__asm__(\".symbol_resolver _" << sym << "\");\n"
 			"#if defined(__arm64__)\n";
 		if (packedGLUpload)

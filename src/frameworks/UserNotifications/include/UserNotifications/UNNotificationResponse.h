@@ -1,8 +1,7 @@
 /*
  This file is part of Darling.
 
- Copyright (C) 2021 Lubos Dolezel
- Copyright (C) 2026 Darling developers
+ Copyright (C) 2026 Darling Developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -22,20 +21,21 @@
 #define _USERNOTIFICATIONS_UNNOTIFICATIONRESPONSE_H_
 
 #import <Foundation/Foundation.h>
-#import <UserNotifications/UNNotification.h>
 
-extern NSString *const UNNotificationDefaultActionIdentifier;
-extern NSString *const UNNotificationDismissActionIdentifier;
+@class UNNotification;
 
-@interface UNNotificationResponse : NSObject <NSCopying, NSSecureCoding> {
-    UNNotification *_notification;
-    NSString *_actionIdentifier;
-}
+/* The user opened the notification. */
+extern NSString * const UNNotificationDefaultActionIdentifier;
+/* The user dismissed it (only for categories with
+   UNNotificationCategoryOptionCustomDismissAction). */
+extern NSString * const UNNotificationDismissActionIdentifier;
 
-+ (instancetype)responseWithNotification:(UNNotification *)notification actionIdentifier:(NSString *)actionIdentifier;
+@interface UNNotificationResponse : NSObject <NSCopying, NSSecureCoding>
 
-@property(readonly, copy) UNNotification *notification;
-@property(readonly, copy) NSString *actionIdentifier;
+- (instancetype) init NS_UNAVAILABLE;
+
+@property (readonly, copy) UNNotification *notification;
+@property (readonly, copy) NSString *actionIdentifier;
 
 @end
 

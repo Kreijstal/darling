@@ -1,8 +1,7 @@
 /*
  This file is part of Darling.
 
- Copyright (C) 2021 Lubos Dolezel
- Copyright (C) 2026 Darling developers
+ Copyright (C) 2026 Darling Developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,15 +22,15 @@
 
 #import <UserNotifications/UNNotificationTrigger.h>
 
-@interface UNCalendarNotificationTrigger : UNNotificationTrigger {
-    NSDateComponents *_dateComponents;
-}
+/* Fires at the next date matching the components (in the current
+   calendar and time zone, unless the components name their own). */
+@interface UNCalendarNotificationTrigger : UNNotificationTrigger
 
-+ (instancetype)triggerWithDateMatchingComponents:(NSDateComponents *)dateComponents repeats:(BOOL)repeats;
++ (instancetype) triggerWithDateMatchingComponents: (NSDateComponents *) dateComponents repeats: (BOOL) repeats;
 
-@property(readonly, copy) NSDateComponents *dateComponents;
+@property (readonly, copy) NSDateComponents *dateComponents;
 
-- (nullable NSDate *)nextTriggerDate;
+- (NSDate *) nextTriggerDate;
 
 @end
 

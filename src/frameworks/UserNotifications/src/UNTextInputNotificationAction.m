@@ -2,7 +2,6 @@
  This file is part of Darling.
 
  Copyright (C) 2021 Lubos Dolezel
- Copyright (C) 2026 Darling developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -22,58 +21,14 @@
 
 @implementation UNTextInputNotificationAction
 
-@synthesize textInputButtonTitle = _textInputButtonTitle;
-@synthesize textInputPlaceholder = _textInputPlaceholder;
-
-+ (BOOL)supportsSecureCoding
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return YES;
+    return [NSMethodSignature signatureWithObjCTypes: "v@:"];
 }
 
-+ (instancetype)actionWithIdentifier:(NSString *)identifier
-                               title:(NSString *)title
-                             options:(UNNotificationActionOptions)options
-                textInputButtonTitle:(NSString *)textInputButtonTitle
-                textInputPlaceholder:(NSString *)textInputPlaceholder
+- (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    UNTextInputNotificationAction *action = [super actionWithIdentifier:identifier title:title options:options];
-    if (action) {
-        action->_textInputButtonTitle = [textInputButtonTitle copy];
-        action->_textInputPlaceholder = [textInputPlaceholder copy];
-    }
-    return action;
-}
-
-- (void)dealloc
-{
-    [_textInputButtonTitle release];
-    [_textInputPlaceholder release];
-    [super dealloc];
-}
-
-- (id)copyWithZone:(NSZone *)zone
-{
-    UNTextInputNotificationAction *copy = [super copyWithZone:zone];
-    copy->_textInputButtonTitle = [self.textInputButtonTitle copyWithZone:zone];
-    copy->_textInputPlaceholder = [self.textInputPlaceholder copyWithZone:zone];
-    return copy;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-    [super encodeWithCoder:coder];
-    [coder encodeObject:_textInputButtonTitle forKey:@"textInputButtonTitle"];
-    [coder encodeObject:_textInputPlaceholder forKey:@"textInputPlaceholder"];
-}
-
-- (instancetype)initWithCoder:(NSCoder *)coder
-{
-    self = [super initWithCoder:coder];
-    if (self) {
-        _textInputButtonTitle = [[coder decodeObjectOfClass:[NSString class] forKey:@"textInputButtonTitle"] copy];
-        _textInputPlaceholder = [[coder decodeObjectOfClass:[NSString class] forKey:@"textInputPlaceholder"] copy];
-    }
-    return self;
+    NSLog(@"Stub called: %@ in %@", NSStringFromSelector([anInvocation selector]), [self class]);
 }
 
 @end

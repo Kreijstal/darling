@@ -80,6 +80,10 @@ struct elf_calls
 	// process that exec'd this one. Returns 0 and fills limits, or -1 if
 	// there are none (the Linux limit applies).
 	int (*inherited_nofile_limit)(unsigned int limits[2]);
+
+	// Legacy slot kept for libsystem_kernel's fork path; the mldr has no native
+	// thread broker to restart, so it does nothing.
+	void (*arm64_thread_bridge_postfork_complete)(void);
 };
 
 #endif

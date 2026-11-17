@@ -2,7 +2,6 @@
  This file is part of Darling.
 
  Copyright (C) 2021 Lubos Dolezel
- Copyright (C) 2026 Darling developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -18,26 +17,8 @@
  along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _USERNOTIFICATIONS_UNNOTIFICATIONATTACHMENT_H_
-#define _USERNOTIFICATIONS_UNNOTIFICATIONATTACHMENT_H_
+#include <Foundation/Foundation.h>
 
-#import <Foundation/Foundation.h>
-
-@interface UNNotificationAttachment : NSObject <NSCopying, NSSecureCoding> {
-    NSString *_identifier;
-    NSURL *_URL;
-    NSString *_type;
-}
-
-+ (nullable instancetype)attachmentWithIdentifier:(nullable NSString *)identifier
-                                              URL:(NSURL *)URL
-                                          options:(nullable NSDictionary *)options
-                                            error:(NSError **)error;
-
-@property(readonly, copy) NSString *identifier;
-@property(readonly, copy) NSURL *URL;
-@property(readonly, copy) NSString *type;
+@interface UNNotificationAttachment : NSObject
 
 @end
-
-#endif

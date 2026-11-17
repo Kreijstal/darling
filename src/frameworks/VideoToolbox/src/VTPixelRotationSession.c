@@ -59,5 +59,5 @@ OSStatus VTPixelRotationSessionRotateImage(VTPixelRotationSessionRef session,
 	(void) destinationBuffer;
 	if (session == NULL)
 		return kVTInvalidSessionErr;
-	return kVTPixelRotationNotSupportedErr;
+	return kVTImageRotationNotSupportedErr;
 }

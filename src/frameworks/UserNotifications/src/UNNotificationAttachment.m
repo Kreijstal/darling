@@ -2,7 +2,6 @@
  This file is part of Darling.
 
  Copyright (C) 2021 Lubos Dolezel
- Copyright (C) 2026 Darling developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -22,67 +21,14 @@
 
 @implementation UNNotificationAttachment
 
-@synthesize identifier = _identifier;
-@synthesize URL = _URL;
-@synthesize type = _type;
-
-+ (BOOL)supportsSecureCoding
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return YES;
+    return [NSMethodSignature signatureWithObjCTypes: "v@:"];
 }
 
-+ (nullable instancetype)attachmentWithIdentifier:(nullable NSString *)identifier
-                                              URL:(NSURL *)URL
-                                          options:(nullable NSDictionary *)options
-                                            error:(NSError **)error
+- (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    if (URL == nil) {
-        if (error) {
-            *error = [NSError errorWithDomain:@"UNErrorDomain" code:1 userInfo:nil];
-        }
-        return nil;
-    }
-
-    UNNotificationAttachment *attachment = [[[self alloc] init] autorelease];
-    attachment->_identifier = identifier ? [identifier copy] : [[[NSUUID UUID] UUIDString] copy];
-    attachment->_URL = [URL copy];
-    attachment->_type = [[URL pathExtension] copy];
-    return attachment;
-}
-
-- (void)dealloc
-{
-    [_identifier release];
-    [_URL release];
-    [_type release];
-    [super dealloc];
-}
-
-- (id)copyWithZone:(NSZone *)zone
-{
-    UNNotificationAttachment *copy = [[[self class] allocWithZone:zone] init];
-    copy->_identifier = [self.identifier copyWithZone:zone];
-    copy->_URL = [self.URL copyWithZone:zone];
-    copy->_type = [self.type copyWithZone:zone];
-    return copy;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-    [coder encodeObject:_identifier forKey:@"identifier"];
-    [coder encodeObject:_URL forKey:@"URL"];
-    [coder encodeObject:_type forKey:@"type"];
-}
-
-- (instancetype)initWithCoder:(NSCoder *)coder
-{
-    self = [super init];
-    if (self) {
-        _identifier = [[coder decodeObjectOfClass:[NSString class] forKey:@"identifier"] copy];
-        _URL = [[coder decodeObjectOfClass:[NSURL class] forKey:@"URL"] copy];
-        _type = [[coder decodeObjectOfClass:[NSString class] forKey:@"type"] copy];
-    }
-    return self;
+    NSLog(@"Stub called: %@ in %@", NSStringFromSelector([anInvocation selector]), [self class]);
 }
 
 @end

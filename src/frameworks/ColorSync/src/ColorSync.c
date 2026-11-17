@@ -29,16 +29,16 @@ static void initme(void) {
     verbose = getenv("STUB_VERBOSE") != NULL;
 }
 
-void* CGDisplayCreateUUIDFromDisplayID(void)
+CFUUIDRef CGDisplayCreateUUIDFromDisplayID(uint32_t display)
 {
     if (verbose) puts("STUB: CGDisplayCreateUUIDFromDisplayID called");
     return NULL;
 }
 
-void* CGDisplayGetDisplayIDFromUUID(void)
+uint32_t CGDisplayGetDisplayIDFromUUID(CFUUIDRef uuid)
 {
     if (verbose) puts("STUB: CGDisplayGetDisplayIDFromUUID called");
-    return NULL;
+    return 0;
 }
 
 void* CMProfileFromColorSyncProfile(void)
