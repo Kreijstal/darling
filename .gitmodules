@@ -1,22 +1,22 @@
 [submodule "src/external/libdispatch"]
 	path = src/external/libdispatch
-	url = https://github.com/VibeDarling/darling-libdispatch.git
+	url = https://github.com/Kreijstal/darling-libdispatch.git
 [submodule "src/external/libcxx"]
 	path = src/external/libcxx
-	url = https://github.com/VibeDarling/darling-libcxx.git
+	url = https://github.com/Kreijstal/darling-libcxx.git
 [submodule "src/external/libcxxabi"]
 	path = src/external/libcxxabi
-	url = https://github.com/VibeDarling/darling-libcxxabi.git
+	url = https://github.com/Kreijstal/darling-libcxxabi.git
 [submodule "src/external/libkqueue"]
 	path = src/external/libkqueue
 	url = https://github.com/Kreijstal/darling-libkqueue.git
 	branch = master
 [submodule "src/external/zlib"]
 	path = src/external/zlib
-	url = https://github.com/VibeDarling/darling-zlib.git
+	url = https://github.com/Kreijstal/darling-zlib.git
 [submodule "src/external/bzip2"]
 	path = src/external/bzip2
-	url = https://github.com/VibeDarling/darling-bzip2.git
+	url = https://github.com/Kreijstal/darling-bzip2.git
 [submodule "src/external/libxml2"]
 	path = src/external/libxml2
 	url = https://github.com/VibeDarling/darling-libxml2.git
@@ -33,28 +33,28 @@
 	branch = master
 [submodule "src/external/icu"]
 	path = src/external/icu
-	url = https://github.com/VibeDarling/darling-icu.git
+	url = https://github.com/Kreijstal/darling-icu.git
 [submodule "src/external/libxslt"]
 	path = src/external/libxslt
 	url = https://github.com/VibeDarling/darling-libxslt.git
 [submodule "src/external/openssl"]
 	path = src/external/openssl
-	url = https://github.com/VibeDarling/darling-openssl.git
+	url = https://github.com/Kreijstal/darling-openssl.git
 [submodule "src/external/curl"]
 	path = src/external/curl
 	url = https://github.com/VibeDarling/darling-curl.git
 [submodule "src/external/shell_cmds"]
 	path = src/external/shell_cmds
-	url = https://github.com/VibeDarling/darling-shell_cmds.git
+	url = https://github.com/Kreijstal/darling-shell_cmds.git
 [submodule "src/external/file_cmds"]
 	path = src/external/file_cmds
-	url = https://github.com/VibeDarling/darling-file_cmds.git
+	url = https://github.com/Kreijstal/darling-file_cmds.git
 [submodule "src/external/bash"]
 	path = src/external/bash
-	url = https://github.com/VibeDarling/darling-bash.git
+	url = https://github.com/Kreijstal/darling-bash.git
 [submodule "src/external/darling-dmg"]
 	path = src/external/darling-dmg
-	url = https://github.com/VibeDarling/darling-dmg.git
+	url = https://github.com/Kreijstal/darling-dmg.git
 [submodule "src/external/bomutils"]
 	path = src/external/bomutils
 	url = https://github.com/VibeDarling/bomutils.git
@@ -64,7 +64,7 @@
 	url = https://github.com/VibeDarling/darling-installer.git
 [submodule "src/external/liblzma"]
 	path = src/external/liblzma
-	url = https://github.com/VibeDarling/darling-liblzma.git
+	url = https://github.com/Kreijstal/darling-liblzma.git
 [submodule "src/external/cfnetwork"]
 	path = src/external/cfnetwork
 	url = https://github.com/Kreijstal/darling-cfnetwork.git
@@ -98,10 +98,10 @@
 	url = https://github.com/VibeDarling/darling-python.git
 [submodule "src/external/expat"]
 	path = src/external/expat
-	url = https://github.com/VibeDarling/darling-expat.git
+	url = https://github.com/Kreijstal/darling-expat.git
 [submodule "src/external/sqlite"]
 	path = src/external/sqlite
-	url = https://github.com/VibeDarling/darling-sqlite.git
+	url = https://github.com/Kreijstal/darling-sqlite.git
 [submodule "src/external/libauto"]
 	path = src/external/libauto
 	url = https://github.com/VibeDarling/darling-libauto.git
@@ -110,10 +110,10 @@
 	url = https://github.com/VibeDarling/darling-coretls.git
 [submodule "src/external/security"]
 	path = src/external/security
-	url = https://github.com/VibeDarling/darling-security.git
+	url = https://github.com/Kreijstal/darling-security.git
 [submodule "src/external/libxpc"]
 	path = src/external/libxpc
-	url = https://github.com/VibeDarling/darling-libxpc.git
+	url = https://github.com/Kreijstal/darling-libxpc.git
 [submodule "src/external/gnutar"]
 	path = src/external/gnutar
 	url = https://github.com/VibeDarling/darling-gnutar.git
@@ -134,10 +134,10 @@
 	url = https://github.com/VibeDarling/darling-file.git
 [submodule "src/external/corecrypto"]
 	path = src/external/corecrypto
-	url = https://github.com/VibeDarling/darling-corecrypto.git
+	url = https://github.com/Kreijstal/darling-corecrypto.git
 [submodule "src/external/ruby"]
 	path = src/external/ruby
-	url = https://github.com/VibeDarling/darling-ruby.git
+	url = https://github.com/Kreijstal/darling-ruby.git
 [submodule "src/external/commoncrypto"]
 	path = src/external/commoncrypto
 	url = https://github.com/VibeDarling/darling-commoncrypto.git
@@ -158,10 +158,10 @@
 	url = https://github.com/VibeDarling/darling-bc.git
 [submodule "src/external/openssl_certificates"]
 	path = src/external/openssl_certificates
-	url = https://github.com/VibeDarling/darling-openssl_certificates.git
+	url = https://github.com/Kreijstal/darling-openssl_certificates.git
 [submodule "src/external/IOKitUser"]
 	path = src/external/IOKitUser
-	url = https://github.com/VibeDarling/darling-iokituser.git
+	url = https://github.com/Kreijstal/darling-iokituser.git
 [submodule "src/external/IOStorageFamily"]
 	path = src/external/IOStorageFamily
 	url = https://github.com/VibeDarling/darling-iostoragefamily.git
@@ -173,10 +173,10 @@
 	url = https://github.com/VibeDarling/darling-top.git
 [submodule "src/external/perl"]
 	path = src/external/perl
-	url = https://github.com/VibeDarling/darling-perl.git
+	url = https://github.com/Kreijstal/darling-perl.git
 [submodule "src/external/cctools-port"]
 	path = src/external/cctools-port
-	url = https://github.com/VibeDarling/cctools-port.git
+	url = https://github.com/Kreijstal/cctools-port.git
 [submodule "src/external/objc4"]
 	path = src/external/objc4
 	url = https://github.com/Kreijstal/darling-objc4.git
@@ -187,13 +187,13 @@
 	branch = master
 [submodule "src/external/libpthread"]
 	path = src/external/libpthread
-	url = https://github.com/VibeDarling/darling-libpthread.git
+	url = https://github.com/Kreijstal/darling-libpthread.git
 [submodule "src/external/syslog"]
 	path = src/external/syslog
-	url = https://github.com/VibeDarling/darling-syslog.git
+	url = https://github.com/Kreijstal/darling-syslog.git
 [submodule "src/external/libclosure"]
 	path = src/external/libclosure
-	url = https://github.com/VibeDarling/darling-libclosure.git
+	url = https://github.com/Kreijstal/darling-libclosure.git
 [submodule "src/external/configd"]
 	path = src/external/configd
 	url = https://github.com/Kreijstal/darling-configd.git
@@ -206,7 +206,7 @@
 	url = https://github.com/VibeDarling/darling-tcsh.git
 [submodule "src/external/system_cmds"]
 	path = src/external/system_cmds
-	url = https://github.com/VibeDarling/darling-system_cmds.git
+	url = https://github.com/Kreijstal/darling-system_cmds.git
 [submodule "src/external/zsh"]
 	path = src/external/zsh
 	url = https://github.com/VibeDarling/darling-zsh.git
@@ -236,7 +236,7 @@
 	url = https://github.com/VibeDarling/darling-DirectoryService.git
 [submodule "src/external/TextEdit"]
 	path = src/external/TextEdit
-	url = https://github.com/VibeDarling/darling-TextEdit.git
+	url = https://github.com/Kreijstal/darling-TextEdit.git
 [submodule "src/external/bsm"]
 	path = src/external/bsm
 	url = https://github.com/VibeDarling/darling-bsm.git
@@ -270,7 +270,7 @@
 	url = https://github.com/VibeDarling/darling-files.git
 [submodule "src/external/crontabs"]
 	path = src/external/crontabs
-	url = https://github.com/VibeDarling/darling-crontabs.git
+	url = https://github.com/Kreijstal/darling-crontabs.git
 [submodule "src/external/WTF"]
 	path = src/external/WTF
 	url = https://github.com/VibeDarling/darling-WTF.git
@@ -305,10 +305,10 @@
 	url = https://github.com/VibeDarling/lzfse.git
 [submodule "src/external/OpenDirectory"]
 	path = src/external/OpenDirectory
-	url = https://github.com/VibeDarling/darling-opendirectory.git
+	url = https://github.com/Kreijstal/darling-opendirectory.git
 [submodule "src/external/iokitd"]
 	path = src/external/iokitd
-	url = https://github.com/VibeDarling/darling-iokitd.git
+	url = https://github.com/Kreijstal/darling-iokitd.git
 [submodule "src/external/OpenAL"]
 	path = src/external/OpenAL
 	url = https://github.com/VibeDarling/darling-openal.git
@@ -317,19 +317,19 @@
 	url = https://github.com/VibeDarling/darling-usertemplate.git
 [submodule "src/external/libtrace"]
 	path = src/external/libtrace
-	url = https://github.com/VibeDarling/darling-libtrace.git
+	url = https://github.com/Kreijstal/darling-libtrace.git
 [submodule "src/external/rsync"]
 	path = src/external/rsync
 	url = https://github.com/VibeDarling/darling-rsync.git
 [submodule "src/external/cups"]
 	path = src/external/cups
-	url = https://github.com/VibeDarling/darling-cups.git
+	url = https://github.com/Kreijstal/darling-cups.git
 [submodule "src/external/libffi"]
 	path = src/external/libffi
-	url = https://github.com/VibeDarling/darling-libffi.git
+	url = https://github.com/Kreijstal/darling-libffi.git
 [submodule "src/external/dbuskit"]
 	path = src/external/dbuskit
-	url = https://github.com/VibeDarling/darling-dbuskit.git
+	url = https://github.com/Kreijstal/darling-dbuskit.git
 [submodule "src/external/IOKitTools"]
 	path = src/external/IOKitTools
 	url = https://github.com/VibeDarling/darling-IOKitTools.git
@@ -396,14 +396,14 @@
 	branch = main
 [submodule "src/external/libmalloc"]
 	path = src/external/libmalloc
-	url = https://github.com/VibeDarling/darling-libmalloc.git
+	url = https://github.com/Kreijstal/darling-libmalloc.git
 [submodule "src/external/libc"]
 	path = src/external/libc
 	url = https://github.com/Kreijstal/darling-Libc.git
 	branch = main
 [submodule "src/external/libsystem"]
 	path = src/external/libsystem
-	url = https://github.com/VibeDarling/darling-Libsystem.git
+	url = https://github.com/Kreijstal/darling-Libsystem.git
 [submodule "src/external/dyld"]
 	path = src/external/dyld
 	url = https://github.com/Kreijstal/darling-dyld.git
@@ -413,7 +413,7 @@
 	url = https://github.com/VibeDarling/darling-AvailabilityVersions
 [submodule "src/external/libnotify"]
 	path = src/external/libnotify
-	url = https://github.com/VibeDarling/darling-Libnotify.git
+	url = https://github.com/Kreijstal/darling-Libnotify.git
 [submodule "src/external/csu"]
 	path = src/external/csu
 	url = https://github.com/VibeDarling/darling-Csu.git
@@ -429,10 +429,10 @@
 	url = https://github.com/VibeDarling/darling-architecture
 [submodule "src/external/bootstrap_cmds"]
 	path = src/external/bootstrap_cmds
-	url = https://github.com/VibeDarling/darling-bootstrap_cmds.git
+	url = https://github.com/Kreijstal/darling-bootstrap_cmds.git
 [submodule "src/external/copyfile"]
 	path = src/external/copyfile
-	url = https://github.com/VibeDarling/darling-copyfile.git
+	url = https://github.com/Kreijstal/darling-copyfile.git
 [submodule "src/external/keymgr"]
 	path = src/external/keymgr
 	url = https://github.com/VibeDarling/darling-keymgr.git
@@ -444,13 +444,13 @@
 	url = https://github.com/VibeDarling/darling-libiconv.git
 [submodule "src/external/libresolv"]
 	path = src/external/libresolv
-	url = https://github.com/VibeDarling/darling-libresolv.git
+	url = https://github.com/Kreijstal/darling-libresolv.git
 [submodule "src/external/libstdcxx"]
 	path = src/external/libstdcxx
 	url = https://github.com/VibeDarling/darling-libstdcxx.git
 [submodule "src/external/libunwind"]
 	path = src/external/libunwind
-	url = https://github.com/VibeDarling/darling-libunwind.git
+	url = https://github.com/Kreijstal/darling-libunwind.git
 [submodule "src/external/libutil"]
 	path = src/external/libutil
 	url = https://github.com/VibeDarling/darling-libutil.git
