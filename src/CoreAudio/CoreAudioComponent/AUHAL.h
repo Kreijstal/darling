@@ -38,7 +38,6 @@ public:
 	OSStatus SetAudioChannelLayout(AudioUnitScope scope, AudioUnitElement element, const AudioChannelLayout* layout) override;
 	bool CanScheduleParameters() const override;
 	bool StreamFormatWritable(AudioUnitScope scope, AudioUnitElement element) override;
-	bool ValidFormat(AudioUnitScope inScope, AudioUnitElement inElement, const CAStreamBasicDescription & inNewFormat) override;
 	OSStatus Version() override;
 
 	OSStatus Start() override;
@@ -77,9 +76,6 @@ private:
 	OSStatus doPlayback(const AudioTimeStamp* inNow, AudioBufferList* outOutputData, const AudioTimeStamp* inOutputTime);
 	OSStatus doRecord(const AudioTimeStamp* inNow, const AudioBufferList* inInputData, const AudioTimeStamp* inInputTime);
 	
-	UInt32 GetChannelLayoutTags(AudioUnitScope scope, AudioUnitElement element, AudioChannelLayoutTag *outLayoutTags) override;
-	UInt32 GetAudioChannelLayout(AudioUnitScope scope, AudioUnitElement element, AudioChannelLayout *outLayoutPtr, Boolean &outWritable) override;
-	OSStatus SetAudioChannelLayout(AudioUnitScope scope, AudioUnitElement element, const AudioChannelLayout *inLayout) override;
 	OSStatus RemoveAudioChannelLayout(AudioUnitScope scope, AudioUnitElement element) override;
 
 protected:

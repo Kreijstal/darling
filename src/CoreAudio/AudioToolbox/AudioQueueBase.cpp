@@ -150,3 +150,9 @@ OSStatus OpaqueAudioQueue::removePropertyListener(AudioQueuePropertyID inID, Aud
 	STUB();
 	return unimpErr;
 }
+
+OSStatus OpaqueAudioQueue::getCurrentTime(AudioTimeStamp *outTimeStamp, Boolean *outTimelineDiscontinuity)
+{
+	STUB();
+	return unimpErr;
+}

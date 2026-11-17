@@ -25,6 +25,11 @@
 typedef int64_t CMTimeValue;
 typedef int32_t CMTimeScale;
 typedef int64_t CMTimeEpoch;
+
+enum {
+	kCMTimeMaxTimescale = 0x7fffffffL
+};
+
 typedef CF_OPTIONS(uint32_t, CMTimeFlags) {
 	kCMTimeFlags_Valid = (1UL << 0),
 	kCMTimeFlags_HasBeenRounded = (1UL << 1),

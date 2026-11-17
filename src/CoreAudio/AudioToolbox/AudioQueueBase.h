@@ -22,6 +22,8 @@ public:
 
 	virtual OSStatus dispose(Boolean inImmediate) = 0;
 
+	virtual OSStatus getCurrentTime(AudioTimeStamp *outTimeStamp, Boolean *outTimelineDiscontinuity);
+
 	virtual OSStatus getParameter(AudioQueueParameterID inParamID, AudioQueueParameterValue *outValue);
 	virtual OSStatus setParameter(AudioQueueParameterID inParamID, AudioQueueParameterValue inValue);
 
