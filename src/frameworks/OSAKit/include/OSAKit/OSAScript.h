@@ -31,12 +31,6 @@ extern NSString *const OSAScriptErrorAppAddressKey;
 extern NSString *const OSAScriptErrorAppNameKey;
 extern NSString *const OSAScriptErrorRangeKey;
 
-extern NSString *const OSAScriptErrorMessage;
-extern NSString *const OSAScriptErrorBriefMessage;
-extern NSString *const OSAScriptErrorNumber;
-extern NSString *const OSAScriptErrorAppName;
-extern NSString *const OSAScriptErrorRange;
-
 extern NSString *const OSAStorageScriptType;
 extern NSString *const OSAStorageScriptBundleType;
 extern NSString *const OSAStorageApplicationType;
@@ -78,7 +72,6 @@ typedef NS_OPTIONS(NSUInteger, OSAStorageOptions) {
 @property (readonly, getter=isCompiled) BOOL compiled;
 @property (readonly, copy) NSAttributedString *richTextSource;
 @property (readonly) BOOL hasOpenHandler;
-@property (retain) NSDate *date;
 
 - (NSString *)sourceAndReturnError:(NSDictionary **)errorInfo;
 - (BOOL)compileAndReturnError:(NSDictionary **)errorInfo;
@@ -86,7 +79,6 @@ typedef NS_OPTIONS(NSUInteger, OSAStorageOptions) {
 - (NSAppleEventDescriptor *)executeAppleEvent:(NSAppleEventDescriptor *)event error:(NSDictionary **)errorInfo;
 - (NSAppleEventDescriptor *)executeAndReturnDisplayValue:(NSAttributedString **)displayValue error:(NSDictionary **)errorInfo;
 - (NSAttributedString *)richTextFromDescriptor:(NSAppleEventDescriptor *)descriptor;
-- (NSAttributedString *)richTextFromDescriptorForLog:(NSAppleEventDescriptor *)descriptor;
 - (NSData *)compiledDataForType:(NSString *)type usingStorageOptions:(OSAStorageOptions)storageOptions error:(NSDictionary **)errorInfo;
 - (BOOL)writeToURL:(NSURL *)url ofType:(NSString *)type error:(NSDictionary **)errorInfo;
 - (BOOL)writeToURL:(NSURL *)url ofType:(NSString *)type usingStorageOptions:(OSAStorageOptions)storageOptions error:(NSDictionary **)errorInfo;

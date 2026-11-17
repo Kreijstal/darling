@@ -29,36 +29,19 @@ static void initme(void) {
     verbose = getenv("STUB_VERBOSE") != NULL;
 }
 
-
-#include <CoreFoundation/CFUUID.h>
-
-CFUUIDRef CGDisplayCreateUUIDFromDisplayID(uint32_t display)
+void* CGDisplayCreateUUIDFromDisplayID(void)
 {
-    uint8_t b0 = (display >> 24) & 0xff;
-    uint8_t b1 = (display >> 16) & 0xff;
-    uint8_t b2 = (display >> 8) & 0xff;
-    uint8_t b3 = display & 0xff;
-    return CFUUIDCreateWithBytes(kCFAllocatorDefault,
-        b0, b1, b2, b3,
-        0x11, 0x22, 0x33, 0x44,
-        0x55, 0x66, 0x77, 0x88,
-        0x99, 0xaa, 0xbb, 0xcc);
+    if (verbose) puts("STUB: CGDisplayCreateUUIDFromDisplayID called");
+    return NULL;
 }
 
-uint32_t CGDisplayGetDisplayIDFromUUID(CFUUIDRef uuid)
+void* CGDisplayGetDisplayIDFromUUID(void)
 {
-    if (!uuid) return 1;
-    CFUUIDBytes b = CFUUIDGetUUIDBytes(uuid);
-    uint32_t id = ((uint32_t)b.byte0 << 24) |
-                  ((uint32_t)b.byte1 << 16) |
-                  ((uint32_t)b.byte2 << 8) |
-                  (uint32_t)b.byte3;
-    if (id == 0) return 1;
-    return id;
+    if (verbose) puts("STUB: CGDisplayGetDisplayIDFromUUID called");
+    return NULL;
 }
 
 void* CMProfileFromColorSyncProfile(void)
-
 {
     if (verbose) puts("STUB: CMProfileFromColorSyncProfile called");
     return NULL;
@@ -696,7 +679,7 @@ CFStringRef kColorSyncDeviceDescriptions     = CFSTR("DeviceDescriptions");
 CFStringRef kColorSyncFactoryProfiles        = CFSTR("FactoryProfiles");
 CFStringRef kColorSyncDeviceUserScope        = CFSTR("DeviceUserScope");
 CFStringRef kColorSyncDeviceHostScope        = CFSTR("DeviceHostScope");
-CFStringRef kColorSyncPrinterDeviceClass     = CFSTR("prnt");
+CFStringRef kColorSyncPrinterDeviceClass     = CFSTR("prtr");
 
 // Key of the per-mode custom-profile override map inside a device-info
 // dictionary. Despite the name it is a key, not the map itself: the value it
@@ -709,34 +692,31 @@ CFStringRef kColorSyncDisplayDeviceClass     = CFSTR("mntr");
 
 void* ColorSyncProfileCreateWithURLAndOptions(void)
 {
-    if (verbose) puts("STUB: ColorSyncProfileCreateWithURLAndOptions called");
     return NULL;
 }
 
 void* ColorSyncProfileCopyFlexGTCInfo(void)
 {
-    if (verbose) puts("STUB: ColorSyncProfileCopyFlexGTCInfo called");
     return NULL;
 }
 
 void* ColorSyncProfileCreateFlexGTCLookupData(void)
 {
-    if (verbose) puts("STUB: ColorSyncProfileCreateFlexGTCLookupData called");
     return NULL;
 }
 
-CFStringRef kColorSyncGenericGrayGamma22Profile = CFSTR("ColorSyncGenericGrayGamma22Profile");
-CFStringRef kColorSyncGenericLabProfile         = CFSTR("ColorSyncGenericLabProfile");
-CFStringRef kColorSyncGenericXYZProfile         = CFSTR("ColorSyncGenericXYZProfile");
-CFStringRef kColorSyncGenericCMYKProfile        = CFSTR("ColorSyncGenericCMYKProfile");
-CFStringRef kColorSyncSRGBProfile               = CFSTR("ColorSyncSRGBProfile");
-CFStringRef kColorSyncAdobeRGB1998Profile       = CFSTR("ColorSyncAdobeRGB1998Profile");
-CFStringRef kColorSyncITUR2020Profile           = CFSTR("ColorSyncITUR2020Profile");
+CFStringRef kColorSyncGenericGrayGamma22Profile = CFSTR("com.apple.ColorSync.GenericGrayGamma2.2");
+CFStringRef kColorSyncGenericLabProfile         = CFSTR("com.apple.ColorSync.GenericLab");
+CFStringRef kColorSyncGenericXYZProfile         = CFSTR("com.apple.ColorSync.GenericXYZ");
+CFStringRef kColorSyncGenericCMYKProfile        = CFSTR("com.apple.ColorSync.GenericCMYK");
+CFStringRef kColorSyncSRGBProfile               = CFSTR("com.apple.ColorSync.sRGB");
+CFStringRef kColorSyncAdobeRGB1998Profile       = CFSTR("com.apple.ColorSync.AdobeRGB1998");
+CFStringRef kColorSyncITUR2020Profile           = CFSTR("com.apple.ColorSync.ITUR2020");
 
-CFStringRef kColorSyncProfileHeader      = CFSTR("ColorSyncProfileHeader");
-CFStringRef kColorSyncProfileDescription = CFSTR("ColorSyncProfileDescription");
-CFStringRef kColorSyncProfileURL         = CFSTR("ColorSyncProfileURL");
-CFStringRef kColorSyncProfileMD5Digest   = CFSTR("ColorSyncProfileMD5Digest");
+CFStringRef kColorSyncProfileHeader      = CFSTR("com.apple.ColorSync.ProfileHeader");
+CFStringRef kColorSyncProfileDescription = CFSTR("com.apple.ColorSync.ProfileDescription");
+CFStringRef kColorSyncProfileURL         = CFSTR("com.apple.ColorSync.ProfileURL");
+CFStringRef kColorSyncProfileMD5Digest   = CFSTR("com.apple.ColorSync.ProfileMD5Digest");
 
 CFStringRef kColorSyncProfile                           = CFSTR("ColorSyncProfile");
 CFStringRef kColorSyncRenderingIntent                   = CFSTR("ColorSyncRenderingIntent");
@@ -750,12 +730,12 @@ CFStringRef kColorSyncTransformDeviceToPCS              = CFSTR("ColorSyncTransf
 CFStringRef kColorSyncTransformPCSToPCS                 = CFSTR("ColorSyncTransformPCSToPCS");
 CFStringRef kColorSyncTransformPCSToDevice              = CFSTR("ColorSyncTransformPCSToDevice");
 CFStringRef kColorSyncTransformGamutCheck               = CFSTR("ColorSyncTransformGamutCheck");
-CFStringRef kColorSyncTransformSimplifiedConversionData = CFSTR("ColorSyncTransformSimplifiedConversionData");
-CFStringRef kColorSyncConversion3DLut                   = CFSTR("ColorSyncConversion3DLut");
-CFStringRef kColorSyncConversionGridPoints              = CFSTR("ColorSyncConversionGridPoints");
+CFStringRef kColorSyncTransformSimplifiedConversionData = CFSTR("com.apple.cmm.SimplifiedConversion");
+CFStringRef kColorSyncConversion3DLut                   = CFSTR("com.apple.cmm.3D-LUT");
+CFStringRef kColorSyncConversionGridPoints              = CFSTR("com.apple.cmm.GridPointCount");
 CFStringRef kColorSyncBlackPointCompensation            = CFSTR("ColorSyncBlackPointCompensation");
-CFStringRef kColorSyncExtendedRange                     = CFSTR("ColorSyncExtendedRange");
-CFStringRef kColorSyncDoNotSubstituteProfiles           = CFSTR("ColorSyncDoNotSubstituteProfiles");
-CFStringRef kColorSyncWaitForCacheReply                 = CFSTR("ColorSyncWaitForCacheReply");
-CFStringRef kColorSyncGainMapBaselineHeadroom           = CFSTR("ColorSyncGainMapBaselineHeadroom");
-CFStringRef kColorSyncMonoGainMapParams                 = CFSTR("ColorSyncMonoGainMapParams");
+CFStringRef kColorSyncExtendedRange                     = CFSTR("com.apple.cmm.ExtendedRange");
+CFStringRef kColorSyncDoNotSubstituteProfiles           = CFSTR("com.apple.cmm.DoNotSubstituteProfiles");
+CFStringRef kColorSyncWaitForCacheReply                 = CFSTR("com.apple.ColorSync.WaitForCacheReply");
+CFStringRef kColorSyncGainMapBaselineHeadroom           = CFSTR("com.apple.ColorSync.GainMapBaselineHeadroom");
+CFStringRef kColorSyncMonoGainMapParams                 = CFSTR("com.apple.ColorSync.MonoGainMapParams");

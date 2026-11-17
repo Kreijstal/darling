@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #if defined(__i386__) || defined(__x86_64__)
-#include <cpuid.h>
+#include "cpu_caps_x86.h"
 #endif
 #include <unistd.h>
 #include <sys/sysinfo.h>
@@ -44,7 +44,6 @@ void commpage_setup(bool _64bit)
 	struct sysinfo si;
 	void* base = (void*)(_64bit ? _COMM_PAGE64_BASE_ADDRESS : _COMM_PAGE32_BASE_ADDRESS);
 	size_t length = _64bit ? _COMM_PAGE64_AREA_LENGTH : _COMM_PAGE32_AREA_LENGTH;
-	size_t text_len = length > 0x1000 ? length - 0x1000 : 0;
 
 	commpage = (uint8_t*) mmap(base, length, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED_NOREPLACE, -1, 0);
 	// Kernels before 4.17 ignore MAP_FIXED_NOREPLACE and treat the address as a hint.
@@ -58,20 +57,6 @@ void commpage_setup(bool _64bit)
 	{
 		fprintf(stderr, "Cannot mmap commpage: %s\n", strerror(errno));
 		exit(1);
-	}
-
-	// Fill text section with 'ret' so any commpage routine invocations safely return
-	if (text_len > 0)
-	{
-#if defined(__x86_64__) || defined(__i386__)
-		memset(commpage + 0x1000, 0xc3, text_len);
-#elif defined(__aarch64__)
-		uint32_t ret_insn = 0xd65f03c0;
-		for (size_t off = 0x1000; off + 4 <= 0x1000 + text_len; off += 4)
-		{
-			memcpy(commpage + off, &ret_insn, 4);
-		}
-#endif
 	}
 
 	signature = (char*)CGET(_COMM_PAGE_SIGNATURE);
@@ -114,9 +99,10 @@ void commpage_setup(bool _64bit)
 		*memsize = si.totalram * si.mem_unit;
 	}
 
-	// The commpage is only written here; guest code reads it.
-	if (mprotect(commpage, length - text_len, PROT_READ) != 0
-		|| (text_len > 0 && mprotect(commpage + 0x1000, text_len, PROT_READ|PROT_EXEC) != 0))
+	// The commpage is only written here; guest code only reads it. Darling
+	// puts no routines in the text part of the area, so none of it is
+	// executable.
+	if (mprotect(commpage, length, PROT_READ) != 0)
 	{
 		fprintf(stderr, "Cannot protect commpage: %s\n", strerror(errno));
 		exit(1);
@@ -162,68 +148,10 @@ uint64_t get_cpu_caps(void)
 
 #else /* x86 */
 	{
-		union cpu_flags1 eax;
-		union cpu_flags2 ecx;
-		union cpu_flags3 edx;
-		uint32_t ebx;
+		struct x86_cpu_features features;
 
-		eax.reg = ecx.reg = edx.reg = 0;
-		__cpuid(1, eax.reg, ebx, ecx.reg, edx.reg);
-
-		if (ecx.mmx)
-			caps |= kHasMMX;
-		if (ecx.sse)
-			caps |= kHasSSE;
-		if (ecx.sse2)
-			caps |= kHasSSE2;
-		if (edx.sse3)
-			caps |= kHasSSE3;
-		if (ecx.ia64)
-			caps |= k64Bit;
-		if (edx.ssse3)
-			caps |= kHasSupplementalSSE3;
-		if (edx.sse41)
-			caps |= kHasSSE4_1;
-		if (edx.sse42)
-			caps |= kHasSSE4_2;
-		if (edx.aes)
-			caps |= kHasAES;
-		if (edx.avx)
-			caps |= kHasAVX1_0;
-		if (edx.rdrnd)
-			caps |= kHasRDRAND;
-		if (edx.fma)
-			caps |= kHasFMA;
-		if (edx.f16c)
-			caps |= kHasF16C;
-	}
-	{
-		union cpu_flags4 ebx;
-		union cpu_flags5 ecx;
-		uint32_t edx = 0, eax = 7;
-
-		__cpuid(7, eax, ebx.reg, ecx.reg, edx);
-
-		if (ebx.erms)
-			caps |= kHasENFSTRG;
-		if (ebx.avx2)
-			caps |= kHasAVX2_0;
-		if (ebx.bmi1)
-			caps |= kHasBMI1;
-		if (ebx.bmi2)
-			caps |= kHasBMI2;
-		if (ebx.rtm)
-			caps |= kHasRTM;
-		if (ebx.hle)
-			caps |= kHasHLE;
-		if (ebx.rdseed)
-			caps |= kHasRDSEED;
-		if (ebx.adx)
-			caps |= kHasADX;
-		if (ebx.mpx)
-			caps |= kHasMPX;
-		if (ebx.sgx)
-			caps |= kHasSGX;
+		x86_cpu_features_read(&features);
+		caps = x86_cpu_caps_decode(&features);
 	}
 #endif /* __aarch64__ */
 
@@ -233,5 +161,10 @@ uint64_t get_cpu_caps(void)
 unsigned long commpage_address(bool _64bit)
 {
 	return _64bit ? _COMM_PAGE64_BASE_ADDRESS : _COMM_PAGE32_BASE_ADDRESS;
+}
+
+unsigned long commpage_length(bool _64bit)
+{
+	return _64bit ? _COMM_PAGE64_AREA_LENGTH : _COMM_PAGE32_AREA_LENGTH;
 }
 

@@ -74,6 +74,7 @@ add_framework(AVFAudio
         src/AVAudioUnit.m
         src/AVAudioEngine.m
         src/AVAudioChannelLayout.m
+        src/AVSpeechSynthesis.m
 
 	DEPENDENCIES
 		system

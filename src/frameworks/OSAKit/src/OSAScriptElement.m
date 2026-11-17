@@ -18,6 +18,7 @@
 */
 
 #import <OSAKit/OSAScriptElement.h>
+#import <darling-stub-forwarding.h>
 
 @implementation OSAScriptElement
 
@@ -49,6 +50,26 @@
 - (NSRange)nameRange
 {
     return NSMakeRange(_range.location, 0);
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
 @end

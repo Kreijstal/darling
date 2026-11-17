@@ -1,7 +1,8 @@
 /*
  This file is part of Darling.
 
- Copyright (C) 2026 Darling Developers
+ Copyright (C) 2021 Lubos Dolezel
+ Copyright (C) 2026 Darling developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -21,15 +22,17 @@
 #define _USERNOTIFICATIONS_UNNOTIFICATION_H_
 
 #import <Foundation/Foundation.h>
+#import <UserNotifications/UNNotificationRequest.h>
 
-@class UNNotificationRequest;
+@interface UNNotification : NSObject <NSCopying, NSSecureCoding> {
+    NSDate *_date;
+    UNNotificationRequest *_request;
+}
 
-@interface UNNotification : NSObject <NSCopying, NSSecureCoding>
++ (instancetype)notificationWithRequest:(UNNotificationRequest *)request date:(NSDate *)date;
 
-- (instancetype) init NS_UNAVAILABLE;
-
-@property (readonly, copy) NSDate *date;
-@property (readonly, copy) UNNotificationRequest *request;
+@property(readonly, copy) NSDate *date;
+@property(readonly, copy) UNNotificationRequest *request;
 
 @end
 

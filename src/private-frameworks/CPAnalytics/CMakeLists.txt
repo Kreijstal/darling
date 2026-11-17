@@ -4,7 +4,6 @@ generate_sdk_framework(CPAnalytics
     HEADER "include/CPAnalytics"
     PRIVATE
 )
-include_directories("include")
 add_framework(CPAnalytics
     FAT
     CURRENT_VERSION

@@ -25,6 +25,7 @@ extern const CFStringRef kCVImageBufferGammaLevelKey;
 extern const CFStringRef kCVImageBufferYCbCrMatrixKey;
 extern const CFStringRef kCVImageBufferColorPrimariesKey;
 extern const CFStringRef kCVImageBufferTransferFunctionKey;
+extern const CFStringRef kCVImageBufferAmbientViewingEnvironmentKey;
 
 extern const CFStringRef kCVImageBufferCGColorSpaceKey;
 
@@ -39,6 +40,9 @@ extern const CFStringRef kCVImageBufferChromaLocation_Top;
 extern const CFStringRef kCVImageBufferChromaLocation_TopLeft;
 
 extern const CFStringRef kCVImageBufferColorPrimaries_ITU_R_2020;
+extern const CFStringRef kCVImageBufferColorPrimaries_P3_D65;
+extern const CFStringRef kCVImageBufferColorPrimaries_DCI_P3;
+extern const CFStringRef kCVImageBufferColorPrimaries_P22;
 extern const CFStringRef kCVImageBufferYCbCrMatrix_ITU_R_2020;
 
 extern const CFStringRef kCVImageBufferTransferFunction_ITU_R_2020;

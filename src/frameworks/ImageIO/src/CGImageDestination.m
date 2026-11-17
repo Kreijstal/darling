@@ -6,7 +6,13 @@
 
 const CFStringRef kCGImageDestinationLossyCompressionQuality=(CFStringRef)@"kCGImageDestinationLossyCompressionQuality";
 const CFStringRef kCGImageDestinationBackgroundColor=(CFStringRef)@"kCGImageDestinationBackgroundColor";
-const CFStringRef kCGImageDestinationDPI=(CFStringRef)@"kCGImageDestinationDPI";
+
+// Each value is the constant's own name (read on macOS 26.7.3). The destination
+// accepts these options and does not act on them yet.
+// Test: tests/src/imageio_property_names.c
+const CFStringRef kCGImageDestinationImageMaxPixelSize = CFSTR("kCGImageDestinationImageMaxPixelSize");
+const CFStringRef kCGImageDestinationOptimizeColorForSharing = CFSTR("kCGImageDestinationOptimizeColorForSharing");
+const CFStringRef kCGImageDestinationPreserveGainMap = CFSTR("kCGImageDestinationPreserveGainMap");
 
 CFTypeID CGImageDestinationGetTypeID(void) {
    return O2ImageDestinationGetTypeID();
@@ -45,6 +51,9 @@ bool CGImageDestinationFinalize(CGImageDestinationRef self) {
    return O2ImageDestinationFinalize((O2ImageDestinationRef)self);
 }
 
+// The CGImageMetadata functions below are limited: tags are kept in a plain
+// dictionary keyed by path and are not written into the encoded image, so
+// AddImageAndMetadata adds the image and drops the metadata.
 void CGImageDestinationAddImageAndMetadata(CGImageDestinationRef self, CGImageRef image, CGImageMetadataRef metadata, CFDictionaryRef properties) {
    CGImageDestinationAddImage(self, image, properties);
 }

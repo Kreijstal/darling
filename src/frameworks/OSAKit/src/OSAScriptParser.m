@@ -18,6 +18,7 @@
 */
 
 #import <OSAKit/OSAScriptParser.h>
+#import <darling-stub-forwarding.h>
 #import <OSAKit/OSAScript.h>
 #import <OSAKit/OSAScriptElement.h>
 
@@ -45,6 +46,26 @@
     [_element release];
     _element = [[OSAScriptElement alloc] initWithRange:NSMakeRange(0, [[_script source] length])];
     return YES;
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
 @end

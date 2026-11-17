@@ -18,6 +18,19 @@
 */
 
 #import <IOBluetooth/OBEXFileTransferServices.h>
+#import <darling-stub-forwarding.h>
+
+NSString * const kFTSListingNameKey = @"name";
+NSString * const kFTSListingTypeKey = @"file-type";
+NSString * const kFTSListingSizeKey = @"size";
+NSString * const kFTSProgressBytesTransferredKey = @"kFTSProgressBytesTransferredKey";
+NSString * const kFTSProgressBytesTotalKey = @"kFTSProgressBytesTotalKey";
+NSString * const kFTSProgressPercentageKey = @"kFTSProgressPercentageKey";
+// macOS exports this misspelled name as a separate key whose value is also misspelled.
+NSString * const kFTSProgressPrecentageKey = @"kFTSProgressPrecentageKey";
+NSString * const kFTSProgressEstimatedTimeKey = @"kFTSProgressEstimatedTimeKey";
+NSString * const kFTSProgressTimeElapsedKey = @"kFTSProgressTimeElapsedKey";
+NSString * const kFTSProgressTransferRateKey = @"kFTSProgressTransferRateKey";
 
 NSString * const kFTSListingNameKey = @"kFTSListingNameKey";
 NSString * const kFTSListingTypeKey = @"kFTSListingTypeKey";
@@ -35,12 +48,22 @@ NSString * const kFTSProgressTransferRateKey = @"kFTSProgressTransferRateKey";
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return [NSMethodSignature signatureWithObjCTypes: "v@:"];
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    NSLog(@"Stub called: %@ in %@", NSStringFromSelector([anInvocation selector]), [self class]);
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
 @end

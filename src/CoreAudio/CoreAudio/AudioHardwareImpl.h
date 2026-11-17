@@ -23,8 +23,8 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <CoreFoundation/CFString.h>
 #include <map>
 #include <mutex>
-#include <atomic>
 #include "AudioHardwareStream.h"
+#include "AudioHardwareListenerRegistry.h"
 
 class AudioHardwareImpl
 {
@@ -67,11 +67,16 @@ public:
 	virtual OSStatus getNearestStartTime(AudioTimeStamp* ioRequestedStartTime,
 		UInt32 inFlags);
 	virtual OSStatus setBufferSize(uint32_t bufferSize);
-	uint32_t bufferSize() const { return m_bufferSize.load(std::memory_order_relaxed); }
+	uint32_t bufferSize() const { return m_bufferSize; }
 
 	AudioObjectID id() const { return m_myId; }
+	virtual bool isInputDevice() const { return false; }
 	const AudioStreamBasicDescription& asbd() const { return m_asbd; }
-	virtual bool isInput() const { return false; }
+
+	// Fires every listener registered (via addPropertyListener) on `selector`
+	// for this object, with a single-element address array matching real
+	// AudioObjectPropertyListenerProc semantics.
+	void notifyPropertyChanged(AudioObjectPropertySelector selector);
 private:
 	static OSStatus getPropertyCFString(CFStringRef str, UInt32* ioDataSize, void* outData);
 	static OSStatus getPropertyString(CFStringRef str, UInt32* ioDataSize, void* outData);
@@ -85,10 +90,11 @@ protected:
 	int m_nextProcId = 1;
 	
 	std::map<AudioDeviceIOProcID, std::unique_ptr<AudioHardwareStream>> m_streams;
-	std::atomic<uint32_t> m_bufferSize{8192};
+	uint32_t m_bufferSize = 8192;
 
 	CFStringRef m_name = CFSTR("unknown"), m_uid = CFSTR("unknown"), m_manufacturer = CFSTR("unknown"), m_modelUid = CFSTR("unknown");
-	AudioStreamBasicDescription m_asbd;
+	AudioStreamBasicDescription m_asbd = {};
+	AudioHardwareListenerRegistry m_listeners;
 };
 
 #endif /* AUDIOHARDWAREIMPL_H */

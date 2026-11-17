@@ -1,42 +1,47 @@
 #include "CoreAudio/HostTime.h"
 #include <mach/mach_time.h>
 
-static mach_timebase_info_data_t getTimebase(void)
+// Without a 128-bit type on every target: divides first, so that the multiplication can't overflow.
+static UInt64 scale(UInt64 value, UInt32 multiplier, UInt32 divisor)
 {
-    static mach_timebase_info_data_t tb = {0, 0};
-    if (tb.denom == 0) {
-        mach_timebase_info(&tb);
-    }
-    return tb;
+	return (value / divisor) * multiplier + (value % divisor) * multiplier / divisor;
+}
+
+static const mach_timebase_info_data_t& timebase()
+{
+	static mach_timebase_info_data_t tb = [] {
+		mach_timebase_info_data_t t = {0, 0};
+		mach_timebase_info(&t);
+		if (!t.numer || !t.denom)
+			t.numer = t.denom = 1;
+		return t;
+	}();
+	return tb;
 }
 
 UInt64 AudioGetCurrentHostTime(void)
 {
-    return mach_absolute_time();
+	return mach_absolute_time();
 }
 
 UInt64 AudioConvertHostTimeToNanos(UInt64 inHostTime)
 {
-    mach_timebase_info_data_t tb = getTimebase();
-    if (tb.denom == 0) return inHostTime;
-    return (inHostTime * tb.numer) / tb.denom;
+	return scale(inHostTime, timebase().numer, timebase().denom);
 }
 
 UInt64 AudioConvertNanosToHostTime(UInt64 inNanos)
 {
-    mach_timebase_info_data_t tb = getTimebase();
-    if (tb.numer == 0) return inNanos;
-    return (inNanos * tb.denom) / tb.numer;
+	return scale(inNanos, timebase().denom, timebase().numer);
 }
 
 Float64 AudioGetHostClockFrequency(void)
 {
-    mach_timebase_info_data_t tb = getTimebase();
-    if (tb.numer == 0) return 1000000000.0;
-    return 1000000000.0 * ((Float64)tb.denom / (Float64)tb.numer);
+	// mach_absolute_time() ticks are numer/denom nanoseconds long.
+	return 1.0e9 * (Float64) timebase().denom / (Float64) timebase().numer;
 }
 
 UInt32 AudioGetHostClockMinimumTimeDelta(void)
 {
-    return 1;
+	// The host clock advances in whole ticks of mach_absolute_time().
+	return 1;
 }

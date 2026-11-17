@@ -25,6 +25,7 @@ set(libm_sources
 	Source/sincos.c
 	Source/exp10.c
 	Source/simd_invert.c
+	Source/simd_identity.c
 	#Source/nan.c
 	#Source/nanl.c
 	#Source/version_info.c
@@ -114,7 +115,8 @@ if (TARGET_i386 OR TARGET_x86_64)
 		Source/Intel/log2f.S
 		Source/Intel/log2.S
 		Source/Intel/logf.S
-		#Source/Intel/log.S
+		# log.S provides double log2 (BASE2) when built with BUILDING_FOR_CARBONCORE_LEGACY
+		Source/Intel/log.S
 		Source/Intel/lrintl.S
 		Source/Intel/lroundf.S
 		Source/Intel/lroundl.S
@@ -148,7 +150,7 @@ if (TARGET_i386 OR TARGET_x86_64)
 		Source/Intel/s_log1p.S
 		#Source/Intel/s_logb.S
 		Source/Intel/s_rint.S
-		Source/Intel/s_significand.S
+		#Source/Intel/s_significand.S
 		Source/Intel/s_sin.S
 		Source/Intel/s_tan.S
 		Source/Intel/tanf.S
@@ -331,6 +333,7 @@ add_circular(system_m FAT
 		$<TARGET_OBJECTS:system_m_extra>
 	SIBLINGS
 		system_c
+		compiler_rt
 		system_dyld
 	LINK_FLAGS
 		"${LIBM_ALIAS_FLAGS}"
@@ -346,3 +349,13 @@ set(CMAKE_AR "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/ar/${APPLE_T
 set(CMAKE_RANLIB "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/ar/${APPLE_TARGET_TRIPLET_PRIMARY}-ranlib")
 add_darling_static_library(system_m_static SOURCES ${libm_sources} $<TARGET_OBJECTS:system_m_extra>)
 make_fat(system_m_static)
+
+# Host-side check of the long double signbit helper in the SDK math.h
+add_test(NAME libm_signbit_header
+	COMMAND ${CMAKE_COMMAND}
+		-DCOMPILER=${CMAKE_C_COMPILER}
+		-DSDK=${CMAKE_SOURCE_DIR}/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+		-DPROBE=${CMAKE_SOURCE_DIR}/tests/libm/signbit_probe.c
+		-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/signbit_header
+		-P ${CMAKE_SOURCE_DIR}/tests/libm/signbit_header.cmake
+)

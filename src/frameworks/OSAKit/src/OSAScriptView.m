@@ -18,6 +18,8 @@
 */
 
 #import <OSAKit/OSAScriptView.h>
+#import "OSAKitPrivate.h"
+#import <darling-stub-forwarding.h>
 
 @implementation OSAScriptView
 
@@ -41,6 +43,26 @@
 - (void)setSource:(NSString *)source
 {
     [self setString:source ?: @""];
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
 @end

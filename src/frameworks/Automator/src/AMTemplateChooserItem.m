@@ -18,7 +18,7 @@
 */
 
 #import <Automator/AMTemplateChooserItem.h>
-#import "AMStubSignature.h"
+#import <darling-stub-forwarding.h>
 
 @implementation AMTemplateChooserItem
 
@@ -37,6 +37,24 @@
     return @"Add actions to build a workflow that runs in Automator.";
 }
 
-AM_STUB_FORWARDING
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
 
 @end

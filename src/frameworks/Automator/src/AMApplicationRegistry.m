@@ -18,12 +18,28 @@
 */
 
 #import <Automator/AMApplicationRegistry.h>
-#import "AMStubSignature.h"
+#import <darling-stub-forwarding.h>
 
 @implementation AMApplicationRegistry
 
-AM_STUB_SHARED_INSTANCE(sharedApplicationRegistry)
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
 
-AM_STUB_FORWARDING
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
 
 @end

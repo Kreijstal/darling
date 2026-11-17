@@ -1,7 +1,8 @@
 /*
  This file is part of Darling.
 
- Copyright (C) 2026 Darling Developers
+ Copyright (C) 2021 Lubos Dolezel
+ Copyright (C) 2026 Darling developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -21,21 +22,22 @@
 #define _USERNOTIFICATIONS_UNNOTIFICATIONREQUEST_H_
 
 #import <Foundation/Foundation.h>
+#import <UserNotifications/UNNotificationContent.h>
+#import <UserNotifications/UNNotificationTrigger.h>
 
-@class UNNotificationContent, UNNotificationTrigger;
+@interface UNNotificationRequest : NSObject <NSCopying, NSSecureCoding> {
+    NSString *_identifier;
+    UNNotificationContent *_content;
+    UNNotificationTrigger *_trigger;
+}
 
-@interface UNNotificationRequest : NSObject <NSCopying, NSSecureCoding>
++ (instancetype)requestWithIdentifier:(NSString *)identifier
+                              content:(UNNotificationContent *)content
+                              trigger:(nullable UNNotificationTrigger *)trigger;
 
-+ (instancetype) requestWithIdentifier: (NSString *) identifier
-                               content: (UNNotificationContent *) content
-                               trigger: (UNNotificationTrigger *) trigger;
-
-- (instancetype) init NS_UNAVAILABLE;
-
-@property (readonly, copy) NSString *identifier;
-@property (readonly, copy) UNNotificationContent *content;
-/* nil delivers the notification right away. */
-@property (readonly, copy) UNNotificationTrigger *trigger;
+@property(readonly, copy) NSString *identifier;
+@property(readonly, copy) UNNotificationContent *content;
+@property(readonly, copy, nullable) UNNotificationTrigger *trigger;
 
 @end
 

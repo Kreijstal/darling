@@ -23,54 +23,28 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <pulse/pulseaudio.h>
 #include <CoreAudio/CoreAudioTypes.h>
 #include <CoreAudio/AudioHardware.h>
-#include <CoreAudio/HostTime.h>
 #include "AudioHardwareImplPA.h"
-#include <atomic>
 #include <condition_variable>
-#include <mutex>
-#include <vector>
-#include <pthread.h>
 
 class AudioHardwareStreamPA : public AudioHardwareStream
 {
 public:
-	AudioHardwareStreamPA(AudioHardwareImplPA* hw, AudioDeviceIOProc callback, void* clientData, bool isInput = false);
+	AudioHardwareStreamPA(AudioHardwareImplPA* hw, AudioDeviceIOProc callback, void* clientData);
 	~AudioHardwareStreamPA();
 
-	void start() override;
 	void stop(/*void(^cbDone)()*/) override;
 protected:
+	void initialize();
+	virtual void start();
 	void transformSignedUnsigned(AudioBufferList* abl) const;
-	static void paStreamWriteCB(pa_stream* s, size_t length, void* self);
-	static void paStreamReadCB(pa_stream* s, size_t length, void* self);
 protected:
-	AudioHardwareImplPA* m_paHw = nullptr;
 	AudioDeviceIOProc m_callback;
 	void* m_clientData;
 	pa_stream* m_stream = nullptr;
+	void(^m_cbDone)() = nullptr;
 	bool m_convertSignedUnsigned = false;
-	bool m_isInput = false;
 
-	std::atomic<bool> m_running{false};
-	Float64 m_sampleTime = 0.0;
-
-	static void* ioThreadEntry(void* arg);
-	void runIOThread();
-
-	pthread_t m_ioThread = 0;
-	std::atomic<bool> m_ioThreadRunning{false};
-
-	std::vector<uint8_t> m_ringBuffer;
-	size_t m_ringHead = 0;
-	size_t m_ringTail = 0;
-	size_t m_ringCount = 0;
-	std::mutex m_ringMutex;
-	std::condition_variable m_ringCvRead;
-	std::condition_variable m_ringCvWrite;
-
-	size_t ringWrite(const uint8_t* data, size_t size);
-	size_t ringRead(uint8_t* data, size_t size);
+	bool m_running = false;
 };
 
 #endif /* AUDIOHARDWARESTREAMPA_H */
-

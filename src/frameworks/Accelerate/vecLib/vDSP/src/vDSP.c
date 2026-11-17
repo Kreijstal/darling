@@ -263,11 +263,27 @@ void* vDSP_blkman_windowD(void)
     return NULL;
 }
 
+/*
+void* vDSP_conv(void)
+{
+    if (verbose) puts("STUB: vDSP_conv called");
+    return NULL;
+}
+*/
+
 void* vDSP_convD(void)
 {
     if (verbose) puts("STUB: vDSP_convD called");
     return NULL;
 }
+
+/*
+void* vDSP_create_fftsetup(void)
+{
+    if (verbose) puts("STUB: vDSP_create_fftsetup called");
+    return NULL;
+}
+*/
 
 void* vDSP_create_fftsetupD(void)
 {
@@ -275,11 +291,35 @@ void* vDSP_create_fftsetupD(void)
     return NULL;
 }
 
+/*
+void* vDSP_ctoz(void)
+{
+    if (verbose) puts("STUB: vDSP_ctoz called");
+    return NULL;
+}
+*/
+
 void* vDSP_ctozD(void)
 {
     if (verbose) puts("STUB: vDSP_ctozD called");
     return NULL;
 }
+
+/*
+void* vDSP_deq22(void)
+{
+    if (verbose) puts("STUB: vDSP_deq22 called");
+    return NULL;
+}
+*/
+
+/*
+void* vDSP_deq22D(void)
+{
+    if (verbose) puts("STUB: vDSP_deq22D called");
+    return NULL;
+}
+*/
 
 void* vDSP_desamp(void)
 {
@@ -292,6 +332,14 @@ void* vDSP_desampD(void)
     if (verbose) puts("STUB: vDSP_desampD called");
     return NULL;
 }
+
+/*
+void* vDSP_destroy_fftsetup(void)
+{
+    if (verbose) puts("STUB: vDSP_destroy_fftsetup called");
+    return NULL;
+}
+*/
 
 void* vDSP_destroy_fftsetupD(void)
 {
@@ -550,6 +598,14 @@ void* vDSP_fft_zoptD(void)
     if (verbose) puts("STUB: vDSP_fft_zoptD called");
     return NULL;
 }
+
+/*
+void* vDSP_fft_zrip(void)
+{
+    if (verbose) puts("STUB: vDSP_fft_zrip called");
+    return NULL;
+}
+*/
 
 void* vDSP_fft_zripD(void)
 {
@@ -1015,6 +1071,14 @@ void* vDSP_svemgD(void)
     return NULL;
 }
 
+/*
+void* vDSP_svesq(void)
+{
+    if (verbose) puts("STUB: vDSP_svesq called");
+    return NULL;
+}
+*/
+
 void* vDSP_svesqD(void)
 {
     if (verbose) puts("STUB: vDSP_svesqD called");
@@ -1062,6 +1126,14 @@ void* vDSP_vabsi(void)
     if (verbose) puts("STUB: vDSP_vabsi called");
     return NULL;
 }
+
+/*
+void* vDSP_vadd(void)
+{
+    if (verbose) puts("STUB: vDSP_vadd called");
+    return NULL;
+}
+*/
 
 void* vDSP_vaddD(void)
 {
@@ -1134,6 +1206,14 @@ void* vDSP_vavlinD(void)
     if (verbose) puts("STUB: vDSP_vavlinD called");
     return NULL;
 }
+
+/*
+void* vDSP_vclip(void)
+{
+    if (verbose) puts("STUB: vDSP_vclip called");
+    return NULL;
+}
+*/
 
 void* vDSP_vclipD(void)
 {
@@ -1729,6 +1809,14 @@ void* vDSP_vmsbD(void)
     return NULL;
 }
 
+/*
+void* vDSP_vmul(void)
+{
+    if (verbose) puts("STUB: vDSP_vmul called");
+    return NULL;
+}
+*/
+
 void* vDSP_vmulD(void)
 {
     if (verbose) puts("STUB: vDSP_vmulD called");
@@ -1927,6 +2015,14 @@ void* vDSP_vrvrsD(void)
     return NULL;
 }
 
+/*
+void* vDSP_vsadd(void)
+{
+    if (verbose) puts("STUB: vDSP_vsadd called");
+    return NULL;
+}
+*/
+
 void* vDSP_vsaddD(void)
 {
     if (verbose) puts("STUB: vDSP_vsaddD called");
@@ -2005,6 +2101,14 @@ void* vDSP_vsimpsD(void)
     return NULL;
 }
 
+/*
+void* vDSP_vsma(void)
+{
+    if (verbose) puts("STUB: vDSP_vsma called");
+    return NULL;
+}
+*/
+
 void* vDSP_vsmaD(void)
 {
     if (verbose) puts("STUB: vDSP_vsmaD called");
@@ -2058,6 +2162,14 @@ void* vDSP_vsmsmaD(void)
     if (verbose) puts("STUB: vDSP_vsmsmaD called");
     return NULL;
 }
+
+/*
+void* vDSP_vsmul(void)
+{
+    if (verbose) puts("STUB: vDSP_vsmul called");
+    return NULL;
+}
+*/
 
 void* vDSP_vsmulD(void)
 {
@@ -2118,6 +2230,14 @@ void* vDSP_vssqD(void)
     if (verbose) puts("STUB: vDSP_vssqD called");
     return NULL;
 }
+
+/*
+void* vDSP_vsub(void)
+{
+    if (verbose) puts("STUB: vDSP_vsub called");
+    return NULL;
+}
+*/
 
 void* vDSP_vsubD(void)
 {
@@ -2437,6 +2557,14 @@ void* vDSP_zrvsubD(void)
     return NULL;
 }
 
+/*
+void* vDSP_ztoc(void)
+{
+    if (verbose) puts("STUB: vDSP_ztoc called");
+    return NULL;
+}
+*/
+
 void* vDSP_ztocD(void)
 {
     if (verbose) puts("STUB: vDSP_ztocD called");
@@ -2598,6 +2726,14 @@ void* vDSP_zvmovD(void)
     if (verbose) puts("STUB: vDSP_zvmovD called");
     return NULL;
 }
+
+/*
+void* vDSP_zvmul(void)
+{
+    if (verbose) puts("STUB: vDSP_zvmul called");
+    return NULL;
+}
+*/
 
 void* vDSP_zvmulD(void)
 {

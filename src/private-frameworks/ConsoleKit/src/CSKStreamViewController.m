@@ -1,21 +1,7 @@
 #import <ConsoleKit/CSKStreamSource.h>
 #import <ConsoleKit/CSKTableColumnLayout.h>
 
-@interface CSKStreamViewController : NSViewController <NSTableViewDataSource, NSTableViewDelegate> {
-	id<CSKStreamSource> _streamSource;
-	NSUInteger _capacity;
-	NSString *_messagesColumnLayoutAutosaveName;
-	__weak id _delegate;
-	BOOL _wantsNowMode;
-	BOOL _showsActivities;
-	BOOL _showsDetailsPane;
-	NSArray *_currentFilters;
-	NSArray<CSKMessage *> *_messages;
-	NSError *_loadError;
-	CSKTableColumnLayout *_layout;
-	NSTableView *_tableView;
-	NSDateFormatter *_dateFormatter;
-}
+@interface CSKStreamViewController : NSViewController <NSTableViewDataSource, NSTableViewDelegate>
 @property (readonly, strong) id<CSKStreamSource> streamSource;
 @property (readonly) NSUInteger capacity;
 @property (copy) NSString *messagesColumnLayoutAutosaveName;
@@ -31,18 +17,11 @@
 - (void)reload;
 @end
 
-@implementation CSKStreamViewController
-
-@synthesize streamSource = _streamSource;
-@synthesize capacity = _capacity;
-@synthesize messagesColumnLayoutAutosaveName = _messagesColumnLayoutAutosaveName;
-@synthesize delegate = _delegate;
-@synthesize wantsNowMode = _wantsNowMode;
-@synthesize showsActivities = _showsActivities;
-@synthesize showsDetailsPane = _showsDetailsPane;
-@synthesize currentFilters = _currentFilters;
-@synthesize messages = _messages;
-@synthesize loadError = _loadError;
+@implementation CSKStreamViewController {
+	CSKTableColumnLayout *_layout;
+	NSTableView *_tableView;
+	NSDateFormatter *_dateFormatter;
+}
 
 - (instancetype)initWithStreamSource:(id<CSKStreamSource>)source capacity:(NSUInteger)capacity
 {

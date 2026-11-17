@@ -9,6 +9,7 @@ enum
 	kCVReturnError = kCVReturnFirst,
 	kCVReturnInvalidArgument = -6661,
 	kCVReturnAllocationFailed = -6662,
+	kCVReturnUnsupported = -6663,
 
 	kCVReturnInvalidDisplay = -6670,
 	kCVReturnDisplayLinkAlreadyRunning = -6671,

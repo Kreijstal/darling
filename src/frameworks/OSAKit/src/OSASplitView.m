@@ -18,34 +18,28 @@
 */
 
 #import <OSAKit/OSASplitView.h>
-#import <AppKit/AppKit.h>
-
-// Script Editor saves and restores its split views through these (window state, divider dragging).
-@implementation NSSplitView (OSAKit)
-
-- (CGFloat)_osa_positionOfDivider:(NSInteger)index
-{
-    NSRect frame = [[[self subviews] objectAtIndex:index] frame];
-    return [self isVertical] ? NSMaxX(frame) : NSMaxY(frame);
-}
-
-- (void)_osa_setPosition:(CGFloat)position ofDivider:(NSInteger)index
-{
-    [self setPosition:position ofDividerAtIndex:(int)index];
-}
-
-@end
+#import <darling-stub-forwarding.h>
 
 @implementation OSASplitView
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return [NSMethodSignature signatureWithObjCTypes: "v@:"];
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    NSLog(@"Stub called: %@ in %@", NSStringFromSelector([anInvocation selector]), [self class]);
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
 @end

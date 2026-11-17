@@ -87,6 +87,16 @@ enum
 };
 
 
+typedef AudioObjectID AudioStreamID;
+enum {
+    kAudioStreamPropertyDirection = 'sdir',
+    kAudioStreamPropertyTerminalType = 'term',
+    kAudioStreamPropertyVirtualFormat = 'sfmt',
+    kAudioStreamPropertyPhysicalFormat = 'pft ',
+    kAudioStreamPropertyAvailableVirtualFormats = 'sfma',
+    kAudioStreamPropertyAvailablePhysicalFormats = 'pfta',
+};
+
 // TODO: A lot more is missing
 
 #ifdef __cplusplus
@@ -94,4 +104,3 @@ enum
 #endif
 
 #endif /* AUDIOHARDWAREBASE_H */
-

@@ -21,7 +21,11 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <typeinfo>
 #include <iostream>
 #include <cstring>
+#include <cstddef>
+#include <CoreFoundation/CFRunLoop.h>
 #include <CarbonCore/MacErrors.h>
+
+static const UInt32 kMinBufferFrames = 128, kMaxBufferFrames = 2048;
 
 AudioHardwareImpl::AudioHardwareImpl(AudioObjectID myId)
 : m_myId(myId)
@@ -33,7 +37,7 @@ AudioHardwareImpl::AudioHardwareImpl(AudioObjectID myId)
 	m_asbd.mFormatID = kAudioFormatLinearPCM;
 	m_asbd.mFormatFlags = kLinearPCMFormatFlagIsFloat | kAudioFormatFlagsNativeEndian;
 	m_asbd.mFramesPerPacket = 1;
-	m_asbd.mBytesPerFrame = UInt32(m_asbd.mBytesPerPacket = m_asbd.mChannelsPerFrame * (m_asbd.mBitsPerChannel / 8));
+	m_asbd.mBytesPerFrame = UInt32(m_asbd.mBytesPerPacket = m_asbd.mChannelsPerFrame * m_asbd.mBitsPerChannel / 8);
 }
 
 
@@ -54,7 +58,7 @@ OSStatus AudioHardwareImpl::createIOProcID(AudioDeviceIOProc inProc, void* inCli
 	if (!inProc)
 		return paramErr;
 	
-	AudioDeviceIOProcID procId = nullptr;
+	AudioDeviceIOProcID procId;
 	if (outIOProcID)
 		*outIOProcID = procId = reinterpret_cast<AudioDeviceIOProcID>(m_nextProcId++);
 	else
@@ -73,13 +77,6 @@ OSStatus AudioHardwareImpl::destroyIOProcID(AudioDeviceIOProcID inIOProcID)
 	if (it == m_proc.end())
 		return paramErr;
 	
-	auto it_stream = m_streams.find(inIOProcID);
-	if (it_stream != m_streams.end())
-	{
-		it_stream->second->stop();
-		m_streams.erase(it_stream);
-	}
-
 	m_proc.erase(it);
 	return noErr;
 }
@@ -87,37 +84,38 @@ OSStatus AudioHardwareImpl::destroyIOProcID(AudioDeviceIOProcID inIOProcID)
 OSStatus AudioHardwareImpl::start(AudioDeviceIOProcID inProcID,
 		AudioTimeStamp* ioRequestedStartTime, UInt32 inFlags)
 {
+	AudioHardwareStream* stream;
 	std::lock_guard<std::mutex> guard(m_procMutex);
 	
-	auto it_stream = m_streams.find(inProcID);
-	if (it_stream != m_streams.end())
-	{
-		it_stream->second->start();
-		return noErr;
-	}
+	if (m_streams.find(inProcID) != m_streams.end())
+		return paramErr;
 
 	auto it = m_proc.find(inProcID);
+	
 	if (it == m_proc.end())
 		return paramErr;
 	
-	AudioHardwareStream* stream = createStream(it->second.first, it->second.second);
+	stream = createStream(it->second.first, it->second.second);
 	if (!stream)
 		return kAudioHardwareBadStreamError;
-	stream->start();
 	m_streams.emplace(std::make_pair(inProcID, std::unique_ptr<AudioHardwareStream>(stream)));
+	
+	// TODO: time
 	
 	return noErr;
 }
 
 OSStatus AudioHardwareImpl::stop(AudioDeviceIOProcID inProcID)
 {
-	std::lock_guard<std::mutex> guard(m_procMutex);
-
 	auto it = m_streams.find(inProcID);
 	if (it == m_streams.end())
 		return kAudioHardwareNotRunningError;
 	
-	it->second->stop();
+	AudioHardwareStream* stream = it->second.release();
+	stream->stop();
+
+	delete stream;
+	m_streams.erase(it);
 	return noErr;
 }
 
@@ -138,10 +136,16 @@ OSStatus AudioHardwareImpl::isPropertySettable(const AudioObjectPropertyAddress*
 {
 	switch (inAddress->mSelector)
 	{
+		case kAudioHardwarePropertyRunLoop:
+			if (m_myId != kAudioObjectSystemObject)
+				break;
+			*outIsSettable = true;
+			return kAudioHardwareNoError;
+		case kAudioDevicePropertyBufferFrameSize:
+			*outIsSettable = true;
+			return kAudioHardwareNoError;
 		case kAudioDevicePropertyVolumeScalar:
 		case kAudioDevicePropertyVolumeDecibels:
-		case kAudioDevicePropertyBufferFrameSize:
-		case kAudioHardwarePropertyRunLoop:
 			*outIsSettable = true;
 			return kAudioHardwareNoError;
 	}
@@ -159,6 +163,17 @@ OSStatus AudioHardwareImpl::getPropertyData(const AudioObjectPropertyAddress* in
 {
 	switch (inAddress->mSelector)
 	{
+		case kAudioHardwarePropertyRunLoop:
+		{
+			if (m_myId != kAudioObjectSystemObject)
+				return kAudioHardwareUnknownPropertyError;
+			if (outData && *ioDataSize < sizeof(CFRunLoopRef))
+				return kAudioHardwareBadPropertySizeError;
+			if (outData)
+				*static_cast<CFRunLoopRef*>(outData) = nullptr;
+			*ioDataSize = sizeof(CFRunLoopRef);
+			return kAudioHardwareNoError;
+		}
 		case kAudioDevicePropertyStreamFormat: // returns AudioStreamBasicDescription
 		{
 			if (AudioStreamBasicDescription* asbd = static_cast<AudioStreamBasicDescription*>(outData); asbd && *ioDataSize >= sizeof(AudioStreamBasicDescription))
@@ -166,6 +181,39 @@ OSStatus AudioHardwareImpl::getPropertyData(const AudioObjectPropertyAddress* in
 				memcpy(asbd, &m_asbd, sizeof(m_asbd));
 			}
 			*ioDataSize = sizeof(AudioStreamBasicDescription);
+			return kAudioHardwareNoError;
+		}
+		case kAudioDevicePropertyBufferFrameSize:
+		{
+			if (!m_asbd.mBytesPerFrame)
+				return kAudioHardwareBadStreamError;
+			if (outData && *ioDataSize < sizeof(UInt32))
+				return kAudioHardwareBadPropertySizeError;
+			if (outData)
+				*static_cast<UInt32*>(outData) = m_bufferSize / m_asbd.mBytesPerFrame;
+			*ioDataSize = sizeof(UInt32);
+			return kAudioHardwareNoError;
+		}
+		case kAudioDevicePropertyBufferFrameSizeRange:
+		{
+			if (outData && *ioDataSize < sizeof(AudioValueRange))
+				return kAudioHardwareBadPropertySizeError;
+			if (AudioValueRange* range = static_cast<AudioValueRange*>(outData))
+			{
+				range->mMinimum = kMinBufferFrames;
+				range->mMaximum = kMaxBufferFrames;
+			}
+			*ioDataSize = sizeof(AudioValueRange);
+			return kAudioHardwareNoError;
+		}
+		case kAudioDevicePropertyLatency:
+		case kAudioDevicePropertySafetyOffset:
+		{
+			if (outData && *ioDataSize < sizeof(UInt32))
+				return kAudioHardwareBadPropertySizeError;
+			if (outData)
+				*static_cast<UInt32*>(outData) = 0;
+			*ioDataSize = sizeof(UInt32);
 			return kAudioHardwareNoError;
 		}
 		case kAudioDevicePropertyDeviceManufacturer:
@@ -214,12 +262,28 @@ OSStatus AudioHardwareImpl::getPropertyData(const AudioObjectPropertyAddress* in
 			*ioDataSize = sizeof(int);
 			return kAudioHardwareNoError;
 		}
+		case kAudioDevicePropertyPreferredChannelLayout:
+		{
+			// A tag-only layout has no trailing channel descriptions.
+			const UInt32 size = offsetof(AudioChannelLayout, mChannelDescriptions);
+			if (outData && *ioDataSize < size)
+				return kAudioHardwareBadPropertySizeError;
+			if (m_asbd.mChannelsPerFrame != 1 && m_asbd.mChannelsPerFrame != 2)
+				return kAudioHardwareUnsupportedOperationError;
+			if (AudioChannelLayout* layout = static_cast<AudioChannelLayout*>(outData))
+			{
+				memset(layout, 0, size);
+				layout->mChannelLayoutTag = m_asbd.mChannelsPerFrame == 2 ? kAudioChannelLayoutTag_Stereo : kAudioChannelLayoutTag_Mono;
+			}
+			*ioDataSize = size;
+			return kAudioHardwareNoError;
+		}
 		case kAudioDevicePropertyPreferredChannelsForStereo:
 		{
 			if (UInt32* b = static_cast<UInt32*>(outData); outData && *ioDataSize >= sizeof(UInt32)*2)
 			{
-				b[0] = 0;
-				b[1] = 1;
+				b[0] = 1;
+				b[1] = 2;
 			}
 			*ioDataSize = sizeof(UInt32)*2;
 			return kAudioHardwareNoError;
@@ -233,78 +297,6 @@ OSStatus AudioHardwareImpl::getPropertyData(const AudioObjectPropertyAddress* in
 		}
 		case kAudioDevicePropertyVolumeDecibels:
 		{
-			return kAudioHardwareNoError;
-		}
-		case kAudioDevicePropertyBufferFrameSize:
-		{
-			if (UInt32* bfs = static_cast<UInt32*>(outData); outData && *ioDataSize >= sizeof(UInt32))
-				*bfs = 512;
-			*ioDataSize = sizeof(UInt32);
-			return kAudioHardwareNoError;
-		}
-		case kAudioDevicePropertyBufferFrameSizeRange:
-		{
-			if (AudioValueRange* avr = static_cast<AudioValueRange*>(outData); avr && *ioDataSize >= sizeof(AudioValueRange))
-			{
-				avr->mMinimum = 64;
-				avr->mMaximum = 4096;
-			}
-			*ioDataSize = sizeof(AudioValueRange);
-			return kAudioHardwareNoError;
-		}
-		case kAudioDevicePropertySafetyOffset:
-		{
-			if (UInt32* so = static_cast<UInt32*>(outData); outData && *ioDataSize >= sizeof(UInt32))
-				*so = 0;
-			*ioDataSize = sizeof(UInt32);
-			return kAudioHardwareNoError;
-		}
-		case kAudioDevicePropertyLatency:
-		{
-			if (UInt32* lat = static_cast<UInt32*>(outData); outData && *ioDataSize >= sizeof(UInt32))
-				*lat = 0;
-			*ioDataSize = sizeof(UInt32);
-			return kAudioHardwareNoError;
-		}
-		case kAudioDevicePropertyStreams:
-		{
-			*ioDataSize = 0;
-			return kAudioHardwareNoError;
-		}
-		case kAudioStreamPropertyIsActive:
-		{
-			if (UInt32* act = static_cast<UInt32*>(outData); act && *ioDataSize >= sizeof(UInt32))
-				*act = 1;
-			*ioDataSize = sizeof(UInt32);
-			return kAudioHardwareNoError;
-		}
-		case kAudioStreamPropertyDirection:
-		{
-			if (UInt32* dir = static_cast<UInt32*>(outData); dir && *ioDataSize >= sizeof(UInt32))
-				*dir = isInput() ? 1 : 0;
-			*ioDataSize = sizeof(UInt32);
-			return kAudioHardwareNoError;
-		}
-		case kAudioStreamPropertyPhysicalFormat:
-		{
-			if (AudioStreamBasicDescription* asbd = static_cast<AudioStreamBasicDescription*>(outData); asbd && *ioDataSize >= sizeof(AudioStreamBasicDescription))
-			{
-				memcpy(asbd, &m_asbd, sizeof(m_asbd));
-			}
-			*ioDataSize = sizeof(AudioStreamBasicDescription);
-			return kAudioHardwareNoError;
-		}
-		case kAudioStreamPropertyAvailablePhysicalFormats:
-		case kAudioStreamPropertyAvailableVirtualFormats:
-		{
-			size_t size = sizeof(AudioStreamRangedDescription);
-			if (AudioStreamRangedDescription* asrd = static_cast<AudioStreamRangedDescription*>(outData); asrd && *ioDataSize >= size)
-			{
-				memcpy(&asrd->mFormat, &m_asbd, sizeof(m_asbd));
-				asrd->mSampleRateRange.mMinimum = m_asbd.mSampleRate ? m_asbd.mSampleRate : 44100.0;
-				asrd->mSampleRateRange.mMaximum = asrd->mSampleRateRange.mMinimum;
-			}
-			*ioDataSize = size;
 			return kAudioHardwareNoError;
 		}
 	}
@@ -323,23 +315,10 @@ OSStatus AudioHardwareImpl::getPropertyCFString(CFStringRef str, UInt32* ioDataS
 
 OSStatus AudioHardwareImpl::getPropertyString(CFStringRef str, UInt32* ioDataSize, void* outData)
 {
-	if (!str)
-	{
-		*ioDataSize = 0;
-		return kAudioHardwareBadObjectError;
-	}
-	char buf[256];
 	const char* cstr = CFStringGetCStringPtr(str, kCFStringEncodingUTF8);
-	if (!cstr)
-	{
-		if (CFStringGetCString(str, buf, sizeof(buf), kCFStringEncodingUTF8))
-			cstr = buf;
-		else
-			cstr = "";
-	}
-	if (char* target = static_cast<char*>(outData); target && *ioDataSize > 0)
+	if (char* target = static_cast<char*>(outData))
 		strlcpy(target, cstr, *ioDataSize);
-	*ioDataSize = (UInt32)strlen(cstr) + 1;
+	*ioDataSize = strlen(cstr) + 1;
 	return noErr;
 }
 
@@ -352,9 +331,23 @@ OSStatus AudioHardwareImpl::setPropertyData(const AudioObjectPropertyAddress* in
 		{
 			return setBufferSize(*static_cast<const uint32_t*>(inData));
 		}
+		case kAudioHardwarePropertyRunLoop:
+		{
+			if (m_myId != kAudioObjectSystemObject)
+				break;
+			if (!inData || inDataSize != sizeof(CFRunLoopRef))
+				return kAudioHardwareBadPropertySizeError;
+			// NULL selects HAL-owned threads, which is the only mode the PulseAudio backend has.
+			return *static_cast<const CFRunLoopRef*>(inData) ? kAudioHardwareUnsupportedOperationError : kAudioHardwareNoError;
+		}
 		case kAudioDevicePropertyBufferFrameSize:
 		{
-			return kAudioHardwareNoError;
+			if (!inData || inDataSize != sizeof(UInt32))
+				return kAudioHardwareBadPropertySizeError;
+			const UInt32 frames = *static_cast<const UInt32*>(inData);
+			if (frames < kMinBufferFrames || frames > kMaxBufferFrames || !m_asbd.mBytesPerFrame)
+				return paramErr;
+			return setBufferSize(frames * m_asbd.mBytesPerFrame);
 		}
 		case kAudioDevicePropertyVolumeScalar:
 		{
@@ -380,7 +373,9 @@ OSStatus AudioHardwareImpl::setPropertyData(const AudioObjectPropertyAddress* in
 			memcpy(&m_asbd, setting, sizeof(m_asbd));
 
 			m_asbd.mFramesPerPacket = 1;
-			m_asbd.mBytesPerFrame = UInt32(m_asbd.mBytesPerPacket = m_asbd.mChannelsPerFrame * (m_asbd.mBitsPerChannel / 8));
+			m_asbd.mBytesPerFrame = UInt32(m_asbd.mBytesPerPacket =
+				((m_asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) ? 1 : m_asbd.mChannelsPerFrame)
+				* m_asbd.mBitsPerChannel / 8);
 
 			return kAudioHardwareNoError;
 		}
@@ -396,18 +391,28 @@ OSStatus AudioHardwareImpl::setPropertyData(const AudioObjectPropertyAddress* in
 OSStatus AudioHardwareImpl::addPropertyListener(const AudioObjectPropertyAddress* inAddress,
 	AudioObjectPropertyListenerProc inListener, void* inClientData)
 {
+	m_listeners.add(inAddress->mSelector, (void*)inListener, inClientData);
 	return kAudioHardwareNoError;
 }
 
 OSStatus AudioHardwareImpl::removePropertyListener(const AudioObjectPropertyAddress* inAddress,
 	AudioObjectPropertyListenerProc inListener, void* inClientData)
 {
+	m_listeners.remove(inAddress->mSelector, (void*)inListener, inClientData);
 	return kAudioHardwareNoError;
+}
+
+void AudioHardwareImpl::notifyPropertyChanged(AudioObjectPropertySelector selector)
+{
+	AudioObjectPropertyAddress addr = { selector, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+	m_listeners.fire(selector, [&](void* proc, void* ctx) {
+		reinterpret_cast<AudioObjectPropertyListenerProc>(proc)(m_myId, 1, &addr, ctx);
+	});
 }
 
 OSStatus AudioHardwareImpl::setBufferSize(uint32_t bufferSize)
 {
-	m_bufferSize.store(bufferSize, std::memory_order_release);
+	m_bufferSize = bufferSize;
 	return noErr;
 }
 

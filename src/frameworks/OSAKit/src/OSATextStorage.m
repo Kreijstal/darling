@@ -18,6 +18,7 @@
 */
 
 #import <OSAKit/OSATextStorage.h>
+#import <darling-stub-forwarding.h>
 
 @implementation OSATextStorage
 
@@ -119,6 +120,26 @@
         [storage replaceCharactersInRange:replaced withAttributedString:previous withUndoManager:manager];
     }];
     [self replaceCharactersInRange:range withAttributedString:string];
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
 @end

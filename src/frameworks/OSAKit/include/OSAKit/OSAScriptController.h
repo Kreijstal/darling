@@ -27,8 +27,6 @@ typedef NS_ENUM(NSInteger, OSAScriptState) {
     OSAScriptRecording,
 };
 
-@class NSAppleEventDescriptor;
-
 @interface OSAScriptController : NSController
 {
     OSAScriptView *_scriptView;
@@ -46,10 +44,7 @@ typedef NS_ENUM(NSInteger, OSAScriptState) {
 @property (retain) OSAScript *script;
 @property (retain) OSALanguage *language;
 @property (readonly) OSAScriptState scriptState;
-// Script Editor sets these; the public header declares only isCompiling, and read-only.
-@property (getter=isCompiling, setter=setIsCompiling:) BOOL compiling;
-@property (retain) NSUndoManager *undoManager;
-@property (retain) NSAppleEventDescriptor *defaultTarget;
+@property (readonly, getter=isCompiling) BOOL compiling;
 
 - (IBAction)compileScript:(id)sender;
 - (IBAction)recordScript:(id)sender;

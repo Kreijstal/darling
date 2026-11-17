@@ -17,8 +17,10 @@ static void UIRequireFinite(CGFloat value)
         [NSException raise:NSInvalidArgumentException format:@"Layout values must be finite"];
 }
 
-@implementation NSCollectionLayoutDimension
-
+@implementation NSCollectionLayoutDimension {
+    UILayoutDimensionKind _kind;
+    CGFloat _dimension;
+}
 - (instancetype)init
 {
     [NSException raise:NSInvalidArgumentException format:@"Use a layout factory to create %@", [self class]];
@@ -59,8 +61,10 @@ static void UIRequireFinite(CGFloat value)
 - (id)copyWithZone:(NSZone *)zone { return self; }
 @end
 
-@implementation NSCollectionLayoutSize
-
+@implementation NSCollectionLayoutSize {
+    NSCollectionLayoutDimension *_widthDimension;
+    NSCollectionLayoutDimension *_heightDimension;
+}
 - (instancetype)init
 {
     [NSException raise:NSInvalidArgumentException format:@"Use a layout factory to create %@", [self class]];
@@ -88,8 +92,10 @@ static void UIRequireFinite(CGFloat value)
 - (id)copyWithZone:(NSZone *)zone { return self; }
 @end
 
-@implementation NSCollectionLayoutSpacing
-
+@implementation NSCollectionLayoutSpacing {
+    CGFloat _spacing;
+    BOOL _fixed;
+}
 - (instancetype)init
 {
     [NSException raise:NSInvalidArgumentException format:@"Use a layout factory to create %@", [self class]];
@@ -118,8 +124,12 @@ static void UIRequireFinite(CGFloat value)
 - (id)copyWithZone:(NSZone *)zone { return self; }
 @end
 
-@implementation NSCollectionLayoutEdgeSpacing
-
+@implementation NSCollectionLayoutEdgeSpacing {
+    NSCollectionLayoutSpacing *_leading;
+    NSCollectionLayoutSpacing *_top;
+    NSCollectionLayoutSpacing *_trailing;
+    NSCollectionLayoutSpacing *_bottom;
+}
 - (instancetype)init
 {
     [NSException raise:NSInvalidArgumentException format:@"Use a layout factory to create %@", [self class]];

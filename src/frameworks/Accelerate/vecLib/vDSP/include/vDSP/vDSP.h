@@ -30,44 +30,44 @@ typedef struct DSPComplex {
 } DSPComplex;
 
 typedef struct DSPSplitComplex {
-	float *realp;
-	float *imagp;
+	float* realp;
+	float* imagp;
 } DSPSplitComplex;
 
 typedef int FFTDirection;
 typedef int FFTRadix;
 
 enum {
-	kFFTDirection_Forward = 1,
-	kFFTDirection_Inverse = -1
+	kFFTDirection_Forward = +1,
+	kFFTDirection_Inverse = -1,
 };
 
 enum {
 	kFFTRadix2 = 0,
 	kFFTRadix3 = 1,
-	kFFTRadix5 = 2
+	kFFTRadix5 = 2,
 };
 
-typedef struct OpaqueFFTSetup *FFTSetup;
+typedef struct OpaqueFFTSetup* FFTSetup;
 
-void vDSP_vadd(const float *__A, vDSP_Stride __IA, const float *__B, vDSP_Stride __IB, float *__C, vDSP_Stride __IC, vDSP_Length __N);
-void vDSP_vsub(const float *__B, vDSP_Stride __IB, const float *__A, vDSP_Stride __IA, float *__C, vDSP_Stride __IC, vDSP_Length __N);
-void vDSP_vmul(const float *__A, vDSP_Stride __IA, const float *__B, vDSP_Stride __IB, float *__C, vDSP_Stride __IC, vDSP_Length __N);
-void vDSP_vsmul(const float *__A, vDSP_Stride __IA, const float *__B, float *__C, vDSP_Stride __IC, vDSP_Length __N);
-void vDSP_vsadd(const float *__A, vDSP_Stride __IA, const float *__B, float *__C, vDSP_Stride __IC, vDSP_Length __N);
-void vDSP_vsma(const float *__A, vDSP_Stride __IA, const float *__B, const float *__C, vDSP_Stride __IC, float *__D, vDSP_Stride __ID, vDSP_Length __N);
-void vDSP_svesq(const float *__A, vDSP_Stride __IA, float *__C, vDSP_Length __N);
-void vDSP_vclip(const float *__A, vDSP_Stride __IA, const float *__B, const float *__C, float *__D, vDSP_Stride __ID, vDSP_Length __N);
-void vDSP_maxmgv(const float *__A, vDSP_Stride __IA, float *__C, vDSP_Length __N);
-void vDSP_conv(const float *__A, vDSP_Stride __IA, const float *__F, vDSP_Stride __IF, float *__C, vDSP_Stride __IC, vDSP_Length __N, vDSP_Length __P);
-void vDSP_ctoz(const DSPComplex *__C, vDSP_Stride __IC, const DSPSplitComplex *__Z, vDSP_Stride __IZ, vDSP_Length __N);
-void vDSP_ztoc(const DSPSplitComplex *__Z, vDSP_Stride __IZ, DSPComplex *__C, vDSP_Stride __IC, vDSP_Length __N);
-void vDSP_zvmul(const DSPSplitComplex *__A, vDSP_Stride __IA, const DSPSplitComplex *__B, vDSP_Stride __IB, const DSPSplitComplex *__C, vDSP_Stride __IC, vDSP_Length __N, int __Conjugate);
-void vDSP_deq22(const float *__A, vDSP_Stride __IA, const float *__B, float *__C, vDSP_Stride __IC, vDSP_Length __N);
-void vDSP_deq22D(const double *__A, vDSP_Stride __IA, const double *__B, double *__C, vDSP_Stride __IC, vDSP_Length __N);
+void vDSP_vadd(const float* __A, vDSP_Stride __IA, const float* __B, vDSP_Stride __IB, float* __C, vDSP_Stride __IC, vDSP_Length __N);
+void vDSP_vsub(const float* __B, vDSP_Stride __IB, const float* __A, vDSP_Stride __IA, float* __C, vDSP_Stride __IC, vDSP_Length __N);
+void vDSP_vmul(const float* __A, vDSP_Stride __IA, const float* __B, vDSP_Stride __IB, float* __C, vDSP_Stride __IC, vDSP_Length __N);
+void vDSP_vsmul(const float* __A, vDSP_Stride __IA, const float* __B, float* __C, vDSP_Stride __IC, vDSP_Length __N);
+void vDSP_vsadd(const float* __A, vDSP_Stride __IA, const float* __B, float* __C, vDSP_Stride __IC, vDSP_Length __N);
+void vDSP_vsma(const float* __A, vDSP_Stride __IA, const float* __B, const float* __C, vDSP_Stride __IC, float* __D, vDSP_Stride __ID, vDSP_Length __N);
+void vDSP_svesq(const float* __A, vDSP_Stride __IA, float* __C, vDSP_Length __N);
+void vDSP_vclip(const float* __A, vDSP_Stride __IA, const float* __B, const float* __C, float* __D, vDSP_Stride __ID, vDSP_Length __N);
+void vDSP_maxmgv(const float* __A, vDSP_Stride __IA, float* __C, vDSP_Length __N);
+void vDSP_conv(const float* __A, vDSP_Stride __IA, const float* __F, vDSP_Stride __IF, float* __C, vDSP_Stride __IC, vDSP_Length __N, vDSP_Length __P);
+void vDSP_deq22(const float* __A, vDSP_Stride __IA, const float* __B, float* __C, vDSP_Stride __IC, vDSP_Length __N);
+void vDSP_deq22D(const double* __A, vDSP_Stride __IA, const double* __B, double* __C, vDSP_Stride __IC, vDSP_Length __N);
+void vDSP_ctoz(const DSPComplex* __C, vDSP_Stride __IC, const DSPSplitComplex* __Z, vDSP_Stride __IZ, vDSP_Length __N);
+void vDSP_ztoc(const DSPSplitComplex* __Z, vDSP_Stride __IZ, DSPComplex* __C, vDSP_Stride __IC, vDSP_Length __N);
+void vDSP_zvmul(const DSPSplitComplex* __A, vDSP_Stride __IA, const DSPSplitComplex* __B, vDSP_Stride __IB, const DSPSplitComplex* __C, vDSP_Stride __IC, vDSP_Length __N, int __Conjugate);
 FFTSetup vDSP_create_fftsetup(vDSP_Length __Log2n, FFTRadix __Radix);
 void vDSP_destroy_fftsetup(FFTSetup __setup);
-void vDSP_fft_zrip(FFTSetup __Setup, const DSPSplitComplex *__C, vDSP_Stride __IC, vDSP_Length __Log2N, FFTDirection __Direction);
+void vDSP_fft_zrip(FFTSetup __Setup, const DSPSplitComplex* __C, vDSP_Stride __IC, vDSP_Length __Log2N, FFTDirection __Direction);
 
 void* vDSP_DCT_CreateSetup(void);
 void* vDSP_DCT_Execute(void);

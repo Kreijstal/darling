@@ -17,7 +17,6 @@ add_framework(WebKit
     FAT
     CURRENT_VERSION
     VERSION ${FRAMEWORK_VERSION}
-    LINK_FLAGS "-Wl,-reexport_library,${CMAKE_BINARY_DIR}/src/external/objc4/runtime/libobjc.A.dylib"
 
     SOURCES
         src/WebKit.m
@@ -98,6 +97,7 @@ add_framework(WebKit
         src/WKDOMRange.m
         src/WKDOMText.m
         src/WKDOMTextIterator.m
+        src/WKError.m
         src/WKFrameInfo.m
         src/WKFullKeyboardAccessWatcher.m
         src/WKFullScreenWindowController.m
@@ -142,6 +142,8 @@ add_framework(WebKit
         src/WKTextInputWindowController.m
         src/WKTypeRefWrapper.m
         src/WKURLSchemeTaskImpl.m
+        src/WKUserContentController.m
+        src/WKUserScript.m
         src/WKViewData.m
         src/WKView.m
         src/WKViewLayoutStrategy.m
@@ -160,9 +162,9 @@ add_framework(WebKit
         src/WKWebProcessPlugInScriptWorld.m
         src/WKWebsiteDataRecord.m
         src/WKWebsiteDataStore.m
+        src/WKUnavailableWebViewBackend.m
         src/WKWebView.m
-        src/dwb-siblings.m
-        src/dwb_client.c
+        src/WKWebViewConfiguration.m
         src/WKWindowFeatures.m
 
     DEPENDENCIES
@@ -170,11 +172,19 @@ add_framework(WebKit
         objc
         Foundation
         CFNetwork
-        # The guest is a view: an NSView subclass that blits frames
-        # through an NSBitmapImageRep and names NSDeviceRGBColorSpace.
-        # Without AppKit the framework compiles and then fails to link on
-        # exactly those three symbols, which is what its first real build
-        # did. Same idiom as Automator, which also uses NSView.
         AppKit
-        CoreGraphics
+)
+
+# The web view classes are written with ARC.
+set_source_files_properties(
+    src/WKNavigation.m
+    src/WKPreferences.m
+    src/WKScriptMessage.m
+    src/WKUnavailableWebViewBackend.m
+    src/WKUserContentController.m
+    src/WKUserScript.m
+    src/WKWebView.m
+    src/WKWebViewConfiguration.m
+    src/WKWebsiteDataStore.m
+    PROPERTIES COMPILE_FLAGS "-fobjc-arc"
 )

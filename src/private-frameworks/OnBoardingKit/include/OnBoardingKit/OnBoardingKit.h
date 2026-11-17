@@ -11,14 +11,14 @@
 	privacy presenter reports no services, because there is no App Store here to
 	link to.
 
-	Every class is declared over NSObject rather than over its real AppKit base,
-	because AppKit does not exist on this system.
+	The views, buttons and controllers derive from NSView, NSButton and
+	NSViewController, as callers that put them in a view hierarchy expect.
 */
 
 #ifndef ONBOARDINGKIT_H
 #define ONBOARDINGKIT_H
 
-#import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 
 extern NSString* const OBPrivacyAppStoreIdentifier;
 extern NSString* const OBPrivacyAppleMusicIdentifier;
@@ -30,80 +30,61 @@ extern NSString* const OBPrivacyiTunesStoreIdentifier;
 + (NSArray*)privacyServiceIdentifiers;
 @end
 
-@interface OBTemplateView : NSObject {
-	NSUInteger templateIdentifier;
-}
+@interface OBTemplateView : NSView
 @property (nonatomic) NSUInteger templateIdentifier;
 @end
 
-@interface OBTemplatePartBulletList : NSObject {
-	NSMutableArray* _bullets;
-}
+@interface OBTemplatePartBulletList : NSView
 - (void)addBullet:(NSString*)text;
 - (void)removeAllBullets;
 @property (readonly) NSUInteger bulletCount;
 @end
 
-@interface OBBoldTrayButton : NSObject {
-	NSString* _title;
-}
-- (void)setTitle:(NSString*)title;
+@interface OBBoldTrayButton : NSButton
 @end
 
-@interface OBLinkTrayButton : OBBoldTrayButton
+@interface OBLinkTrayButton : NSButton
 @end
 
-@interface OBBulletedListItemLinkButton : OBBoldTrayButton {
-	NSURL* _url;
-}
+@interface OBBulletedListItemLinkButton : NSButton
 - (void)setDestinationURL:(NSURL*)url;
 @end
 
-@interface OBTemplateContainerViewController : NSObject
+@interface OBTemplateContainerViewController : NSViewController
 - (void)setBullets:(NSArray*)bullets;
 @end
 
-@interface OBTableWelcomeController : NSObject {
-	NSString* title;
-	NSString* body;
-}
-@property (nonatomic, copy) NSString* title;
+@interface OBTableWelcomeController : NSViewController
 @property (nonatomic, copy) NSString* body;
 @end
 
-@interface OBWelcomeController : NSObject
+@interface OBWelcomeController : NSViewController
 - (void)advance;
 - (void)finish;
 @end
 
-@interface OBNavigationController : NSObject {
-	NSMutableArray* _stack;
-}
+@interface OBNavigationController : NSViewController
 - (void)pushViewController:(id)controller;
 - (void)popViewController;
 @property (readonly) NSUInteger viewControllerCount;
 @end
 
-@interface OBPrivacyLinkController : NSObject
+@interface OBPrivacyLinkController : NSViewController
 - (void)openServiceWithIdentifier:(NSString*)identifier;
 @end
 
-@interface OBPrivacyPresenter : NSObject {
-	NSString* _bundleIdentifier;
-}
+@interface OBPrivacyPresenter : NSObject
 + (instancetype)presenterForBundleIdentifier:(NSString*)bundleIdentifier;
 - (NSArray*)servicesRequiringConsent;
 - (BOOL)presentConsentForService:(NSString*)identifier error:(NSError**)error;
 @end
 
-@interface OBPrivacyFlow : NSObject {
-	NSString* _bundleIdentifier;
-}
+@interface OBPrivacyFlow : NSObject
 + (instancetype)flowWithBundleIdentifier:(NSString*)bundleIdentifier;
 - (BOOL)run:(NSError**)error;
 @end
 
-@interface OBPrivacySplashController : NSObject
+@interface OBPrivacySplashController : NSViewController
 - (void)showPrivacySplash;
 @end
 

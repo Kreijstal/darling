@@ -5,18 +5,18 @@
 typedef void (^CSKDirectoryEventHandler)(CSKDirectoryObserver *observer, NSArray<NSString *> *paths, BOOL flag);
 
 // Watches directories through FSEvents and reports the paths of the ones whose contents change.
-@interface CSKDirectoryObserver : NSObject {
-	NSArray<NSURL *> *_urls;
-	CSKDirectoryEventHandler _handler;
-	FSEventStreamRef _stream;
-}
+@interface CSKDirectoryObserver : NSObject
 @property (strong) dispatch_queue_t eventQueue;
 @property (strong) id representedObject;
 - (instancetype)initWithURLs:(NSArray<NSURL *> *)urls eventHandler:(CSKDirectoryEventHandler)handler;
 - (void)start;
 @end
 
-@implementation CSKDirectoryObserver
+@implementation CSKDirectoryObserver {
+	NSArray<NSURL *> *_urls;
+	CSKDirectoryEventHandler _handler;
+	FSEventStreamRef _stream;
+}
 
 - (instancetype)initWithURLs:(NSArray<NSURL *> *)urls eventHandler:(CSKDirectoryEventHandler)handler
 {

@@ -1,7 +1,12 @@
 /*
  This file is part of Darling.
 
+<<<<<<<< HEAD:src/libScreenReader/src/ScreenReader.c
  Copyright (C) 2026 Darling Developers
+========
+ Copyright (C) 2021 Lubos Dolezel
+ Copyright (C) 2026 Darling developers
+>>>>>>>> darlinghq/master:src/frameworks/UserNotifications/src/UNNotificationTrigger.m
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,6 +28,7 @@
 
 #include <stdbool.h>
 
+<<<<<<<< HEAD:src/libScreenReader/src/ScreenReader.c
 bool _ScreenReaderIsRunning(void)
 {
     return false;
@@ -31,4 +37,32 @@ bool _ScreenReaderIsRunning(void)
 bool _ScreenReaderIsInRecoveryMode(void)
 {
     return false;
+========
+@synthesize repeats = _repeats;
+
++ (BOOL)supportsSecureCoding
+{
+    return YES;
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    UNNotificationTrigger *copy = [[[self class] allocWithZone:zone] init];
+    copy->_repeats = self.repeats;
+    return copy;
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+    [coder encodeBool:_repeats forKey:@"repeats"];
+}
+
+- (instancetype)initWithCoder:(NSCoder *)coder
+{
+    self = [super init];
+    if (self) {
+        _repeats = [coder decodeBoolForKey:@"repeats"];
+    }
+    return self;
+>>>>>>>> darlinghq/master:src/frameworks/UserNotifications/src/UNNotificationTrigger.m
 }

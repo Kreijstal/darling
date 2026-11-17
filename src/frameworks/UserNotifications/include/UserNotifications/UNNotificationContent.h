@@ -1,7 +1,8 @@
 /*
  This file is part of Darling.
 
- Copyright (C) 2026 Darling Developers
+ Copyright (C) 2021 Lubos Dolezel
+ Copyright (C) 2026 Darling developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -21,19 +22,19 @@
 #define _USERNOTIFICATIONS_UNNOTIFICATIONCONTENT_H_
 
 #import <Foundation/Foundation.h>
-
-@class UNNotificationSound, UNNotificationAttachment;
+#import <UserNotifications/UNNotificationAttachment.h>
+#import <UserNotifications/UNNotificationSound.h>
 
 typedef NS_ENUM(NSUInteger, UNNotificationInterruptionLevel) {
-    UNNotificationInterruptionLevelPassive,
-    UNNotificationInterruptionLevelActive,
-    UNNotificationInterruptionLevelTimeSensitive,
-    UNNotificationInterruptionLevelCritical,
+    UNNotificationInterruptionLevelPassive = 0,
+    UNNotificationInterruptionLevelActive = 1,
+    UNNotificationInterruptionLevelTimeSensitive = 2,
+    UNNotificationInterruptionLevelCritical = 3
 };
 
 @interface UNNotificationContent : NSObject <NSCopying, NSMutableCopying, NSSecureCoding> {
-@protected
-    NSArray *_attachments;
+@package
+    NSArray<UNNotificationAttachment *> *_attachments;
     NSNumber *_badge;
     NSString *_body;
     NSString *_categoryIdentifier;
@@ -43,28 +44,30 @@ typedef NS_ENUM(NSUInteger, UNNotificationInterruptionLevel) {
     NSString *_threadIdentifier;
     NSString *_title;
     NSDictionary *_userInfo;
+    UNNotificationInterruptionLevel _interruptionLevel;
     NSString *_summaryArgument;
     NSUInteger _summaryArgumentCount;
     NSString *_targetContentIdentifier;
-    UNNotificationInterruptionLevel _interruptionLevel;
     double _relevanceScore;
+    NSString *_filterCriteria;
 }
 
-@property (readonly, copy) NSArray<UNNotificationAttachment *> *attachments;
-@property (readonly, copy) NSNumber *badge;
-@property (readonly, copy) NSString *body;
-@property (readonly, copy) NSString *categoryIdentifier;
-@property (readonly, copy) NSString *launchImageName;
-@property (readonly, copy) UNNotificationSound *sound;
-@property (readonly, copy) NSString *subtitle;
-@property (readonly, copy) NSString *threadIdentifier;
-@property (readonly, copy) NSString *title;
-@property (readonly, copy) NSDictionary *userInfo;
-@property (readonly, copy) NSString *summaryArgument;
-@property (readonly) NSUInteger summaryArgumentCount;
-@property (readonly, copy) NSString *targetContentIdentifier;
-@property (readonly) UNNotificationInterruptionLevel interruptionLevel;
-@property (readonly) double relevanceScore;
+@property(readonly, copy) NSArray<UNNotificationAttachment *> *attachments;
+@property(readonly, copy) NSNumber *badge;
+@property(readonly, copy) NSString *body;
+@property(readonly, copy) NSString *categoryIdentifier;
+@property(readonly, copy) NSString *launchImageName;
+@property(readonly, copy) UNNotificationSound *sound;
+@property(readonly, copy) NSString *subtitle;
+@property(readonly, copy) NSString *threadIdentifier;
+@property(readonly, copy) NSString *title;
+@property(readonly, copy) NSDictionary *userInfo;
+@property(readonly) UNNotificationInterruptionLevel interruptionLevel;
+@property(readonly, copy) NSString *summaryArgument;
+@property(readonly) NSUInteger summaryArgumentCount;
+@property(readonly, copy) NSString *targetContentIdentifier;
+@property(readonly) double relevanceScore;
+@property(readonly, copy) NSString *filterCriteria;
 
 @end
 

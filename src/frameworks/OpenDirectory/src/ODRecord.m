@@ -17,62 +17,118 @@
  along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#import <OpenDirectory/ODRecord.h>
-#import <OpenDirectory/OpenDirectory.h>
-#import <Foundation/Foundation.h>
-#include <pwd.h>
-#include <unistd.h>
+#import "ODInternal.h"
+#import <darling-stub-forwarding.h>
 
-@interface ODRecord ()
-- (instancetype)initWithRecordType:(ODRecordType)inRecordType recordName:(NSString *)inRecordName attributes:(id)inAttributes;
+// ODRecord declares no instance variables, so the records this framework
+// hands out are of a private subclass that holds the CF record.
+@interface _ODRecordWrapper : ODRecord
+{
+@public
+	ODRecordRef _record;
+}
 @end
 
 @implementation ODRecord
 
-- (instancetype)initWithRecordType:(ODRecordType)inRecordType recordName:(NSString *)inRecordName attributes:(id)inAttributes {
-    self = [super init];
-    if (self) {
-        _internal = (void *)[inRecordName copy];
-    }
-    return self;
++ (ODRecord *)_recordWithRecordRef:(ODRecordRef)record
+{
+	_ODRecordWrapper *wrapper = [[_ODRecordWrapper alloc] init];
+
+	if (wrapper != nil)
+		wrapper->_record = (ODRecordRef) CFRetain(record);
+	return [wrapper autorelease];
 }
 
-- (void)dealloc {
-    [(id)_internal release];
-    [super dealloc];
++ (NSArray *)_recordsWithRecordRefs:(CFArrayRef)records
+{
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity: CFArrayGetCount(records)];
+
+	for (CFIndex i = 0; i < CFArrayGetCount(records); i++)
+	{
+		ODRecord *record = [self _recordWithRecordRef: (ODRecordRef) CFArrayGetValueAtIndex(records, i)];
+		if (record != nil)
+			[result addObject: record];
+	}
+	return result;
 }
 
-- (NSString *)recordName {
-    return (NSString *)_internal;
+- (ODRecordRef)_recordRef
+{
+	return NULL;
 }
 
-- (NSArray *)valuesForAttribute:(ODAttributeType)inAttribute error:(NSError **)outError {
-    if (outError) *outError = nil;
-    if ([inAttribute isEqualToString:kODAttributeTypeUserShell]) {
-        const char *shellEnv = getenv("SHELL");
-        if (shellEnv && strlen(shellEnv) > 0) {
-            return @[ [NSString stringWithUTF8String:shellEnv] ];
-        }
-        struct passwd *pw = getpwuid(getuid());
-        if (pw && pw->pw_shell && strlen(pw->pw_shell) > 0) {
-            return @[ [NSString stringWithUTF8String:pw->pw_shell] ];
-        }
-        return @[ @"/bin/bash" ];
-    }
-    if ([inAttribute isEqualToString:kODAttributeTypeRecordName]) {
-        return @[ (NSString *)_internal ?: (NSUserName() ?: @"root") ];
-    }
-    return @[];
+- (NSString *)recordType
+{
+	return [[(NSString *) ODRecordGetRecordType([self _recordRef]) copy] autorelease];
+}
+
+- (NSString *)recordName
+{
+	return [[(NSString *) ODRecordGetRecordName([self _recordRef]) copy] autorelease];
+}
+
+- (NSArray *)valuesForAttribute:(ODAttributeType)inAttribute error:(NSError **)outError
+{
+	CFErrorRef error = NULL;
+	CFArrayRef values = ODRecordCopyValues([self _recordRef], (ODAttributeType) inAttribute, &error);
+
+	ODSetError(outError, error);
+	return [(NSArray *) values autorelease];
+}
+
+- (NSDictionary *)recordDetailsForAttributes:(NSArray *)inAttributes error:(NSError **)outError
+{
+	CFErrorRef error = NULL;
+	CFDictionaryRef details = ODRecordCopyDetails([self _recordRef], (CFArrayRef) inAttributes, &error);
+
+	ODSetError(outError, error);
+	return [(NSDictionary *) details autorelease];
+}
+
+- (BOOL)verifyPassword:(NSString *)inPassword error:(NSError **)outError
+{
+	CFErrorRef error = NULL;
+	bool ok = ODRecordVerifyPassword([self _recordRef], (CFStringRef) inPassword, &error);
+
+	ODSetError(outError, error);
+	return ok ? YES : NO;
 }
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return [NSMethodSignature signatureWithObjCTypes: "v@:"];
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    NSLog(@"Stub called: %@ in %@", NSStringFromSelector([anInvocation selector]), [self class]);
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
+@end
+
+@implementation _ODRecordWrapper
+
+- (void)dealloc
+{
+	if (_record != NULL)
+		CFRelease(_record);
+	[super dealloc];
+}
+
+- (ODRecordRef)_recordRef
+{
+	return _record;
 }
 
 @end

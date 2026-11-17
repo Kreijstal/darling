@@ -8,9 +8,10 @@ add_darling_library(vDSP SHARED
 	src/vDSP.c
 	src/extrema.c
 	src/arith.c
+	src/convert.c
 	src/fft.c
 )
-# WebAudio calls these on the realtime render thread.
+# Audio code calls these on realtime threads.
 target_compile_options(vDSP PRIVATE -O2)
 make_fat(vDSP)
 target_link_libraries(vDSP system)

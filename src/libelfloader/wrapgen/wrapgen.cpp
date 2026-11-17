@@ -28,7 +28,7 @@
 // TODO: use wrapgen32 to generate 32-bit wrappers.
 
 void parse_elf(const char* elf, std::string& soname_out, std::set<std::string>& functions_out, std::set<std::string>& vars_out);
-void generate_wrapper(std::ofstream& output, const char* soname, const std::set<std::string>& symbols);
+void generate_wrapper(std::ofstream& output, const char* soname, const std::set<std::string>& symbols, const std::string& availabilitySymbol);
 void generate_var_wrappers(std::ofstream& output, std::ofstream& outputHeader, const std::set<std::string>& vars);
 Elf64_Off vaddr_to_offset(const Elf64_Ehdr* ehdr, Elf64_Addr vaddr);
 
@@ -39,9 +39,9 @@ int main(int argc, const char** argv)
 	std::string soname;
 	std::ofstream output;
 
-	if (argc != 4)
+	if (argc != 4 && argc != 5)
 	{
-		std::cerr << "Usage: " << argv[0] << " <library-name> <output-file> <var-access-header>\n";
+		std::cerr << "Usage: " << argv[0] << " <library-name> <output-file> <var-access-header> [<availability-function>]\n";
 		return 1;
 	}
 
@@ -101,7 +101,7 @@ int main(int argc, const char** argv)
 		}
 
 		parse_elf(elfLibrary.c_str(), soname, functions, vars);
-		generate_wrapper(output, soname.c_str(), functions);
+		generate_wrapper(output, soname.c_str(), functions, argc == 5 ? argv[4] : "");
 
 		if (!vars.empty())
 		{
@@ -273,11 +273,29 @@ end_dyn:
 	munmap((void*) ehdr, length);
 }
 
-void generate_wrapper(std::ofstream& output, const char* soname, const std::set<std::string>& symbols)
+// With a non-empty availabilitySymbol the library is optional: a missing ELF library
+// does not abort the process when the wrapper is loaded. The wrapper then exports
+// "int <availabilitySymbol>(void)", which tells whether the library could be loaded.
+// Calling any wrapped function while the library is missing still fails fatally, so a
+// client has to check the availability function first.
+void generate_wrapper(std::ofstream& output, const char* soname, const std::set<std::string>& symbols, const std::string& availabilitySymbol)
 {
 	output << "#include <elfcalls.h>\n"
 		"extern struct elf_calls* _elfcalls;\n\n"
 		"extern const char __elfname[];\n\n";
+
+	// The functions below are symbol resolvers: the first call to each one goes
+	// through ld64's resolver helper, which calls the resolver and then jumps to
+	// the function it returned with the caller's arguments still in place.
+	// On x86-64 the helper only saves the integer argument registers, while
+	// looking the symbol up in the ELF library can clobber the XMM registers
+	// carrying floating-point and vector arguments. preserve_all makes the
+	// resolver itself save them.
+	output << "#ifdef __x86_64__\n"
+		"#define WRAPGEN_RESOLVER __attribute__((preserve_all))\n"
+		"#else\n"
+		"#define WRAPGEN_RESOLVER\n"
+		"#endif\n\n";
 
 	output << "static void* lib_handle;\n"
 		"static void open_library(void) {\n"
@@ -287,6 +305,21 @@ void generate_wrapper(std::ofstream& output, const char* soname, const std::set<
 	// The host library is opened when a function in it is first resolved, not when this
 	// wrapper loads: hosts without it (Android has no libpulse) can still run programs that
 	// link it without calling it.
+
+	if (availabilitySymbol.empty())
+	{
+		output << "__attribute__((constructor)) static void initializer() {\n"
+			"\topen_library();\n"
+			"}\n\n";
+	}
+	else
+	{
+		output << "__attribute__((visibility(\"default\"))) int " << availabilitySymbol << "(void) {\n"
+			"\tif (!lib_handle && _elfcalls)\n"
+			"\t\tlib_handle = _elfcalls->dlopen(__elfname);\n"
+			"\treturn lib_handle != 0;\n"
+			"}\n\n";
+	}
 
 	output << "__attribute__((destructor)) static void destructor() {\n"
 		"\tif (lib_handle)\n"
@@ -328,12 +361,51 @@ void generate_wrapper(std::ofstream& output, const char* soname, const std::set<
 		"\\tbr x17\\n\");\n"
 		"#endif\n\n";
 
+	// Guest call sites bind directly to the host function through the resolver generated below, so a
+	// variadic prototype means the guest passes its arguments in one layout while the host reads them in
+	// another. That mismatch is not detectable here and crashes at run time: it killed every Darling app
+	// at once through libdbus's dbus_message_append_args. A generated shim cannot fix it, because the
+	// variadic tail has to be forwarded under a different ABI, which needs assembly per call site. So
+	// flag these in the generated wrapper rather than emit one that fails mysteriously at run time.
+	static const std::set<std::string> variadic_symbols = {
+		// libdbus
+		"dbus_message_append_args",
+		"dbus_message_get_args",
+		// libtiff
+		"TIFFGetField",
+		"TIFFSetField",
+		"TIFFGetFieldDefaulted",
+		"TIFFError",
+		"TIFFErrorExt",
+		"TIFFWarning",
+	};
+
 	for (const std::string& sym : symbols)
 	{
-		// These signatures have eight register arguments, then two 32-bit
-		// scalars and a pointer. Darwin packs the scalars; AAPCS64 does not.
+		// ABI adapters for every caller of these four GL entry points, not for
+		// any particular application. Their prototypes (OpenGL/glext.h) have
+		// eight register arguments followed by two 32-bit scalars and a
+		// pointer, which go on the stack. The Darwin arm64 calling convention
+		// packs stack arguments to their natural size (offsets 0, 4 and 8),
+		// while AAPCS64 on Linux gives each its own 8-byte slot (0, 8 and 16).
+		// wrapgen has no prototypes, so it cannot convert stack arguments in
+		// general; the adapter below repacks them for these signatures only.
 		bool packedGLUpload = sym == "glTexSubImage3D" || sym == "glTexSubImage3DEXT" ||
 			sym == "glCompressedTexSubImage3D" || sym == "glCompressedTexSubImage3DARB";
+		// wrapgen emits a wrapper for every exported symbol, whether or not any guest image imports
+		// it, so refusing to generate one would break the build for a symbol nothing calls - TIFFError
+		// is exactly that case today. The wrapper is only dangerous when it is actually called, so warn
+		// in the generated translation unit instead: it still reaches the compiler log and any developer
+		// who adds a call site, without failing an unrelated build.
+		if (variadic_symbols.count(sym))
+		{
+			output << "#warning \"wrapgen: '" << sym << "' from " << soname
+				<< " is variadic. A guest caller passes arguments in a different layout than the host"
+				<< " expects and the call will crash. Call it through a hand-written shim that does not"
+				<< " forward the variadic tail, or avoid it.\"\n";
+		}
+		// These signatures have eight register arguments, then two 32-bit
+		// scalars and a pointer. Darwin packs the scalars; AAPCS64 does not.
 		output << "#if defined(__arm64__)\n"
 			"__attribute__((visibility(\"hidden\"), used))\n"
 			"struct lazy_symbol __elf_lazy_symbol_" << sym << " = { 0, \"" << sym << "\" };\n"
@@ -365,12 +437,14 @@ void generate_wrapper(std::ofstream& output, const char* soname, const std::set<
 				"\\tret\\n\");\n"
 				"#endif\n";
 		}
+		output << "WRAPGEN_RESOLVER void* " << sym << "() {\n"
 		output << "void* " << sym << "() {\n"
 			"\t__asm__(\".symbol_resolver _" << sym << "\");\n"
 			"#if defined(__arm64__)\n";
 		if (packedGLUpload)
 			output << "\treturn __elf_abi_" << sym << ";\n";
 		else
+			output << "\tif (!_elfcalls)\n\t\treturn __elf_lazy_" << sym << ";\n";
 			// Always the trampoline, so that binding never opens the host library.
 			output << "\treturn __elf_lazy_" << sym << ";\n";
 		output <<

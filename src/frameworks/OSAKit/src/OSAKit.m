@@ -159,17 +159,8 @@ NSString* const OSAScriptErrorAppAddressKey = @"OSAScriptErrorAppAddressKey";
 NSString* const OSAScriptErrorAppNameKey = @"OSAScriptErrorAppNameKey";
 NSString* const OSAScriptErrorRangeKey = @"OSAScriptErrorRangeKey";
 
-// The older names share the values of the *Key names, so error dictionaries answer lookups through
-// either spelling.
-NSString* const OSAScriptErrorMessage = @"OSAScriptErrorMessageKey";
-NSString* const OSAScriptErrorBriefMessage = @"OSAScriptErrorBriefMessageKey";
-NSString* const OSAScriptErrorNumber = @"OSAScriptErrorNumberKey";
-NSString* const OSAScriptErrorAppName = @"OSAScriptErrorAppNameKey";
-NSString* const OSAScriptErrorRange = @"OSAScriptErrorRangeKey";
-
-// These match the UTIs that CoreTypes declares for the corresponding file formats.
-NSString* const OSAStorageScriptType = @"com.apple.applescript.script";
-NSString* const OSAStorageScriptBundleType = @"com.apple.applescript.script-bundle";
-NSString* const OSAStorageApplicationType = @"com.apple.application-file";
-NSString* const OSAStorageApplicationBundleType = @"com.apple.application-bundle";
-NSString* const OSAStorageTextType = @"com.apple.applescript.text";
+NSString* const OSAStorageScriptType = @"script";
+NSString* const OSAStorageScriptBundleType = @"script bundle";
+NSString* const OSAStorageApplicationType = @"application";
+NSString* const OSAStorageApplicationBundleType = @"application bundle";
+NSString* const OSAStorageTextType = @"text";

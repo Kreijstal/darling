@@ -1,149 +1,49 @@
-# Launcher shutdown isolation
+<!-- Copyright (C) 2026 Lubos Dolezel -->
 
-## Prefix initialization state
+# Launcher host tests
 
-Run without root or any Darling container:
-
-```sh
-cc -Wall -Wextra -Werror -O2 tests/launcher/prefix-state.c -o /tmp/darling-prefix-state-test
-/tmp/darling-prefix-state-test
-```
-
-An empty pre-created directory is treated like an absent prefix and follows
-normal setup. A non-empty directory must contain the structural files created
-by `setupPrefix()`; otherwise the launcher fails closed instead of overwriting
-user data.
-
-## Profile selection
-
-Run without root or any Darling container:
+Run the prefix classification and named profile tests without root or a Darling
+container:
 
 ```sh
-cc -Wall -Wextra -Werror -O2 tests/launcher/profile-prefix.c -o /tmp/darling-profile-prefix-test
-/tmp/darling-profile-prefix-test
+cc -std=gnu11 -Wall -Wextra -Werror tests/launcher/prefix-state.c -o /tmp/prefix-state-test
+/tmp/prefix-state-test
+cc -std=gnu11 -Wall -Wextra -Werror tests/launcher/profile-prefix.c -o /tmp/profile-prefix-test
+/tmp/profile-prefix-test
 ```
 
-This tests the launcher's pure prefix selector. `DPREFIX` remains the explicit
-path interface and must be absolute; an empty or relative value is rejected. `DARLING_PROFILE=<name>` selects the isolated sibling prefix
-`~/.darling.<name>`; using both selectors or a name containing path separators
-is rejected. The harness does not create or access any prefix.
-
-## Shellspawn socket path
-
-Run without root or any Darling container:
-
-```sh
-sh tests/launcher/shellspawn-sockpath.sh /tmp/darling-shellspawn-sockpath-test
-```
-
-Extracts the path construction of `connectToShellspawn()` from `darling.c` and
-checks that a prefix too long for `sun_path` is refused with an error instead of
-overflowing it. The launcher accepts a `DPREFIX` of up to 255 bytes; `sun_path`
-holds 107.
-
-## Root-mode /proc
-
-Run without root or any Darling container:
-
-```sh
-cc -Wall -Wextra -Werror -O2 tests/launcher/proc-dir.c -o /tmp/darling-proc-dir-test
-/tmp/darling-proc-dir-test
-```
-
-Non-root mode makes the prefix's `/proc` a symlink to the host procfs, and root
-mode must mount a procfs for launchd's PID namespace on a directory there. The
-root-mode launcher replaces exactly that symlink with a directory; any other
-entry, including a symlink with a different target, is left alone. The check
-runs with the invoking user's ids.
-
-## Shutdown isolation
-
-Run without root or any Darling container:
-
-```sh
-cc -Wall -Wextra -Werror -O2 tests/launcher/shutdown-isolation.c -o /tmp/darling-shutdown-isolation-test
-/tmp/darling-shutdown-isolation-test
-```
-
-This exercises the launcher's actual shutdown helpers on a private process tree.
-The target children and grandchildren ignore SIGTERM, checking the SIGKILL phase
-and preservation of process handles after reparenting. An unrelated process
-named darlingserver and the test caller must survive. A different prefix must
-fail the server identity check. The test reaps its children, including orphans.
-Linux pidfd syscalls are required; unsupported kernels fail closed.
-
-## Orphans of a dead server
-
-Run without root or any Darling container:
-
-```sh
-cc -Wall -Wextra -Werror -O2 tests/launcher/orphan-cleanup.c -o /tmp/darling-orphan-cleanup-test
-/tmp/darling-orphan-cleanup-test
-```
-
-Nonroot containers have no PID namespace, so when darlingserver dies its guests are
-reparented to init and no longer descend from any server. `shutdownOrphans()` finds
-them by exact prefix socket environment, the invoking user and an `mldr` executable
-path (a replaced binary's ` (deleted)` suffix is ignored). The test copies itself to
-two `mldr` paths and checks that a live server for the prefix blocks reaping; that
-after it dies the prefix's guests, including a grandchild, a SIGTERM-resistant child
-and one running a since-replaced binary, are stopped; and that a non-`mldr` process,
-another prefix's guest and a process without the socket environment survive. The
-prefix is the run's own temporary directory.
-
-## Inspection failure on /proc/<pid>/cmdline
-
-Run without root or any Darling container:
-
-```sh
-cc -Wall -Wextra -Werror -O2 -Wl,--wrap=open tests/launcher/proc-permission.c -o /tmp/darling-proc-permission-test
-/tmp/darling-proc-permission-test
-```
-
-Under `/proc` mounted with `hidepid=1` or `hidepid=2`, inspecting another process's
-`cmdline` requires `PTRACE_MODE_READ_FSCREDS`, which fails with `EACCES` or `EPERM`
-when GIDs differ (for example, after `newgrp`). `shutdownServerMatches()` separates
-inspection failure (-1) from mismatch (0), so `shutdownOrphans()` and `darling shutdown`
-fail closed instead of treating an unreadable server as absent and killing guests
-or spawning a duplicate server.
-
-For container integration testing, use the fixed launcher with two disposable
-prefixes. Boot both, shut down the first, check the second server PID remains
-alive and serves another request, then shut down the second. Do not run the
-historical launcher's shutdown path alongside any valuable running container.
-
-Nonroot shellspawn has a separate process tree. The launcher records its host PID
-at startup and validates its user and exact prefix socket environment before
-obtaining a shutdown target. Existing nonroot containers started by an older
-launcher lack this record and are refused rather than falling back to a global
-process-name search. Start disposable nonroot tests with the fixed launcher.
-
-## Missing init pid file
-
-Run without root or any Darling container:
+The missing-init harness compiles the launcher startup branch with a mocked
+process scan and verifies that a live server or inspection error causes no
+prefix mutations:
 
 ```sh
 python3 tests/launcher/test-missing-init.py src/startup/darling.c --run
 ```
 
-The script extracts the launcher's "start the prefix's init" branch from the
-given source, compiles it with mocked process and filesystem helpers in a
-temporary directory, and runs three cases. A live darlingserver with a missing
-or invalid `.init.pid` and a failed server inspection must both refuse with
-exit 1 and no unlink, setup, spawn or pid write. A verified absence of a server
-must proceed with setup. The script fails if the branch's shape changes.
-
-## Shellspawn accept loop
-
-Run without root or any Darling container:
+## Modes
 
 ```sh
-python3 tests/launcher/test-shellspawn-accept.py src/shellspawn/shellspawn.c --run
+cc -std=gnu11 -Wall -Wextra -D_GNU_SOURCE -Isrc/startup tests/launcher/mode.c src/startup/launcher-mode.c src/startup/launcher-server.c -o /tmp/mode-test
+/tmp/mode-test
 ```
 
-The script extracts `listenForConnections()` from the given source, compiles it
-with mocked `accept`, `usleep`, `perror` and `fork` in a temporary directory, and
-runs scripted accept results. `EINTR`, `EAGAIN` and `ECONNABORTED` retry without
-sleeping. `EMFILE`, `ENFILE`, `ENOBUFS` and `ENOMEM` sleep on every retry but log
-once per streak, and a successful accept resets the streak. `EINVAL` and
-`ENOTSOCK` log once and return -1. The script fails if the function's shape changes.
+covers how the launcher tells it is privileged (effective uid 0, a secure exec or any capability; privileged
+without uid 0 is refused), the mode selection (a privileged launcher ignores `DARLING_NONROOT`/`DARLING_ROOTLESS`), the install
+prefix taken from the executable's path in the unprivileged modes only, the user name rules and the process
+tree walk used by the non-root shutdown, and the namespace test that makes an unprivileged launcher refuse a container started in another mode.
+
+Manual checks in an installed Darling (not part of the automated tests):
+
+- `DARLING_ROOTLESS=1 darling shell true` with a non-setuid `darling`, then `darling shutdown`.
+- `DARLING_NONROOT=1 darling shell true` likewise; the prefix's `/proc` is a link to `/Volumes/SystemRoot/proc`.
+- With the setuid `darling`, `DARLING_NONROOT=1 darling shell true` still runs in the root mode.
+
+## Default locale
+
+```sh
+cc -std=gnu11 -Wall -Wextra -D_GNU_SOURCE -Isrc/startup tests/launcher/locale.c src/startup/launcher-locale.c -o /tmp/locale-test
+/tmp/locale-test
+```
+
+covers the mapping from `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LC_TIME` and `LANG` to the `AppleLocale` and `AppleLanguages` a new prefix gets in its
+`/Library/Preferences/.GlobalPreferences.plist`, and that existing values there are never changed.

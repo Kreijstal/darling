@@ -18,28 +18,28 @@
 */
 
 #import <Automator/AMWorkflowMetaData.h>
-#import "AMStubSignature.h"
+#import <darling-stub-forwarding.h>
 
 @implementation AMWorkflowMetaData
 
-@synthesize personality = _personality;
-@synthesize documentSaveName = _documentSaveName;
-
-- (void)dealloc
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    [_personality release];
-    [_documentSaveName release];
-    [super dealloc];
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
-- (id)copyWithZone:(NSZone *)zone
+- (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    AMWorkflowMetaData *copy = [[[self class] allocWithZone: zone] init];
-    [copy setPersonality: _personality];
-    [copy setDocumentSaveName: _documentSaveName];
-    return copy;
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
-AM_STUB_FORWARDING
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
 
 @end

@@ -123,8 +123,7 @@ OSErr FSOpenResourceFileMapped(const FSRef* ref, UniCharCount forkNameLength, co
 	return err;
 }
 
-// Mapped resource-fork SPI. Callers only use it after GetForkPhysicalInfo() succeeds, which it
-// doesn't on Darling, so these report no resources.
+// Mapped resource-fork SPI. Forks are not mapped here, so these report no resources.
 OSErr RMNewMappedRefFromMappedFork(const void* forkData, UInt64 forkSize, RMMappedFileRef* mappedRef)
 {
 	if (mappedRef)
@@ -193,7 +192,16 @@ void FSCreateResFile(const FSRef* parentDir, UniCharCount nameLength, const UniC
 		if (*p == '/')
 			*p = ':';
 	}
-	if (strcmp(nameUTF8, ".") == 0 || strcmp(nameUTF8, "..") == 0)
+	// QUIRK: "." is reported as errFSBadForkName and ".." as bdNamErr.
+	// Not documented. Evidence: black-box observation on macOS 27.0.1 (tier 2),
+	// vd-upstream/mac-probes/v122-rescreate-probe.c.
+	// Test: tests/src/file_manager_create_res_file.c
+	if (strcmp(nameUTF8, ".") == 0)
+	{
+		g_lastError = errFSBadForkName;
+		return;
+	}
+	if (strcmp(nameUTF8, "..") == 0)
 	{
 		g_lastError = bdNamErr;
 		return;
@@ -202,7 +210,7 @@ void FSCreateResFile(const FSRef* parentDir, UniCharCount nameLength, const UniC
 	std::string path = std::string((const char*) parentPath) + "/" + nameUTF8;
 	mode_t mode = 0644;
 	if (catalogInfo && (whichInfo & kFSCatInfoPermissions))
-		mode = catalogInfo->fsPermissionInfo.mode & 07777;
+		mode = catalogInfo->permissions.mode & 07777;
 
 	int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_EXCL, mode);
 	if (fd < 0)
@@ -228,6 +236,26 @@ void FSCreateResFile(const FSRef* parentDir, UniCharCount nameLength, const UniC
 	if (newSpec)
 		memset(newSpec, 0, sizeof(*newSpec)); // FSSpecs aren't supported; don't leave it uninitialized
 	g_lastError = noErr;
+}
+
+ResFileRefNum HomeResFile(Handle resource)
+{
+	std::unique_lock<std::mutex> l(g_resourcesLock);
+
+	if (resource)
+	{
+		for (auto const& [refNum, resources] : g_resources)
+		{
+			if (resources->dataByHandle(resource))
+			{
+				g_lastError = noErr;
+				return refNum;
+			}
+		}
+	}
+
+	g_lastError = resNotFound;
+	return kResFileNotOpened;
 }
 
 ResFileRefNum CurResFile(void)

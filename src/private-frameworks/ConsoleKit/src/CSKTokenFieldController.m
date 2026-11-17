@@ -12,12 +12,7 @@
 @implementation CSKTokenFieldCell
 @end
 
-@interface CSKTokenFieldController : NSObject {
-	NSTokenField *_tokenField;
-	__weak id _delegate;
-	BOOL _isBasicSearchEnabled;
-	NSArray *_filters;
-}
+@interface CSKTokenFieldController : NSObject
 @property (strong) NSTokenField *tokenField;
 @property (weak) id delegate;
 @property BOOL isBasicSearchEnabled;
@@ -26,11 +21,6 @@
 @end
 
 @implementation CSKTokenFieldController
-
-@synthesize tokenField = _tokenField;
-@synthesize delegate = _delegate;
-@synthesize isBasicSearchEnabled = _isBasicSearchEnabled;
-@synthesize filters = _filters;
 
 - (void)updateSearchWithFilters:(NSArray *)filters
 {

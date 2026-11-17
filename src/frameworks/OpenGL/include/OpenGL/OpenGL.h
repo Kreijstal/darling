@@ -8,6 +8,7 @@
 #endif
 
 #include <OpenGL/CGLTypes.h>
+#include <OpenGL/CGLIOSurface.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,7 +27,10 @@ CGL_EXPORT CGLError CGLUnlockContext(CGLContextObj context);
 
 CGL_EXPORT CGLError CGLSetCurrentContext(CGLContextObj ctx);
 CGL_EXPORT CGLError CGLSetFullScreen(CGLContextObj ctx);
+CGL_EXPORT CGLError CGLSetFullScreenOnDisplay(CGLContextObj ctx, GLuint display_mask);
 CGL_EXPORT CGLContextObj CGLGetCurrentContext(void);
+CGL_EXPORT CGLError CGLGetVirtualScreen(CGLContextObj ctx, GLint *screen);
+CGL_EXPORT CGLError CGLSetVirtualScreen(CGLContextObj ctx, GLint screen);
 CGL_EXPORT CGLPixelFormatObj CGLGetPixelFormat(CGLContextObj context);
 CGL_EXPORT void CGLGetVersion(GLint *majorvers, GLint *minorvers);
 
@@ -34,7 +38,6 @@ CGL_EXPORT CGLError CGLEnable(CGLContextObj ctx, CGLContextEnable pname);
 CGL_EXPORT CGLError CGLDisable(CGLContextObj ctx, CGLContextEnable pname);
 CGL_EXPORT CGLError CGLIsEnabled(CGLContextObj ctx, CGLContextEnable pname, GLint *enable);
 CGL_EXPORT const char *CGLErrorString(CGLError error);
-CGL_EXPORT CGLError CGLTexImageIOSurface2D(CGLContextObj ctx, GLenum target, GLenum internal_format, GLsizei width, GLsizei height, GLenum format, GLenum type, void *ioSurface, GLuint plane);
 
 CGL_EXPORT CGLError CGLSetParameter(CGLContextObj context, CGLContextParameter parameter, const GLint *value);
 CGL_EXPORT CGLError CGLGetParameter(CGLContextObj context, CGLContextParameter parameter, GLint *value);
@@ -49,9 +52,9 @@ CGL_EXPORT CGLError CGLDestroyPixelFormat(CGLPixelFormatObj pixelFormat);
 CGL_EXPORT GLuint CGLGetPixelFormatRetainCount(CGLPixelFormatObj pixelFormat);
 CGL_EXPORT CGLError CGLDescribePixelFormat(CGLPixelFormatObj pixelFormat, GLint screenNumber, CGLPixelFormatAttribute attribute, GLint *valuep);
 
-CGL_EXPORT CGLError CGLQueryRendererInfo(unsigned long display_mask, CGLRendererInfoObj *rend, long *nrend);
+CGL_EXPORT CGLError CGLQueryRendererInfo(GLuint display_mask, CGLRendererInfoObj *rend, GLint *nrend);
 CGL_EXPORT CGLError CGLDestroyRendererInfo(CGLRendererInfoObj rend);
-CGL_EXPORT CGLError CGLDescribeRenderer(CGLRendererInfoObj rend, long rend_num, CGLRendererProperty prop, long *value);
+CGL_EXPORT CGLError CGLDescribeRenderer(CGLRendererInfoObj rend, GLint rend_num, CGLRendererProperty prop, GLint *value);
 
 CGL_EXPORT CGLError CGLCreatePBuffer(GLsizei width, GLsizei height, GLenum target, GLenum internalFormat, GLint maxDetail, CGLPBufferObj *pbuffer);
 CGL_EXPORT CGLError CGLDescribePBuffer(CGLPBufferObj pbuffer, GLsizei *width, GLsizei *height, GLenum *target, GLenum *internalFormat, GLint *mipmap);
@@ -62,8 +65,6 @@ CGL_EXPORT CGLError CGLDestroyPBuffer(CGLPBufferObj pbuffer);
 CGL_EXPORT CGLError CGLGetPBuffer(CGLContextObj context, CGLPBufferObj *pbuffer, GLenum *face, GLint *level, GLint *screen);
 CGL_EXPORT CGLError CGLSetPBuffer(CGLContextObj context, CGLPBufferObj pbuffer, GLenum face, GLint level, GLint screen);
 CGL_EXPORT CGLError CGLTexImagePBuffer(CGLContextObj context, CGLPBufferObj pbuffer, GLenum sourceBuffer);
-
-CGL_EXPORT CGLError CGLSetDrawableRefreshRate(CGLContextObj context, uint32_t millihertz);
 
 #ifdef __cplusplus
 }

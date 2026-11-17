@@ -21,7 +21,8 @@
 #include <sandbox/sandbox.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <errno.h>
+#include <darling/emulation/linux_premigration/ext/for-sandbox.h>
 
 static int verbose = 0;
 
@@ -30,56 +31,69 @@ static void initme(void) {
     verbose = getenv("STUB_VERBOSE") != NULL;
 }
 
-/* There is no seatbelt compiler or enforcement here. Compiling a profile and
- * applying one fail with an error instead of pretending a sandbox is in force,
- * so a client such as a renderer does not run believing it is confined.
- * Shapes follow the documented SPI (profile and params are opaque here). */
-#define SANDBOX_UNSUPPORTED "sandboxing is not supported on Darling"
+/* Compile/apply family. There is no seatbelt compiler here, so
+ * "compiling" a profile yields an empty profile and applying it succeeds.
+ * A profile has the documented layout (builtin name, compiled data and
+ * its size); here all of them are empty. */
+struct sandbox_profile {
+    char *builtin;
+    unsigned char *data;
+    size_t size;
+};
 
-static void set_unsupported(char **error)
+static void* sandbox_empty_profile(char **errorbuf)
 {
-    if (error != NULL)
-        *error = strdup(SANDBOX_UNSUPPORTED);
+    if (errorbuf != NULL) *errorbuf = NULL;
+    return calloc(1, sizeof(struct sandbox_profile));
 }
 
-int sandbox_apply(void *profile)
+void* sandbox_compile_string(const char *data, void *params, char **errorbuf)
+{
+    if (verbose) puts("STUB: sandbox_compile_string called");
+    (void)data; (void)params;
+    return sandbox_empty_profile(errorbuf);
+}
+
+void* sandbox_compile_file(const char *path, void *params, char **errorbuf)
+{
+    if (verbose) puts("STUB: sandbox_compile_file called");
+    (void)path; (void)params;
+    return sandbox_empty_profile(errorbuf);
+}
+
+void* sandbox_compile_named(const char *name, void *params, char **errorbuf)
+{
+    if (verbose) puts("STUB: sandbox_compile_named called");
+    (void)name; (void)params;
+    return sandbox_empty_profile(errorbuf);
+}
+
+void* sandbox_compile_entitlements(void *entitlements, void *params, char **errorbuf)
+{
+    if (verbose) puts("STUB: sandbox_compile_entitlements called");
+    (void)entitlements; (void)params;
+    return sandbox_empty_profile(errorbuf);
+}
+
+int sandbox_apply(void *handle)
 {
     if (verbose) puts("STUB: sandbox_apply called");
-    (void)profile;
-    return -1;
+    (void)handle;
+    // Nothing is enforced; only record that the process is sandboxed, as
+    // sandbox_init does (sandbox_check reports it)
+    (void)__darling_sandbox_mark_applied();
+    return 0;
+}
+
+void sandbox_free_profile(void *handle)
+{
+    if (verbose) puts("STUB: sandbox_free_profile called");
+    free(handle);
 }
 
 void* sandbox_apply_container(void)
 {
     if (verbose) puts("STUB: sandbox_apply_container called");
-    return NULL;
-}
-
-void* sandbox_compile_entitlements(void)
-{
-    if (verbose) puts("STUB: sandbox_compile_entitlements called");
-    return NULL;
-}
-
-void* sandbox_compile_file(const char *path, void *params, char **error)
-{
-    if (verbose) puts("STUB: sandbox_compile_file called");
-    (void)path; (void)params;
-    set_unsupported(error);
-    return NULL;
-}
-
-void* sandbox_compile_named(void)
-{
-    if (verbose) puts("STUB: sandbox_compile_named called");
-    return NULL;
-}
-
-void* sandbox_compile_string(const char *data, void *params, char **error)
-{
-    if (verbose) puts("STUB: sandbox_compile_string called");
-    (void)data; (void)params;
-    set_unsupported(error);
     return NULL;
 }
 
@@ -89,24 +103,22 @@ void* sandbox_container_paths_iterate_items(void)
     return NULL;
 }
 
+/* A parameter set is an opaque object. Callers treat NULL as failure, so hand out a
+ * real one; parameters only matter to profile compilation, which does not happen here. */
+struct sandbox_params {
+    unsigned int count;
+};
+
 void* sandbox_create_params(void)
 {
     if (verbose) puts("STUB: sandbox_create_params called");
-    return NULL;
+    return calloc(1, sizeof(struct sandbox_params));
 }
 
-/* sandbox_create_params returns NULL, so there is never anything to free. */
 void sandbox_free_params(void *params)
 {
     if (verbose) puts("STUB: sandbox_free_params called");
-    (void)params;
-}
-
-/* sandbox_compile_* never return a profile, so there is never anything to free. */
-void sandbox_free_profile(void *profile)
-{
-    if (verbose) puts("STUB: sandbox_free_profile called");
-    (void)profile;
+    free(params);
 }
 
 void* sandbox_inspect_pid(void)
@@ -121,10 +133,15 @@ void* sandbox_inspect_smemory(void)
     return NULL;
 }
 
-void* sandbox_set_param(void)
+int sandbox_set_param(void *params, const char *key, const char *value)
 {
     if (verbose) puts("STUB: sandbox_set_param called");
-    return NULL;
+    if (params == NULL || key == NULL || value == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+    ((struct sandbox_params *)params)->count++;
+    return 0;
 }
 
 void* sandbox_set_user_state_item(void)

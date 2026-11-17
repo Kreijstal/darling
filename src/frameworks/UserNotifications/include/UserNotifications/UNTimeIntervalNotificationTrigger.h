@@ -1,7 +1,8 @@
 /*
  This file is part of Darling.
 
- Copyright (C) 2026 Darling Developers
+ Copyright (C) 2021 Lubos Dolezel
+ Copyright (C) 2026 Darling developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -22,17 +23,15 @@
 
 #import <UserNotifications/UNNotificationTrigger.h>
 
-/* Fires the interval after it is added; one that repeats must be at least a
-   minute apart. */
-@interface UNTimeIntervalNotificationTrigger : UNNotificationTrigger
+@interface UNTimeIntervalNotificationTrigger : UNNotificationTrigger {
+    NSTimeInterval _timeInterval;
+}
 
-+ (instancetype) triggerWithTimeInterval: (NSTimeInterval) timeInterval repeats: (BOOL) repeats;
++ (instancetype)triggerWithTimeInterval:(NSTimeInterval)timeInterval repeats:(BOOL)repeats;
 
-@property (readonly) NSTimeInterval timeInterval;
+@property(readonly) NSTimeInterval timeInterval;
 
-/* When it fires next: a trigger made in this process counts from its
-   creation, one read back from the system from when it was added. */
-- (NSDate *) nextTriggerDate;
+- (nullable NSDate *)nextTriggerDate;
 
 @end
 

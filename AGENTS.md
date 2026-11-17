@@ -1,452 +1,478 @@
-# Agent and contributor rules
-
-Read this before changing anything in this repository. Two things here are not negotiable and are
-checked in review:
-
-1. the clean-room boundary: **no disassembly, no decompilation, no reading machine code**
-2. the commit standard in [Commit standard](#2-commit-standard)
-
-Section 1 is intended to be identical across every Darling repository, because the boundary does not change per
-project. Section 2 is the same standard everywhere and differs only in the scope vocabulary under
-"Format". Section 3 is specific to this checkout.
-
-## 1. Clean room: no disassembly
-
-### The rule
-
-Never disassemble or decompile a binary to work out what it does, and never transcribe
-decompiled output into source, a comment, an issue, or a pull request. This applies to Apple's
-binaries without exception, and to every other binary whose source you are not the author of.
-
-The line is drawn at **expression**, not at information:
-
-- Names and interfaces are fair game when they come from a permitted source: rungs 1 to 4, or the
-  demand analysis of rung 5 on a guest application. Extracting them from an Apple binary with any
-  other tool is not, even if no instruction is read. Symbol names, class names, selector names,
-  argument labels, type encodings, load commands, and the dependency list are facts about the
-  *interface*.
-- Implementation is off limits. The order of statements, the algorithm, the chosen data layout, the
-  constant values, the error-handling strategy, the shape of a function: that is Apple's
-  copyrighted expression, and copying it is both a licence violation and the thing that makes a
-  clean-room reimplementation indefensible.
-
-If you cannot state the behaviour without looking at how the original does it, you do not know the
-behaviour yet. Go one rung down the ladder.
-
-### Never, under any circumstances
-
-Applied to any binary that is not your own build output or a public open-source artefact, including
-third-party guest applications, and to core dumps, memory images and caches that contain Apple code
-or data. A binary shipped in a macOS install, Xcode, an SDK or the dyld shared cache is never an
-open-source artefact, even when Apple publishes source for it.
-
-On a binary covered by this list, the only tools you may run that read or parse its contents are
-those in "Binaries you may point tools at". Copying, hashing, and running a guest application under
-Darling (rung 4) are not reading it. Everything else that reads or parses it is banned whether or
-not it is named below, however it is invoked (directly, through `xcrun`, a wrapper or a script).
-Named for clarity:
-
-- `otool` / `llvm-otool` in any mode other than `-L`, and `otool-classic`
-- `objdump` / `llvm-objdump` in any mode, including GNU `objdump -d`, `-s` and `-x`, and
-  `llvm-objdump --disassemble`, `--macho`, `--universal-headers`, `--all-headers`,
-  `--chained-fixups`, `--bind` and `--dylibs-used`
-- `strings`, `dyldinfo`, `dyld_info`, `llvm-readobj`, `rabin2`, and hex dumpers (`hexdump`, `xxd`,
-  `od`)
-- `radare2`, `r2`, `cutter`, `Ghidra`, `Hopper`, `IDA`, `Binary Ninja`, `jtool2` / `jtool`, `lief`,
-  `MachOView`
-- `ipsw` in any subcommand that reads a binary, `dsc_extractor`, or any other tool that extracts or
-  disassembles the dyld shared cache
-- `lldb` or `gdb` on anything but your own build output and the core dumps described under
-  "Binaries you may point tools at", and never to step into, disassemble, or read code, data,
-  stack words or backtrace frames belonging to an Apple image a process has loaded
-- `DYLD_INSERT_LIBRARIES`, `DYLD_PRINT_*` or `frida` injected into an Apple binary to hook its
-  internals, or the `dyld` from a macOS install, or any Apple binary run under instrumentation that
-  observes inside it (hooks, breakpoints, single-stepping, PC sampling). Darling's own loader and
-  stubs recording calls that reach them are rung 4; what they record is limited as for
-  missing-symbol traces under "Provenance": no caller or return addresses, backtraces, stack
-  words, or contents behind a pointer.
-- `dtrace` / `perf` / `kprobe` tracing of Apple code paths
-- `class-dump`, or any other tool that reconstructs a class hierarchy from an Apple binary or a
-  running Apple process
-- the superproject's `tools/stub-gen-c-func`, `tools/stub-gen-objc`, `tools/darling-stub-gen`,
-  `tools/darling-tier1-stub-gen` or `tools/generate-xcode-stubs.py`, or any script wrapping a tool
-  on this list, pointed at any binary this list covers: any Apple binary wherever it was copied
-  to, including a macOS install and Xcode
-- decompilers of any kind, including LLM-based ones
-- reading a disassembly listing produced by anyone else, including in a blog post, a conference
-  talk, a chat message, or a reverse-engineering wiki
-
-That last one is the one people break by accident. A public write-up that contains no disassembly
-or decompiled code may be read as a description of behaviour. Cite it only as GUESS-grade
-(rung 6), never as a specification; if it cites a rung 1 to 3 source, cite that source instead.
-A write-up that quotes disassembly or pseudo-code, whose method is disassembly, decompilation,
-class dumping or tracing inside Apple code, or that does not state its method, is not read or
-cited, conclusions included; if you have read one, follow "If a boundary is crossed". Only a
-write-up whose stated method is documentation, black-box observation or open-source reading may
-be cited; a summary or retelling of a write-up that is barred is barred too.
-
-### Escalation ladder
-
-Work down this list in order. Stop at the first rung that answers the question, and record which
-rung you used in the commit body.
-
-1. **Apple's published open-source releases** ([apple-oss-distributions][oss]). `xnu`, `Libc`,
-   `Libsystem`, `libobjc`, `libdispatch`, `Libxpc`, `Libclosure`, `Security`, `AvailabilityVersions`,
-   `corecrypto`, `swift-corelibs-foundation`, and the Swift compiler runtime are all published
-   source under licences that permit reuse. This is where most of the low-level code in this tree
-   came from, and it is the correct first stop.
-2. **Headers already vendored in this tree**, in particular the superproject's `framework-include/`,
-   `framework-private-include/` and `basic-headers/`, plus this repository's own header
-   directories. If a prototype is declared there, the answer is already written down; read it
-   instead of guessing.
-3. **Apple's public documentation.** developer.apple.com, the archived documentation sets, the
-   `man` pages, and the header comments shipped with the sources from rung 1. Public API behaviour
-   is specified, and implementing a specification is the whole point.
-4. **Dynamic observation at the API boundary.** Call the function, class or syscall with known
-   inputs and record what comes out. A guest program under Darling, a small harness in the tests
-   directory, or the target platform itself are all legitimate instruments here, because observing
-   a documented interface from outside is what a compatibility layer is for. Observe inputs and
-   outputs; do not step into the callee.
-5. **Demand analysis.** `nm -u`, `llvm-nm -u -m` (both flags together) and `otool -L` /
-   `llvm-otool -L` tell you which symbols and libraries guest applications actually bind, so you
-   can tell a missing symbol from a missing feature. See "Binaries you may point tools at" below.
-6. **Nothing above answers it.** Leave the symbol out and let the link error say so, or implement
-   the conservative behaviour the documentation implies and say in the commit body that it is a
-   guess and why.
-
-Jumping from rung 4 to reading code is the failure this section exists to prevent.
-
-### Binaries you may point tools at
-
-- **Your own build output.** Code compiled from source in Darling's repositories (the superproject
-  and its submodules). It excludes any Apple
-  binary or object the build copies, extracts, thins, re-signs or links in, and anything derived
-  from one. It is fair game, including for disassembling Darling's own code when debugging it.
-- **Binaries you wrote or that you are the author of.**
-- **Guest applications inside a Darling prefix**, for **demand analysis only**: the app's
-  executable and the code bundled inside its own app bundle, including Apple stock apps copied
-  from a macOS install. Apple frameworks, dylibs, daemons, `dyld`, the dyld shared cache and
-  extracts from it are macOS-install code and never guest binaries, wherever they are copied to,
-  and no tool that reads or parses a binary, `nm -u` included, may be pointed at them. On a guest
-  application the only tools allowed are `nm -u`, `llvm-nm -u -m` (both flags together) and
-  `otool -L` / `llvm-otool -L`, to learn which symbols and libraries it imports; `otool -L` /
-  `llvm-otool -L` is the way to list dylibs. `file` and `lipo -info` / `lipo -archs` are also
-  allowed, on guest applications only, for the format and architecture only (header-level);
-  `lipo -thin`, `-extract` and `-detailed_info` stay banned. That tells you what to implement. It
-  does not tell you how Apple implemented it. Reading anything these tools print beyond names is
-  not allowed either.
-- **Apple's open-source releases from rung 1.** They are source. Read them; that is the point.
-
-A core dump of a crashed process built by Darling (such as `mldr` running a guest) may be read
-**only** for its register file and memory map (library names, load addresses). Nothing else in it
-is read: no disassembly at the pc, no `x/i`, `x/s` or byte dumps of any region, no backtrace
-symbolised against macOS-install code, no stepping. Cores are never searched for text; take a
-diagnostic such as `dyld`'s `Library not loaded:` from the loader's stderr or log.
-Registers and the memory map tell you which library a crash happened in. Do not derive, record or
-cite an address, offset or symbol+offset inside a macOS-install image (pc, lr, return addresses,
-frame addresses mapped to an Apple library): in specs, handoffs, commits, issues, PRs, chat,
-including but not limited to these. Name the library and, only if a permitted source already names
-it, the exported symbol; stop there.
-
-Apart from that demand analysis and the core-dump reading above, never point any of these tools at
-a binary from a macOS install, and never run the stub generators named above against one. If a
-script in this repository appears to do that, that is a bug in the script: fix it or report it.
-
-### Provenance
-
-Every non-obvious change records where its specification came from. The commit body names the rung
-from the ladder, and names the specific file, header, documentation page, or observation. "Fixed
-the behaviour" is not provenance.
-
-For a change whose behaviour is not derivable from rungs 1 to 4, the commit body says so explicitly
-and states which rung supplied the guess. A reviewer can then judge the risk, which is the only
-reason the information is worth collecting.
-
-A commit that adds a private name, constant, key or struct layout names the rung and its source
-(file, documentation page, the observation described well enough to repeat: harness, inputs,
-outputs; or for rung 5 the guest application whose imports name it, which supplies the name only,
-never a value, signature or layout), or says GUESS. "GNUstep" and "as Apple does it" are not
-sources. No source is an address, offset or symbol+offset inside a macOS-install image; see the
-core-dump paragraph under "Binaries you may point tools at".
-
-GNUstep's (or any other reimplementation's) behaviour is not a specification of Apple's behaviour,
-so citing it is not a rung; it can support a rung 1 to 4 source, never replace one. Reading GNUstep
-code is not forbidden by this rule, but licence compatibility is a separate question: flag
-the LGPL before copying anything from it.
-
-Missing-symbol tracing in Darling's loader is planned, not yet merged. Where the loader offers it,
-it is optional and off by default. A trace may hold only the names of imports the loader could not
-resolve (rung 5) and, in modes that record them, raw argument words that reached Darling's own stub
-(rung 4). It never holds caller or return addresses, backtraces, stack words, the contents behind a
-pointer, or anything read from an Apple image; a trace that does is non-compliant: stop using it,
-move the log aside and follow "If a boundary is crossed". A trace never replaces rungs 1 to 3: work
-through them first, and name the rung for each fact taken from a trace. Facts from a trace never
-include an address, offset or symbol+offset inside a macOS-install image (see the core-dump
-paragraph under "Binaries you may point tools at").
-
-### Never commit
-
-- Mach-O binaries, `.dSYM` bundles, `.class` files, PDBs, or any compiled output of Apple's code
-- disassembly listings, decompiler output, or class dumps
-- header trees scraped from a local Xcode or macOS install that are not present in the upstream
-  open-source release
-- symbol dumps of Apple binaries, including raw `nm`/`otool -L` output; the names you implement in
-  stubs are not dumps
-- missing-symbol trace logs, which are also never attached or pasted raw into an issue or PR
-- anything under `framework-include/` or `framework-private-include/` whose origin you cannot name
-
-### If a boundary is crossed
-
-This applies whether you ran a forbidden tool yourself or read such output by accident, including
-output someone else produced.
-
-Stop. Do not paste the listing into a source file, a comment, an issue, a PR, or a chat message,
-and do not "clean it up" by rewriting it in your own words, which is still derived from it. Then:
-
-1. Report it to whoever assigned the work: what was run, on which binaries, and which files were
-   touched, never the output itself. An agent that has run a tool on the "Never" list, or read its
-   output (disassembly, decompiled text, a class dump, a symbol or string dump, a trace holding
-   anything forbidden above), on any binary the rule covers, stops there and is replaced by a
-   fresh agent. Permitted demand-analysis output is not taint.
-2. Move the artefact, and everything the tainted agent or person wrote for the task, out of the
-   working tree into a directory outside any repository that is plainly marked as tainted. Nobody
-   opens, copies or cites it again, and it is not deleted without the approval of the person who
-   owns the work. Branches holding the tainted work are not merged or rebased onto; name them in
-   the report.
-3. For agent work, re-derive it cleanly: the specification is written by a fresh agent with no
-   access to the tainted material, from rungs 1 to 3; where they do not answer, that author may
-   perform rungs 4 and 5 afresh, never reusing observations, logs or demand lists from the tainted
-   party, and otherwise the item is left out or marked GUESS (rung 6). It is implemented by a
-   different fresh agent that sees only that specification. A human contributor needs no second
-   person: the disclosure in step 4 plus maintainer review of the change is the rule, and the
-   maintainer may require a clean re-derivation.
-4. Say plainly in the PR body what happened: what was run, on which binaries, which files were
-   touched, and whether anything was transcribed (anything that was is moved aside under step 2),
-   so a reviewer can assess the damage.
-
-An honest disclosure costs one paragraph; a hidden derivative implementation invalidates the whole
-change.
-
-## 2. Commit standard
-
-### Format
-
-`<scope>: <summary>` in the imperative mood, lowercase, no trailing period.
-
-The scope is the subsystem or framework, matching the vocabulary the surrounding commits already
-use. Check the last 20 commits before writing one; do not invent a scope scheme for a repository
-that already has one. The superproject and `xnu` use `<subsystem>: <summary>`, `cocotron` uses
-Conventional Commits (`feat(appkit):`, `fix(appkit):`), and `foundation` is mixed. Follow the
-branch you are on, not the branch you wish existed.
-
-Keep the subject under 72 characters. If it does not fit, the change is too big or the scope is
-wrong, both of which are fixable.
-
-### Body
-
-Required for anything non-obvious, and expected in this project: a reviewer here reads the body to
-find out *why*, because the diff cannot tell them.
-
-- **Why** the change is needed, in terms of the observable failure it removes. Not a restatement of
-  the diff.
-- **Where the behaviour came from**, naming the ladder rung from section 1, for anything whose
-  specification was not already in the tree.
-- **What was verified, and how it was run.** A command, a prefix, a test name. "Tests pass" is not
-  verification; the command and its result are.
-- **What is deliberately left out**, when that is a judgement worth recording, and why.
-
-A table beats prose when there are several items:
-
-```
-  APFSCancelContainerResize         one pointer, result masked to a byte, so int
-  APFSVolumeRole                    imported but never called, so unconstrained
-  CacheDeletePurgeSpaceWithInfo     two arguments, result discarded, so void
-```
-
-Prose is right when there is one idea and a reason behind it. Match the density of the recent
-history; the existing bodies in this project run a few paragraphs, not a paragraph.
-
-### Atomicity
-
-One commit, one thing. A commit that both fixes a bug and reformats the surrounding file, or that
-adds a feature and its logging, is two commits. The test is whether the commit can be reverted on
-its own without leaving the tree broken, and whether its subject could be read as a single entry in
-a changelog.
-
-Split before you push, not after review asks.
-
-### Never in a commit
-
-- `wip`, `fix`, `tmp`, `asdf`, or a subject that only you can decode
-- a `--no-verify` run, an amended commit that was already pushed, a force-push to a shared branch
-- unrelated reformatting, reordering, or whitespace churn: that is its own commit, or nothing
-- commented-out code, `TODO` without an owner and a reason, debug prints, or a debugger left in
-- build output, logs, coredumps, or a prefix directory
-- a submodule pointer bump you did not mean to make, and especially a bump that mixes unrelated
-  submodule work into a source change: those are separate commits
-- anything from the "Never commit" list in section 1
-
-### Before you commit
-
-- `git status` shows only the files you meant to change, and no submodule you did not touch
-- the change builds, and you have run the thing, not just the compiler
-- a bug fix carries a regression test that fails without the fix
-- the body says how it was verified, with the command
-- the commit was reviewed before staging, not only after
-
-Never commit with a broken tree because a hook complained: fix the hook's complaint or the code.
-Skipping hooks is not a workflow.
-
-### Branch and PR
-
-- Branch: `<type>/<short-description>`, matching the repository's existing branches.
-- A PR is one concern, under 400 changed lines where the project allows it, with a subject in the
-  same format as a commit.
-- The PR body states what problem this solves, how it was verified, and the ladder rung for
-  anything non-obvious. Reviewers read the PR body before the diff.
-
-[oss]: https://github.com/apple-oss-distributions
-
-## 3. This repository
-
-The superproject. A Mach-O loader (`mldr`) plus `darlingserver` plus the submodules under
-`src/external/`, wired by `src/CMakeLists.txt`. Default branch `master`; submodule default branches
-vary (most `master`, some `main`, such as `darling-xnu` and `darlingserver`, a few pinned to a
-release branch), so any script assuming one name silently skips the others. Every submodule URL
-in `.gitmodules` is relative (`../<name>` or `../<name>.git`; a couple have no `.git` suffix).
-
-Operational notes (worktrees and submodules, `ninja -n`, running a build without installing it,
-containers and prefixes, diagnosing) are in [CLAUDE.md](CLAUDE.md). Where this section and CLAUDE.md
-disagree, CLAUDE.md wins.
-
-- **Issues and PRs**: before working on a VibeDarling issue, follow `.claude/ISSUE_COLLABORATION.md`
-  (claim it in a GitHub comment for 24 hours, renew while working). Every merged PR links an issue
-  and needs the five-approval gate described there.
-- **Build**: CMake with Ninja. Unit tests are the `ENABLE_TESTS` option in the top-level
-  `CMakeLists.txt`, off by default, and install into a prefix rather than the host.
-- **Heavy-build lock (host convention, not part of this repository)**: on a shared build host,
-  serialise every build, install or prefix boot under that host's lock. On the maintainers' host it
-  is `flock -w 1800 /tmp/agent-locks/darling-heavy-build.lock <command>`, with `ninja -j1` when
-  `MemAvailable` in `/proc/meminfo` is low (not `MemFree`, see `docs/agent-knowledge.md`).
-- **No prebuilt runtime exists.** The 19 `v0.1.*` releases on the fork have no assets (checked with
-  `gh release view`); their bodies are a "Full Changelog" link, except `v0.1.20260921`, which carries
-  a generated "What's Changed" PR list. Build from source; update this bullet when a release ships
-  a runtime.
-- **Recipe: build a private runtime from default branches and run it.**
-  1. Use an independent clone with every submodule at its own default branch, not a worktree.
-  2. Take the heavy-build lock if your host has one.
-  3. `cmake -G Ninja` with `CMAKE_INSTALL_PREFIX=/usr/local`, then `ninja`; run `ninja -n` until it
-     reports nothing left to do.
-  4. Install and run as in CLAUDE.md, "Running a locally built runtime without installing it".
-  5. Stop it with `darling shutdown`, not kill.
-  Do not install or publish from a tree with uncommitted changes.
-- **`darling shutdown`** exits 1 when it cannot verify the prefix's server (CLAUDE.md covers the
-  rest of its behaviour).
-- **`DSERVER_LOG_LEVEL`** reaches `darlingserver` through the setuid launcher's pass-through list
-  (`g_darlingserverEnvAllowlist` in `src/startup/darling.c`); `DEFAULT_LOG_CUTOFF` in
-  `src/external/darlingserver/src/logging.cpp` is where the default is set.
-
-## 4. How to work in this repository
-
-Sections 1-3 cover what the code requires. This section covers how to arrive at a correct change.
-
-### Understand before changing
-Read the file you are about to edit, and the callers of what you are changing, before writing a line.
-Map the area first (`grep`/`rg` plus reading the sources); this codebase is large enough that
-directory structure does not tell you where behaviour lives.
-
-### Plan before non-trivial changes
-For anything beyond a few obvious steps, write what you will change, where, and how you will prove it,
-before implementing. State what breaks without each part; a step you cannot justify is a step to cut.
-Keep plans in source control or your own notes, not only in conversation.
-
-### Reuse before writing
-Before adding a function, type, or helper, search for something that already does the job or about 80%
-of it. Exact fit: reuse. Close fit: refactor the existing code and say so. Never silently copy-paste.
-
-### Root cause, not symptom
-When something fails, fix the faulty assumption, not the observable. A patch that only makes a test pass
-is usually hiding the real issue. Ask what would have to be true for this to work, and check that.
-
-### No "done" without proof
-Tests passing is necessary, not sufficient. Exercise the real path the user takes: launch the actual
-app, hit the actual endpoint, drive the actual code. If you cannot verify, say so explicitly rather
-than implying success. A regression test must replicate the real failing scenario and be shown to fail
-before the fix.
-
-### Measure; do not infer
-This is the failure mode that costs the most time here. Process liveness, elapsed time, wait channels,
-symbol tables and tool output on unfamiliar binaries are all *indirect*, and each has misled a
-diagnosis: an app whose main thread sat in `epoll_wait` was read as "hung" and also as "idle"
-conclusively, and both readings were wrong. Confirm a runtime claim with the thing itself, not a proxy.
-
-Two corollaries that cost real time:
-- **Probe at the entry of what you are debugging, not after the statement you suspect.** A probe placed
-  after the failing statement reports "the code before it never ran", which is indistinguishable from
-  "the method was never called".
-- **Check that a log line is absent for the right reason.** An empty log often means the run never
-  happened (the container failed, the binary was not installed) rather than that the event did not occur.
-
-### Verify before asserting status
-Re-read the live source before reporting any count or state. Do not report success, cleanliness or
-readiness from memory or from an earlier turn; stale or optimistic status is a defect, not a courtesy.
-
-### Fail loud
-No silent fallbacks, no invented defaults, no magic constants, no stringly-typed enums standing in for
-a real type. If something required is missing or wrong, return an explicit error. Validate external
-input at the boundary and reject what you do not recognise.
-
-### Elegance over cleverness
-Prefer fewer moving parts: fewer lines, fewer concepts, fewer names. Treat "this feels like a hack" as a
-signal to look for the clean version. Skip the ceremony for the obvious one-liner.
-
-### Minimal impact
-Touch only what the task requires. No drive-by refactors, reformatting, or added comments in code you
-were not asked to change. Leave existing problems noted rather than fixed in passing.
-
-### Comments earn their line
-Default to none. Add a comment only where the *why* is not deducible from the code. Generated comments
-are where filler accumulates; prune them, and treat the pruning as a chance to notice real design
-problems.
-
-### Flag what you find
-If you notice an existing bug or sharp edge, record it (see section 5) rather than fixing it silently
-inside an unrelated change.
-
-## 5. Knowledge base and record-keeping
-
-- **Durable technical knowledge**: [`docs/agent-knowledge.md`](docs/agent-knowledge.md) - measured facts,
-  worked recipes, and expensive-to-rediscover pitfalls. Add to it when you learn something that cost real
-  time and is still true.
-- **Per-checkout notes**: keep a short `STATUS.md` in your own scratch directory. Current state, what you
-  verified, what is blocked, what you tried that failed.
-- **Known problems**: the repository already has `known-issues.md`. Add an entry when you find a real,
-  reproducible defect, with how to reproduce it. This is for defects, not for status.
-
-### Scratch layout and handover
-- One scratch directory per task, outside the checkout and outside `/tmp` (`/tmp` is a small shared
-  tmpfs; use it only for locks, sockets and files a tool creates itself).
-- `STATUS.md` at the top of that directory, with its owner and the date of the last update. Rewrite
-  it as state changes rather than appending; when the task ends, mark it done and say where the
-  result landed (commit, PR, or file).
-- Handing work to another agent: write `HANDOVER-<name>.md` in your scratch
-  directory (not the checkout) with the task, what is done, what is in progress, branches and PRs,
-  blockers, exact next steps, and paths to the evidence. Commit any work first, send the file's path
-  to your coordinator or the agent taking over, then stop. Never move another agent's work before it
-  has handed over.
-
-Deliberately **not** kept here: per-app launch status, lists of currently-failing things, branch
-inventories, or anything that goes stale on its own. Those belong in a scratch `STATUS.md`, not in a
-document that will be read months later and trusted.
-
-### Safety: never signal through an empty variable
-Compare or kill processes only against a variable you have checked is non-empty, and prefer
-`darling shutdown` (section 3) over signalling at all. An empty variable makes comparisons match
-*everything unreadable*, including `systemd --user`; this has taken down the desktop. Likewise, never
-build a `kill` list by iterating `ps` output with a `for` loop and field extraction - `for` word-splits,
-so a field you meant to read can be used as a PID. Pipe into `while read -r a b c`.
-
-### Shared checkouts
-Several agents work in these trees at once. Check for other sessions before editing or building, and do
-not change shared build configuration, dependency versions, or install steps unilaterally - propose it,
-and let the owner decide. Do not kill processes you did not start.
+# AGENTS.md
+
+> **Note to human contributors and reviewers.** This document tells an AI
+> agent how to behave *if* you use one. It is not permission to submit code
+> you do not understand. You are responsible for every line in a PR you open,
+> AI-assisted or not: you must be able to explain what it does, why it is
+> correct, and why it follows the rules below, in your own words. "The agent
+> wrote it and followed AGENTS.md" is not an acceptable answer to a reviewer's
+> question, and a PR whose author cannot explain their own change may be
+> closed regardless of how it was produced.
+>
+> When a maintainer asks a question on a PR or issue, we expect a reply from
+> you, the human contributor, not from your AI assistant pasted verbatim, and
+> not from the AI replying on your behalf. Maintainers are volunteering their
+> time to review your contribution; having that time spent talking to a bot
+> instead of you is disrespectful and such comments may be disregarded.
+
+This project is a clean-room-style reimplementation of macOS/Apple platform
+functionality. The goal is **API compatibility with the publicly documented
+contracts**, while avoiding legal risk and low-quality, application-specific
+hacks.
+
+These rules apply to every agent and contributor. When a rule conflicts with
+making a task "work", the rule wins. If you cannot complete a task without
+breaking a rule, stop and say so (see Section 10).
+
+---
+
+## 1. Implement the documented contract, not a particular application
+
+- Target the behavior described in public API documentation, public headers,
+  standards, and RFCs. These are the source of truth.
+- Never add special cases, bundle-ID checks, app-name checks, version sniffing,
+  or "if this app calls it, return X" logic to make one application work.
+- If an application fails, find the **general** documented behavior we got
+  wrong or haven't implemented, and fix that.
+- Where documentation is ambiguous or silent, first prefer the most
+  conservative, spec-consistent behavior. If real-world compatibility requires
+  more than that, follow Section 3 (Undocumented behavior and quirks). Never
+  guess silently.
+- Match documented error codes, return values, threading/reentrancy guarantees,
+  and nullability contracts, not just the happy path.
+
+## 2. Follow the macOS layering and dependency hierarchy
+
+Apple's platform is a stack: higher-level frameworks are built on lower-level
+frameworks and libraries. Applications are written against that stack and
+implicitly rely on its structure. Our implementation must have the same shape.
+
+- **Mirror the layering.** If framework A sits on top of library B on macOS,
+  our A must be implemented on top of our B, through B's interfaces. Do not
+  re-implement B's functionality privately inside A.
+- **Fix things at the right layer.** A bug or missing behavior belongs in the
+  lowest layer where it originates. Do not patch it in a higher layer to hide
+  a lower-layer defect, and do not duplicate logic across layers.
+- **Preserve the compatibility assumption between layers.** Applications that
+  use framework A assume library B is compatible with what A needs, and
+  applications may also call B directly alongside A. Changes to B must keep
+  both usage patterns working. Behavior, object identity, ownership, error
+  propagation, and state shared between layers must be consistent whether an
+  application enters through A or through B.
+- **No dependency inversions.** Lower layers must not depend on higher layers,
+  and no cyclic dependencies may be introduced. Do not make a layer reach
+  around the one directly beneath it unless that is how macOS does it.
+- **Preserve interposition and substitution points.** Where applications or
+  system components can observe or override a lower-level call (callbacks,
+  delegates, notifications, dynamic dispatch), the higher layer must go
+  through that same path rather than a private shortcut.
+- **Establish the hierarchy from evidence.** Use public documentation,
+  published architecture overviews, public headers (what imports or wraps
+  what), linkage visible via public tooling (e.g. which libraries a public
+  binary declares as dependencies), and backtraces provided under Section 7.
+  If the correct layer for something is unclear, ask (Section 10).
+- **Place quirks at the layer where they originate**, not where they were first
+  noticed.
+
+## 3. Undocumented behavior and quirks
+
+Public documentation is incomplete, and real applications sometimes depend on
+behavior the original implementation exhibits but never documented. We support
+such quirks deliberately and carefully, as a last resort, never casually and
+never as a shortcut.
+
+### When a quirk may be implemented
+
+All of the following must hold:
+
+1. **Documented behavior is insufficient.** The public contract, standards, and
+   conservative interpretation do not produce correct compatibility.
+2. **There is acceptable evidence** that the original behaves this way (see
+   "Acceptable evidence").
+3. **It is general.** The quirk is a property of the API under certain inputs or
+   states, not a reaction to a specific application. Test: would any
+   application making the same call get the same result? If the behavior only
+   triggers for a given bundle ID, app name, version, or call pattern unique
+   to one app, it is a hack and is forbidden (Section 1).
+4. **It is the minimal behavior needed.** Replicate the observable effect, not
+   guessed internals. Do not speculate about why the original does it.
+
+### Acceptable evidence (strongest first)
+
+- Public, license-clean documentation from other sources: Apple technical
+  notes, release notes, WWDC material, published books, reputable third-party
+  write-ups of observed behavior (paraphrased, never copied).
+- Black-box observation of the original through its public API, captured as a
+  reproducible behavioral test (inputs, outputs, error codes, OS version).
+- **Backtraces from real macOS** supplied by a human (see Section 7). These are
+  evidence of *what called what, in what order, in what context*, which makes
+  them especially valuable for layering (Section 2), call ordering, threading
+  context, and error propagation. They show behavior, not implementation.
+- Multiple independent, credible reports of the same observed behavior from
+  public bug trackers, forums, or other open-source compatibility projects,
+  cited by link. Summarize them; do not copy code from them.
+- A strong inference (e.g. a documented sibling API behaves this way, and
+  applications widely rely on it), clearly labeled as inference with the
+  reasoning stated. Inference alone is the weakest tier and requires
+  maintainer approval.
+
+### Never acceptable evidence
+
+- Disassembly, decompilation, or instruction-level inspection of Apple
+  binaries, and leaked or confidential Apple material. (Backtraces supplied
+  under Section 7 are not in this category; disassembly listings that
+  accompany them are. Neither is inspection of a third-party application's own
+  code, which is permitted for diagnosis under Section 7 — but what it yields
+  is a lead to confirm, not evidence of how the Apple API behaves.)
+- Apple's corecrypto source (see Section 5), or any restricted source.
+- Verbatim code from third-party projects with an undeclared or incompatible
+  license. Other compatibility projects may inform *what* the quirk is, not
+  *how* we write it.
+
+### How to implement a quirk
+
+- **Isolate it.** Put the quirk behind a clearly named helper or branch so it
+  can be found, reviewed, and removed. Do not scatter it through mainline
+  logic.
+- **Mark it in a code comment.** Every quirk carries a comment starting with
+  the tag `QUIRK:` placed directly at the quirk. The comment must be
+  self-contained and state:
+  - the observed behavior, in neutral terms,
+  - the evidence and its tier (and a link if public),
+  - affected OS versions, if known,
+  - the test that pins it.
+
+  Example:
+  ```c
+  // QUIRK: returns EINVAL instead of success for zero-length input.
+  // Not documented. Evidence: black-box observation on macOS 14.x
+  // (tier 2); same behavior reported in <public URL>.
+  // Test: test_quirk_zero_length_input_returns_einval
+  ```
+- **Test it.** Add a test that fails without the quirk. The test name or a
+  comment must make clear it covers a quirk and reference the same behavior
+  the code comment describes.
+- **Scope by OS version only if the evidence shows version dependence.** Never
+  scope by application.
+- **Do not weaken documented behavior** for cases the documentation does cover.
+  A quirk applies only to the gap.
+- **Security-sensitive quirks** (crypto, authentication, sandboxing, signature
+  or certificate validation, memory safety) are never implemented without
+  explicit maintainer approval. Compatibility must not silently weaken
+  security.
+
+### Distinguishing quirks from hacks
+
+| Quirk (allowed, with evidence) | Hack (forbidden) |
+|---|---|
+| API returns a specific error code for an undocumented edge-case input, for all callers | Return a canned value when the caller is `com.vendor.App` |
+| Preserves an observed ordering or default value that many apps rely on | Skip a failing call because one app crashes on it |
+| Marked with a `QUIRK:` comment, evidence stated, and pinned by a test | Explained only by "makes app X work" |
+
+If the real-world trigger was one application, use that only to *discover* the
+behavior. Then reproduce the general behavior with a standalone test that does
+not involve that application.
+
+## 4. No verbatim copying; use sources for understanding only
+
+- Do not copy code, comments, distinctive structure, or test fixtures verbatim
+  (or near-verbatim) from any external source unless its license is explicitly
+  declared and permissive **and** compatible with this project's license.
+- "Found on the internet / in a repo / in a gist / in a Stack Overflow answer"
+  is not a license. No declared license means no permission.
+- Third-party code you discover may inform your understanding of *what* needs
+  to be done. Close it, then write the implementation independently, in your
+  own structure and style.
+- If permissively licensed code is genuinely reused, it must be recorded
+  (source URL, commit, license, copyright notice) in the PR and in the
+  project's third-party notices, and required attribution must be preserved.
+- Do not reproduce Apple's documentation prose verbatim in comments or docs.
+  Paraphrase and link to the public documentation instead.
+
+## 5. CoreCrypto (and alike): absolute prohibition (highest priority)
+
+- Apple's open-source CoreCrypto (corecrypto) is under a license that is
+  incompatible with this project. **No code from it may ever enter this
+  codebase under any circumstances**: not copied, not translated to another
+  language, not "lightly refactored", not reproduced from memory, not used as
+  a line-by-line reference while writing.
+- **This extends to any other Apple source we cannot freely use, however it
+  became available.** Apple occasionally publishes source for a component
+  under terms that make the *source available to read* without it being
+  *free/open-source software* we can actually use here (e.g.
+  viewing/research-only terms, no-redistribution or no-derivative clauses,
+  patent carve-outs, or anything short of a license compatible with this
+  project's license). The same is true, with even less ambiguity, of Apple
+  source that was *leaked* rather than intentionally released — i.e. it
+  became "available" through a breach, an unauthorized dump, or similar,
+  with no license from Apple at all. It makes no difference whether such
+  source arrived via an official-looking release or a leak, how it was found
+  (a public repo, a forum, a pastebin, a torrent, etc.), or whether it
+  carries Apple's name or copyright notice: if it is not under a license
+  compatible with this project's license, it is restricted material, full
+  stop, and every rule in this section that applies to corecrypto applies
+  identically to it, whether or not it is named here: no copying,
+  translating, "light refactoring", reproduction from memory, or use as a
+  line-by-line reference; no pasting it into prompts, tool calls, scratch
+  files, or PR text; implementation only from the public API contract,
+  published standards, and public test vectors; and the same mandatory human
+  review step below before any PR touching a reimplementation of it can be
+  merged. If you are unsure whether source you have encountered falls into
+  this category, treat it as if it does and ask a maintainer (Section 10)
+  before using it for anything beyond understanding the public contract.
+- Do not open, quote, summarize, or paste corecrypto source into prompts, tool
+  calls, scratch files, or PR text.
+- Implement CoreCrypto-compatible APIs from: the public API contract,
+  published standards (FIPS, NIST SP, RFCs), and public test vectors (e.g.
+  NIST CAVP, Wycheproof, RFC appendices).
+- Prefer well-known, permissively licensed, vetted crypto implementations as
+  backends over writing primitives from scratch. Do not invent cryptography.
+- Treat anything resembling corecrypto's internal structure, naming of
+  internals, or algorithms-as-written as a red flag. If you notice that your
+  output might be derived from it, discard it and start over from the
+  standards, then tell the maintainers.
+- Backtraces that pass through corecrypto may be used only to understand which
+  public API calls into it and in what order. They must never be used to infer
+  or reconstruct anything about corecrypto's internals.
+- Quirks in crypto code require explicit maintainer approval (Section 3).
+- **Mandatory human review step.** Any PR touching the CoreCrypto
+  reimplementation, or the reimplementation of any other component covered by
+  the extension above, requires an explicit, separate check — stated by the
+  author and verified by the reviewer, not merely assumed because
+  "AGENTS.md was followed" — that the diff does not contain verbatim or
+  near-verbatim code from Apple's corecrypto (or the other component's)
+  source (including variable/field names, comments, or distinctive structure
+  copied from it). This check must be performed by reading the actual diff
+  side-by-side with knowledge of corecrypto's public layout/API (never its
+  source, per above), not by
+  asking an AI agent to self-certify its own output. If a reviewer cannot
+  confirm this, the PR must not be merged until a maintainer with corecrypto
+  familiarity confirms it.
+
+## 6. No leftover runtime validation or debugging code
+
+Debugging aids must never be present in final commits or PRs. This includes:
+
+- Writing to temp files, or dumping buffers/state/arguments to disk or stdout
+  when some condition occurs.
+- `printf`/`NSLog`/`println!`/`print` debugging, ad-hoc logging, or
+  `abort()`/`assert` probes added only to observe application behavior.
+- Environment-variable, file-existence, or flag-gated "diagnostic" paths that
+  exist only to inspect the behavior of a particular app.
+- Commented-out debugging code, `TODO remove`, or `HACK` markers left behind.
+
+Unit tests, integration tests, and *intentional, documented* logging that is
+part of the product's design are fine and encouraged. Before finishing any
+task, review the full diff specifically for leftover probes.
+
+## 7. Provenance and clean-room hygiene
+
+- **No disassembly or decompilation of Apple binaries**, and no use of leaked
+  or confidentially obtained Apple source, internal documents, or NDA-covered
+  material. If you suspect something is such material, do not use it. This
+  restriction is about Apple's code; third-party applications we are trying to
+  run are treated separately below.
+- Black-box observation of public API behavior is the primary way we discover
+  quirks. Record findings as behavioral specifications and tests (inputs,
+  outputs, OS version), not as descriptions of internals.
+- Every PR must include a short **Provenance** note: what sources informed the
+  change (public docs, standards, test vectors, black-box observations,
+  backtraces), and confirmation that no restricted material was used.
+- Keep research notes separate from implementation: describe observed behavior
+  in neutral terms ("function X returns error E for input class Y"), not in
+  terms of someone else's code.
+
+### Backtraces from macOS
+
+Backtraces captured from a real macOS system are permitted evidence and are
+part of our clean-room process. They are observations of runtime behavior, not
+decompilation.
+
+**Who provides them.** A human contributor captures the backtrace on a
+macOS system they are entitled to use (e.g. from a debugger, a crash report,
+or a sampling tool) and supplies it as input. Agents must not attempt to
+obtain backtraces by disassembling, unpacking, or otherwise inspecting Apple
+binaries themselves.
+
+**What they may be used for:**
+
+- Learning the call hierarchy: which framework or library calls which, and
+  through which public entry points (feeds Section 2).
+- Learning ordering, threading and queue context, callback and delegate
+  invocation paths, and where errors originate and propagate.
+- Confirming that a public API is implemented on top of another public API.
+- Supporting a quirk as evidence (Section 3), together with a reproducible
+  test.
+
+**What they must not be used for:**
+
+- Reconstructing function bodies, algorithms, data structures, or control flow
+  inside a function. A stack tells you who called whom, not how a function
+  works.
+- Using instruction offsets, register contents, raw memory dumps, or
+  disassembly that may accompany a trace. If a supplied trace contains such
+  material, ignore it and ask the contributor to remove it. Do not use it.
+- Adding private or undocumented symbols to our public surface merely because
+  they appear in a trace. Implement a private symbol only when public-layer
+  behavior requires it, it is general, and a maintainer approves.
+- Copying symbol names into our code as a way to mimic internal structure.
+  Our internals are named and organized by our own design. Only the public API
+  and the layering are dictated by compatibility.
+
+**Hygiene for supplied traces:**
+
+- Strip personal data, paths containing usernames, hostnames, tokens, and
+  application-private information before sharing.
+- State the macOS version and architecture, and how the trace was captured.
+- In the PR, summarize what was learned from the trace in neutral terms
+  ("API X is entered via Y, then delegates to Z on a background queue"). Do
+  not commit raw traces to the repository unless a maintainer agrees.
+
+### Reverse engineering third-party (non-Apple) software
+
+The prohibitions above are about **Apple's** binaries and restricted Apple
+source. They do not cover the applications we are trying to run. Inspecting a
+third-party, non-Apple application — including disassembling or decompiling it
+— is **permitted** when the purpose is to find out why it crashes or
+misbehaves under Darling.
+
+The reason is that such an application is not something we reimplement. We
+never need its code; we need to know *how it talks to the Apple APIs we
+provide*. Looking at the failing call site to see which API was called, with
+which arguments, and what it expected back tells us what our implementation
+got wrong. That is a diagnostic activity, and its output is a bug report about
+Darling, not a transcription of someone else's program.
+
+**What it may be used for:**
+
+- Identifying the API call, selector, argument values, or structure layout
+  involved in a crash or misbehavior, and what the application expected.
+- Determining which Apple framework or library the application entered, and
+  through which public entry point (feeds Section 2).
+- Deciding whether our behavior deviates from the documented contract, and if
+  the documentation is silent, gathering a lead to confirm by black-box
+  observation under Section 3.
+- Writing a *standalone* reproducer that makes the same calls, so the fix can
+  be tested without the application.
+
+**What it must not be used for:**
+
+- Reproducing the application's own code, algorithms, assets, or data
+  structures in Darling, in any form — copied, translated, or paraphrased from
+  its disassembly. Section 4 applies in full.
+- Circumventing licensing, DRM, copy protection, activation, or anti-tampering
+  in the application. We fix compatibility; we do not defeat protection
+  mechanisms. If an application only fails because of such a mechanism, stop
+  and ask (Section 10).
+- Justifying an application-specific hack. Whatever is learned must still
+  result in a general fix to the documented or quirk behavior of our API
+  (Sections 1 and 3). The application is how the bug was *discovered*, never
+  what the fix is keyed on.
+- Inspecting Apple frameworks that happen to be bundled or statically linked
+  into the application. Those are Apple binaries and remain off limits; the
+  permission here ends at the application's own code.
+
+**Hygiene:**
+
+- Only inspect software you are lawfully entitled to possess and run.
+- Record findings in neutral, API-facing terms ("the application calls X with
+  a NULL second argument and expects errSecParam"), not as a description of
+  the application's internals. Do not paste disassembly listings into the PR,
+  commit messages, issue comments, or the repository.
+- Say in the Provenance note that a third-party application was inspected, and
+  name the general behavior that was identified — the fix itself must stand on
+  the public contract or on evidence admissible under Section 3.
+
+## 8. Tests
+
+- Every new API behavior needs tests derived from the **documented contract**,
+  public standards, or (for quirks) reproducible black-box observation, not
+  from one application's traffic.
+- Layering-relevant behavior (e.g. a higher-level framework correctly
+  delegating to the lower-level library, shared objects behaving identically
+  across layers) should be covered by tests that exercise both entry points.
+- Include negative and edge-case tests (error codes, invalid arguments,
+  nullability, boundary sizes), especially for crypto and parsing code.
+- Test vectors must come from public, license-clean sources; cite them.
+- Never weaken or delete a failing test to make a change pass. Fix the cause or
+  raise it.
+
+## 9. Quality and security expectations
+
+- No `unsafe`/unchecked memory handling without justification in a comment.
+- Crypto code: constant-time comparisons for secrets, zeroize key material, no
+  secrets in logs, no custom primitives.
+- Add or update dependencies only if the license is compatible; list new
+  dependencies and their licenses in the PR.
+- Keep public API signatures binary- and source-compatible with the documented
+  Apple API. Don't add public symbols that aren't part of the contract without
+  maintainer sign-off.
+
+## 10. When to stop and ask
+
+Stop and ask a maintainer instead of proceeding when:
+
+- Compatibility seems to require behavior that is undocumented, and the only
+  way to learn it would be to look at proprietary or restricted code.
+- A needed quirk has only inference-tier evidence, is security-sensitive, or
+  could only be confirmed by looking at proprietary or restricted code.
+- You cannot tell whether observed behavior is general or specific to one
+  application.
+- You cannot tell which layer a piece of functionality belongs to, or a change
+  would require breaking the layering (upward dependency, cycle, or bypassing
+  a layer).
+- A supplied backtrace includes disassembly, register or memory contents, or
+  anything that looks like it came from restricted material.
+- You are unsure whether a source's license permits use.
+- A fix appears to require an application-specific workaround.
+- An application appears to fail because of its licensing, DRM, copy
+  protection, activation, or anti-tampering mechanism rather than because of
+  an API incompatibility.
+- You suspect you have encountered, or produced something derived from,
+  Apple's corecrypto or other restricted code.
+
+## 11. PR checklist
+
+- [ ] Behavior follows public documentation/standards; no app-specific hacks
+- [ ] Implementation respects the macOS layering: built on the correct lower
+      layer, fix placed at the right layer, no upward dependencies or cycles
+- [ ] Any undocumented behavior is isolated, marked with a self-contained
+      `QUIRK:` comment (behavior, evidence, test), pinned by a test, and not
+      application-specific
+- [ ] Any backtrace used was human-supplied, sanitized, used only for
+      hierarchy/ordering/context, and summarized neutrally in the PR
+- [ ] No verbatim third-party code; any reused code is licensed, attributed,
+      and listed
+- [ ] If a third-party application was reverse engineered to diagnose the
+      issue (Section 7): it informed only which API call failed and how, no
+      disassembly is included, nothing from it was reproduced in Darling, and
+      the fix is general rather than keyed on that application
+- [ ] No corecrypto-derived code or reference, nor from any other
+      source-available-but-not-free-software Apple release (Section 5)
+- [ ] If this PR touches the CoreCrypto reimplementation, or any other
+      component covered by Section 5's extension: a human reviewer has
+      explicitly checked the diff for verbatim/near-verbatim code from
+      Apple's source (not merely assumed compliance)
+- [ ] The PR author can explain, in their own words, what this change does
+      and why it is correct, and will personally respond (and not AI) to
+      maintainer questions on this PR
+- [ ] No debugging/probe code left in the diff
+- [ ] Tests added from contract/standards/observation; vectors cited
+- [ ] Provenance note included
+- [ ] New dependencies' licenses checked
+
+
+## 12. Agent skills for working on Darling
+
+How-to guides for agents are kept in a separate repository,
+[darlinghq/darling-skills](https://github.com/darlinghq/darling-skills):
+building and installing a change, running tests inside the guest (including
+GUI tests on X11 and Wayland), debugging with lldb, checking which APIs an
+application needs, and contributing AppDB reports. Its README explains how to
+install them for Claude Code and other agents.
+
+- If your harness supports skills, install them. Otherwise read the matching
+  `SKILL.md` before building, testing or debugging a change at runtime.
+- The skills describe *how* to do things. This file describes *what* is
+  allowed. Where they conflict, this file wins.
+- Improvements to the skills go to the darling-skills repository, not here.

@@ -18,55 +18,28 @@
 */
 
 #import <Automator/AMWorkflowController.h>
-#import <Automator/AMWorkflow.h>
-#import <Automator/AMWorkflowView.h>
-#import "AMStubSignature.h"
+#import <darling-stub-forwarding.h>
 
 @implementation AMWorkflowController
 
-@synthesize workflow = _workflow;
-@synthesize delegate = _delegate;
-@synthesize runLocally = _runLocally;
-
-- (void)dealloc
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    [_workflow release];
-    [self setWorkflowView: nil];
-    [super dealloc];
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
-- (AMWorkflowView *)workflowView
+- (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    return _workflowView;
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
-- (void)setWorkflowView:(AMWorkflowView *)view
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    if (view == _workflowView)
-        return;
-    if ([_workflowView workflowController] == self)
-        [_workflowView setWorkflowController: nil];
-    [_workflowView release];
-    _workflowView = [view retain];
-    [_workflowView setWorkflowController: self];
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
-// There is no workflow engine, so a workflow never runs.
-- (BOOL)canRun
++ (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    return NO;
+    DarlingStubForwardInvocation(self, anInvocation);
 }
-
-- (BOOL)isRunning
-{
-    return NO;
-}
-
-- (BOOL)isPaused
-{
-    return NO;
-}
-
-AM_STUB_FORWARDING
 
 @end

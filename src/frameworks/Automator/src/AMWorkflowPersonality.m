@@ -18,61 +18,28 @@
 */
 
 #import <Automator/AMWorkflowPersonality.h>
-#import <Automator/AMGeneralWorkflowPersonality.h>
-#import <Automator/AMApplicationWorkflowPersonality.h>
-#import <Automator/Automator.h>
-#import "AMStubSignature.h"
-#include <dispatch/dispatch.h>
+#import <darling-stub-forwarding.h>
 
 @implementation AMWorkflowPersonality
 
-// Automator asks for its document personalities at launch: the general (plain workflow) and
-// application personalities exist; every other type identifier maps to the general one.
-+ (id)generalWorkflowPersonality
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    static id general;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        general = [[AMGeneralWorkflowPersonality alloc] init];
-    });
-    return general;
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
-+ (id)applicationWorkflowPersonality
+- (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    static id application;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        application = [[AMApplicationWorkflowPersonality alloc] init];
-    });
-    return application;
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
-+ (NSArray *)workflowPersonalities
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return @[ [self generalWorkflowPersonality], [self applicationWorkflowPersonality] ];
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
-+ (id)workflowPersonalityForTypeIdentifier:(NSString *)typeIdentifier
++ (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    if ([typeIdentifier isEqualToString: AMWorkflowTypeIdentifierApplication])
-        return [self applicationWorkflowPersonality];
-    return [self generalWorkflowPersonality];
+    DarlingStubForwardInvocation(self, anInvocation);
 }
-
-// Automator.app adds a displayLabel titlebar label only when this is YES; none is shown.
-- (BOOL)showInTitlebar
-{
-    return NO;
-}
-
-- (BOOL)canSaveWorkflow:(id)workflow atURL:(NSURL *)url forInstallation:(BOOL)install error:(NSError **)error
-{
-    if (error != NULL)
-        *error = AMWorkflowFormatUnsupportedError();
-    return NO;
-}
-
-AM_STUB_FORWARDING
 
 @end

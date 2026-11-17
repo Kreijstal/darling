@@ -1,48 +1,76 @@
-#!/usr/bin/env python3
-"""Exercise the exact Darling startup branch with authored side-effect mocks."""
+# Copyright (C) 2026 Lubos Dolezel
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Exercise the launcher refusal branch with a mocked process scan."""
 import argparse
-import hashlib
 import pathlib
 import subprocess
 import tempfile
 
 parser = argparse.ArgumentParser()
-parser.add_argument('source', type=pathlib.Path)
-parser.add_argument('--run', action='store_true', help='compile and run the generated harness')
+parser.add_argument("source", type=pathlib.Path)
+parser.add_argument("--run", action="store_true", help="compile and run the generated harness")
 args = parser.parse_args()
 source = args.source.read_text()
-start = source.index('\t// If prefix\'s init is not running, start it up')
-end = source.index('\n\telse if (g_nonroot)', start)
+start = source.index("\t// If prefix's init is not running, start it up")
+end = source.index("\n\t// A container belongs to the mode that started it", start)
 branch = source[start:end]
-for required in ('if (pidInit == 0)', 'stopPrefixOrphans(&liveServer)', 'unlink(socketPath)', 'spawnInitProcess()', 'putInitPid(pidInit)'):
+for required in (
+    "if (pidInit == 0)",
+    "launcherFindPrefixServer(",
+    "unlink(socketPath)",
+    "setupWorkdir()",
+    "spawnInitProcess()",
+    "putInitPid(pidInit)",
+):
     if required not in branch:
-        raise SystemExit('unsupported source shape: ' + required)
-header = r'''
+        raise SystemExit("unsupported launcher source shape: " + required)
+
+header = r"""
+#define _GNU_SOURCE
+#include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <unistd.h>
+#define INSTALL_PREFIX "/opt/darling"
 #define SHELLSPAWN_SOCKPATH "/var/run/shellspawn.sock"
-#define SHELLSPAWN_WAIT_RETRIES 1
 static const char *prefix = "/synthetic-prefix";
-static int g_nonroot = 0;
+static const char *g_serverPath = INSTALL_PREFIX "/bin/darlingserver";
+static const char *g_mldrPath = INSTALL_PREFIX "/libexec/darling/usr/libexec/darling/mldr";
+static uid_t g_originalUid = 1000;
 static int scan_result;
 static pid_t detected_server;
 static int unlinks, setups, spawns, pid_writes;
-static int stopPrefixOrphans(pid_t *server) { *server = detected_server; return scan_result; }
-static void useOriginalIds(void) {}
+int launcherFindPrefixServer(const char *proc, const char *p, uid_t uid,
+    const char *exe, pid_t *server) {
+    (void)proc; (void)p; (void)uid; (void)exe;
+    *server = detected_server;
+    return scan_result;
+}
+static int orphan_result;
+int launcherFindOrphanedInit(const char *proc, const char *p, uid_t uid,
+    const char *mldr, pid_t *init) {
+    (void)proc; (void)p; (void)uid; (void)mldr;
+    *init = 8003;
+    return orphan_result;
+}
+static void useInvokingIds(void) {}
 static void restoreRootIds(void) {}
-static int unlink(const char *path) { (void)path; ++unlinks; return 0; }
+int unlink(const char *path) { (void)path; ++unlinks; return 0; }
 static void setupWorkdir(void) { ++setups; }
 static pid_t spawnInitProcess(void) { ++spawns; return 8002; }
 static void putInitPid(pid_t pid) { (void)pid; ++pid_writes; }
-static void spawnShellspawn(void) {}
-static int existsAsOriginalUser(const char *path) { (void)path; return 0; }
-static int usleep(unsigned usec) { (void)usec; return 0; }
+int faccessat(int fd, const char *path, int mode, int flags) {
+    (void)fd; (void)path; (void)mode; (void)flags; return 0;
+}
+unsigned int sleep(unsigned int seconds) { (void)seconds; return 0; }
 static int startup(pid_t pidInit) {
-'''
-tail = r'''
-return 0;
+"""
+tail = r"""
+    return 0;
 }
 static int check(const char *label, int scan, pid_t live, int expected_rc, int expected_mutations) {
+    orphan_result = 0;
     scan_result = scan; detected_server = live;
     unlinks = setups = spawns = pid_writes = 0;
     int rc = startup(0);
@@ -54,20 +82,26 @@ static int check(const char *label, int scan, pid_t live, int expected_rc, int e
 }
 int main(void) {
     int failed = 0;
-    failed += check("missing-or-invalid-pidfile/live-server", 0, 8001, 1, 0);
+    failed += check("missing-or-invalid-pidfile/live-server", 1, 8001, 1, 0);
     failed += check("inspection-error", -1, 0, 1, 0);
-    failed += check("verified-no-server", 0, 0, 0, 5);
+    failed += check("verified-no-server", 0, 0, 0, 4);
+    // a container whose darlingserver exited must not be started over
+    int expected_rc = 1;
+    scan_result = 0; detected_server = 0; orphan_result = 1;
+    unlinks = setups = spawns = pid_writes = 0;
+    int rc = startup(0);
+    int mutations = unlinks + setups + spawns + pid_writes;
+    printf("%s orphaned-container rc=%d mutations=%d\n",
+        rc == expected_rc && mutations == 0 ? "PASS" : "FAIL", rc, mutations);
+    failed += !(rc == expected_rc && mutations == 0);
     return failed ? 1 : 0;
 }
-'''
+"""
 code = header + branch + tail
-with tempfile.TemporaryDirectory(prefix='darling-missing-init-') as tmp:
-    output = pathlib.Path(tmp) / 'missing-init-generated.c'
-    output.write_text(code)
-    print('source_sha256=' + hashlib.sha256(args.source.read_bytes()).hexdigest(), flush=True)
-    print('branch_sha256=' + hashlib.sha256(branch.encode()).hexdigest(), flush=True)
-    print('generated=' + str(output), flush=True)
+with tempfile.TemporaryDirectory(prefix="darling-missing-init-") as tmp:
+    generated = pathlib.Path(tmp) / "missing-init-generated.c"
+    binary = pathlib.Path(tmp) / "missing-init-test"
+    generated.write_text(code)
     if args.run:
-        binary = pathlib.Path(tmp) / 'identity-mock'
-        subprocess.run(['cc', '-std=c11', '-Wall', '-Werror', str(output), '-o', str(binary)], check=True)
+        subprocess.run(["cc", "-std=c11", "-Wall", "-Werror", str(generated), "-o", str(binary)], check=True)
         raise SystemExit(subprocess.run([str(binary)]).returncode)

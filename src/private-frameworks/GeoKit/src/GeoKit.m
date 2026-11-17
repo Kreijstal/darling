@@ -17,15 +17,16 @@
 	like "there are zero places here", which is a different and wrong answer.
 */
 
-#import <Foundation/Foundation.h>
-#import <CoreFoundation/CoreFoundation.h>
-#import "../include/GeoKit/GeoKit.h"
+#import <GeoKit/GeoKit.h>
 
 /* No Core Data stack is present, so both contexts are absent. */
 id GEOManagedObjectContext = NULL;
 id GEODefaultManagedObjectContext = NULL;
 
 @implementation GeoKitPlace
+{
+	NSString* _name;
+}
 @synthesize name = _name;
 
 /* No place was resolved, so there is no coordinate to report. Zero is the

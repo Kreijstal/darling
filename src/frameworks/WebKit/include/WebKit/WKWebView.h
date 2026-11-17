@@ -1,87 +1,71 @@
 /*
- This file is part of Darling.
-
- Copyright (C) 2017 Lubos Dolezel
-
- Darling is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- Darling is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with Darling.  If not, see <http://www.gnu.org/licenses/>.
+ Copyright (C) 2026 Lubos Dolezel
+ Darling is free software under the GNU GPL version 3 or later.
 */
 
-/* AppKit, not just Foundation: the superclass is an NSView, which Foundation
- * does not declare. WebView.h in this same directory already imports Cocoa for
- * the same reason. */
-#include <AppKit/AppKit.h>
-#include <Foundation/Foundation.h>
+#import <Foundation/Foundation.h>
+#import <AppKit/NSView.h>
+#import <WebKit/WKError.h>
+#import <WebKit/WKNavigation.h>
+#import <WebKit/WKNavigationDelegate.h>
+#import <WebKit/WKUIDelegate.h>
+#import <WebKit/WKWebViewConfiguration.h>
+#import <Security/Security.h>
 
-@class WKWebViewHostState;
-@class WKWebViewConfiguration;
-@protocol WKNavigationDelegate;
+@class WKBackForwardList, WKBackForwardListItem;
 
-/* WKWebView is a view on macOS, and an application that allocates one expects
- * to be able to put it in a window and have AppKit lay it out. Declared here as
- * an NSObject, which it is not: [super setFrame:] is an unrecognized selector,
- * the view can never be added to a window, and the app dies on its first layout
- * pass even when every other part of the proxy works.
- *
- * The class body stays empty. The implementation is supplied by the guest
- * (src/WKWebView.m and src/dwb-siblings.m), which proxies rendering to
- * darling-webkit-host over a Unix socket. */
-@interface WKWebView : NSView {
-@public
-	WKWebViewHostState *_host;
-	NSBitmapImageRep *_frameImage;
-	NSString *_lastURL;
-	WKWebViewConfiguration *_configuration;
-	NSTimer *_frameTimer;
-	id _navigationDelegate;
-	BOOL _allowsBackForwardNavigationGestures;
-	BOOL _allowsLinkPreview;
-	BOOL _loading;
-	NSString *_title;
-	id _currentRequest;
-	NSString *_customUserAgent;
-	double _estimatedProgress;
-	BOOL _drawsBackground;
-}
+NS_ASSUME_NONNULL_BEGIN
+
+@interface WKWebView : NSView
 
 @property (nonatomic, readonly, copy) WKWebViewConfiguration *configuration;
-@property (nonatomic, assign) id <WKNavigationDelegate> navigationDelegate;
-@property (nonatomic, readonly, copy) NSString *title;
-@property (nonatomic, readonly, copy) NSURL *URL;
+@property (nullable, nonatomic, weak) id <WKNavigationDelegate> navigationDelegate;
+@property (nullable, nonatomic, weak) id <WKUIDelegate> UIDelegate;
+@property (nonatomic, readonly, strong) WKBackForwardList *backForwardList;
+
+- (instancetype)initWithFrame:(NSRect)frame configuration:(WKWebViewConfiguration *)configuration NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithCoder:(NSCoder *)coder NS_DESIGNATED_INITIALIZER;
+
+- (nullable WKNavigation *)loadRequest:(NSURLRequest *)request;
+- (nullable WKNavigation *)loadFileURL:(NSURL *)URL allowingReadAccessToURL:(NSURL *)readAccessURL;
+- (nullable WKNavigation *)loadHTMLString:(NSString *)string baseURL:(nullable NSURL *)baseURL;
+- (nullable WKNavigation *)loadData:(NSData *)data MIMEType:(NSString *)MIMEType characterEncodingName:(NSString *)characterEncodingName baseURL:(NSURL *)baseURL;
+- (nullable WKNavigation *)goToBackForwardListItem:(WKBackForwardListItem *)item;
+
+@property (nullable, nonatomic, readonly, copy) NSString *title;
+@property (nullable, nonatomic, readonly, copy) NSURL *URL;
 @property (nonatomic, readonly, getter=isLoading) BOOL loading;
 @property (nonatomic, readonly) double estimatedProgress;
-@property (nonatomic) BOOL allowsBackForwardNavigationGestures;
-@property (nonatomic, copy) NSString *customUserAgent;
-@property (nonatomic) BOOL allowsLinkPreview;
+@property (nonatomic, readonly) BOOL hasOnlySecureContent;
+@property (nonatomic, readonly, nullable) SecTrustRef serverTrust;
 @property (nonatomic, readonly) BOOL canGoBack;
 @property (nonatomic, readonly) BOOL canGoForward;
-@property (nonatomic) BOOL drawsBackground;
 
-- (instancetype)initWithFrame:(NSRect)frame configuration:(WKWebViewConfiguration *)configuration;
-- (id)loadRequest:(NSURLRequest *)request;
-- (id)loadHTMLString:(NSString *)string baseURL:(NSURL *)baseURL;
-- (id)reload;
+- (nullable WKNavigation *)goBack;
+- (nullable WKNavigation *)goForward;
+- (nullable WKNavigation *)reload;
+- (nullable WKNavigation *)reloadFromOrigin;
 - (void)stopLoading;
-- (id)goBack;
-- (id)goForward;
-- (void)evaluateJavaScript:(NSString *)javaScriptString completionHandler:(void (^)(id result, NSError *error))completionHandler;
+
+- (void)evaluateJavaScript:(NSString *)javaScriptString completionHandler:(void (^ _Nullable)(id _Nullable, NSError * _Nullable error))completionHandler;
+
+@property (nonatomic) BOOL allowsBackForwardNavigationGestures;
+@property (nullable, nonatomic, copy) NSString *customUserAgent;
+@property (nonatomic) BOOL allowsLinkPreview;
+@property (nonatomic) BOOL allowsMagnification;
+@property (nonatomic) CGFloat pageZoom;
+@property (nonatomic, getter=isInspectable) BOOL inspectable;
 
 @end
 
-@interface WKWebView (Compatibility)
+@interface WKWebView (WKIBActions)
 
-- (id)scrollView;
-- (NSURLRequest *)request;
-- (NSString *)loadingTitle;
+- (IBAction)goBack:(nullable id)sender;
+- (IBAction)goForward:(nullable id)sender;
+- (IBAction)reload:(nullable id)sender;
+- (IBAction)reloadFromOrigin:(nullable id)sender;
+- (IBAction)stopLoading:(nullable id)sender;
 
 @end
+
+NS_ASSUME_NONNULL_END

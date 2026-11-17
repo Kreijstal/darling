@@ -18,6 +18,7 @@
 */
 
 #import <OSAKit/OSALanguageInstance.h>
+#import <darling-stub-forwarding.h>
 
 // Darling has no OSA components, so there is never a component instance to hand out.
 @implementation OSALanguageInstance
@@ -79,6 +80,26 @@
     if (text == nil)
         return nil;
     return [[[NSAttributedString alloc] initWithString:text] autorelease];
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
 @end

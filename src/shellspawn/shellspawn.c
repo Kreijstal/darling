@@ -33,13 +33,12 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/event.h>
 #include <sys/ioctl.h>
 #include <signal.h>
-#include <termios.h>
-#if defined(__APPLE__) || defined(__DARLING__)
-#include <util.h>
-#else
-#include <pty.h>
-#endif
+#include <pwd.h>
+#include <limits.h>
 #include "shellspawn.h"
+#include "shellspawn-fds.h"
+#include "shellspawn-shell.h"
+#include "shellspawn-config.h"
 #include "duct_signals.h"
 
 #define DBG 0
@@ -56,17 +55,21 @@ void reapAll(void);
 
 int main(int argc, const char** argv)
 {
-	// Ignore SIGPIPE in shellspawn itself: the per-connection child reports the
-	// shell's exit status to a client socket that may already be closed, and that
-	// write should fail with EPIPE instead of killing the process. The ignore is
-	// inherited across fork and exec, so the shell gets the default back below.
+	// Clients may disconnect at any time; writing to their socket must fail
+	// with EPIPE instead of killing shellspawn. The spawned program gets the
+	// default disposition back before exec.
 	signal(SIGPIPE, SIG_IGN);
 
-	// shellspawn (daemon) --fork()--> shellspawn (child) --fork()--> exec /bin/bash
+	// shellspawn (daemon) --fork()--> shellspawn (child) --fork()--> exec the shell
 	// in order to read the exit status of the shell process,
 	// we have to allow it to become a zombie, therefore we need to
 	// restore the sigaction of SIGCHLD of the child shellspawn
 	setupSigchild();
+
+	// The darling launcher waits for the socket before it sends the first
+	// command, so binding it only after the system configuration has arrived
+	// makes every program started through shellspawn see the configuration.
+	waitForSystemConfig();
 	setupSocket();
 	int status = listenForConnections();
 
@@ -194,7 +197,8 @@ void spawnShell(int fd)
 {
 	pid_t shell_pid = -1;
 	int shellfd[3] = { -1, -1, -1 };
-	int pipefd[2];
+	int pipefd[2] = { -1, -1 };
+	int ctty_fd = -1;
 	int rv;
 	struct pollfd pfd[2];
 	char** argv = NULL;
@@ -204,19 +208,23 @@ void spawnShell(int fd)
 	char cmsgbuf[CMSG_SPACE(sizeof(int)) * 3];
 	int kq;
 	int wstatus = 0;
-#ifndef DBG
-	static int _dbg_cached = -1;
-	if (_dbg_cached == -1) _dbg_cached = (getenv("DARLING_SHELLSPAWN_DEBUG") != NULL);
-#define DBG _dbg_cached
-#endif
 
 	bool read_cmds = true;
 
-	argv = (char**) malloc(sizeof(char*) * 3);
-	argv[0] = "/bin/zsh";
-	argv[1] = "--login";
+	// argv[0] is replaced by the login shell's name once the client has
+	// chosen the user (see below); a client's SETEXEC discards it.
+	argv = (char**) malloc(sizeof(char*) * 2);
+	argv[0] = "-zsh";
+	argc = 1;
 
 	char* alloc_exec = NULL;
+
+	// Keep the control socket out of the way of the standard I/O descriptors
+	// set up for the shell.
+	int moved_fd = shellspawn_move_above_stdio(fd);
+	if (moved_fd == -1)
+		goto err;
+	fd = moved_fd;
 
 	// Read commands from client
 	while (read_cmds)
@@ -264,7 +272,9 @@ void spawnShell(int fd)
 			{
 				if (param != NULL)
 				{
-					if (param[0] != '\0' && strchr(param, '=') != NULL)
+					// NAME=value with a non-empty name
+					char* equals = strchr(param, '=');
+					if (equals != NULL && equals != param)
 					{
 						if (DBG) printf("set env: %s\n", param);
 						putenv(param);
@@ -340,87 +350,56 @@ void spawnShell(int fd)
 		}
 	}
 
+	// Without a program of the client's choosing, run the login shell from the
+	// account entry of the user we run as.
+	char login_argv0[PATH_MAX];
+	const char* login_shell = SHELLSPAWN_DEFAULT_SHELL;
+	if (alloc_exec == NULL)
+	{
+		struct passwd* pw = getpwuid(getuid());
+		login_shell = shellspawn_choose_shell(pw != NULL ? pw->pw_shell : NULL);
+		if (argc > 0 && shellspawn_login_argv0(login_shell, login_argv0, sizeof(login_argv0)) == 0)
+			argv[0] = login_argv0;
+	}
+
 	// Add terminating NULL
 	argv = (char**) realloc(argv, sizeof(char*) * (argc + 1));
 	argv[argc] = NULL;
 
-	int ctty_master = -1;
-	int ctty_slave = -1;
-	int ctty_fd = -1;
-
-	// If stdin is not a terminal (e.g. piped input, test suite, non-interactive),
-	// allocate a fallback PTY to serve as the session's controlling terminal so
-	// that open("/dev/tty") and terminal size queries succeed without hijacking
-	// the standard input/output pipes.
-	if (!isatty(shellfd[0]))
-	{
-		struct winsize ws = { .ws_row = 24, .ws_col = 80, .ws_xpixel = 0, .ws_ypixel = 0 };
-		if (openpty(&ctty_master, &ctty_slave, NULL, NULL, &ws) == 0)
-		{
-			fcntl(ctty_master, F_SETFD, FD_CLOEXEC);
-			fcntl(ctty_slave, F_SETFD, FD_CLOEXEC);
-			fcntl(ctty_master, F_SETFL, fcntl(ctty_master, F_GETFL) | O_NONBLOCK);
-		}
-	}
-
 	if (pipe(pipefd) == -1)
 		goto err;
 
+	for (int i = 0; i < 2; i++)
+	{
+		int moved = shellspawn_move_above_stdio(pipefd[i]);
+		if (moved == -1)
+			goto err;
+		pipefd[i] = moved;
+	}
+
 	shell_pid = fork();
+	if (shell_pid == -1)
+		goto err;
+
 	if (shell_pid == 0)
 	{
 		setsid();
 		setpgrp();
 
-		// If shellspawn was started with stdio closed, the control socket and
-		// the streams can themselves be 0, 1 or 2. Close the socket first and
-		// copy every stream above 2 before replacing any of 0, 1 and 2.
-		close(fd);
-		int moved[3];
-		for (int i = 0; i < 3; i++)
-		{
-			moved[i] = fcntl(shellfd[i], F_DUPFD_CLOEXEC, STDERR_FILENO + 1);
-			if (moved[i] == -1)
-			{
-				int error = errno;
-				write(pipefd[1], &error, sizeof(error));
-				exit(EXIT_FAILURE);
-			}
-		}
-		for (int i = 0; i < 3; i++)
-		{
-			if (shellfd[i] > STDERR_FILENO)
-				close(shellfd[i]);
-		}
-
-		dup2(moved[0], STDIN_FILENO);
-		dup2(moved[1], STDOUT_FILENO);
-		dup2(moved[2], STDERR_FILENO);
-
-		if (ctty_slave != -1)
-		{
-			ioctl(ctty_slave, TIOCSCTTY, 0);
-		}
-		else
-		{
-			ioctl(STDIN_FILENO, TIOCSCTTY, 0);
-		}
-
-		if (ctty_slave != -1)
-			close(ctty_slave);
-		if (ctty_master != -1)
-			close(ctty_master);
-
+		close(pipefd[0]);
 		fcntl(pipefd[1], F_SETFD, FD_CLOEXEC);
 
-		// An ignored signal stays ignored across exec; the shell and every program
-		// started from it must see the default SIGPIPE, or `cmd | head` pipelines
-		// print "Broken pipe" errors and writers that ignore errors spin.
-		signal(SIGPIPE, SIG_DFL);
+		if (shellspawn_remap_stdio(shellfd) == 0)
+		{
+			ioctl(STDIN_FILENO, TIOCSCTTY, 0);
 
-		// In future, we may support spawning something else than Zsh
-		// and check the provided shell against /etc/shells
-		execv(alloc_exec ? alloc_exec : "/bin/zsh", argv);
+			close(fd);
+			shellspawn_close_streams(shellfd, STDERR_FILENO + 1);
+
+			signal(SIGPIPE, SIG_DFL);
+
+			execv(alloc_exec ? alloc_exec : login_shell, argv);
+		}
 
 		rv = errno;
 		write(pipefd[1], &rv, sizeof(rv));
@@ -429,25 +408,12 @@ void spawnShell(int fd)
 		exit(EXIT_FAILURE);
 	}
 
-	if (ctty_slave != -1)
-	{
-		close(ctty_slave);
-		ctty_slave = -1;
-	}
-
 	if (isatty(shellfd[0]))
 	{
 		ctty_fd = fcntl(shellfd[0], F_DUPFD_CLOEXEC, 0);
 	}
-	else
-	{
-		ctty_fd = ctty_master;
-	}
 
-	close(shellfd[0]);
-	close(shellfd[1]);
-	close(shellfd[2]);
-	shellfd[0] = shellfd[1] = shellfd[2] = -1;
+	shellspawn_close_streams(shellfd, 0);
 
 	if (alloc_exec)
 	{
@@ -457,6 +423,7 @@ void spawnShell(int fd)
 
 	// Check that exec succeeded
 	close(pipefd[1]); // close the write end
+	pipefd[1] = -1;
 	if (read(pipefd[0], &rv, sizeof(rv)) == sizeof(rv))
 	{
 		errno = rv;
@@ -464,16 +431,13 @@ void spawnShell(int fd)
 		goto err;
 	}
 	close(pipefd[0]);
+	pipefd[0] = -1;
 
 	if (DBG) { puts("shellspawn: execv succeeded, entering poll loop"); fflush(stdout); }
 
-	struct pollfd pfd_in[2];
-	memset(pfd_in, 0, sizeof(pfd_in));
+	struct pollfd pfd_in[1];
 	pfd_in[0].fd = fd;
 	pfd_in[0].events = POLLIN;
-	pfd_in[1].fd = ctty_master;
-	pfd_in[1].events = (ctty_master != -1) ? POLLIN : 0;
-	int poll_cnt = (ctty_master != -1) ? 2 : 1;
 
 	while (true)
 	{
@@ -490,23 +454,12 @@ void spawnShell(int fd)
 			goto done_reaped;
 		}
 
-		int pret = poll(pfd_in, poll_cnt, 50);
+		int pret = poll(pfd_in, 1, 50);
 		if (pret < 0)
 		{
 			if (errno == EINTR)
 				continue;
 			break;
-		}
-
-		if (pret > 0 && ctty_master != -1 && (pfd_in[1].revents & (POLLIN | POLLHUP | POLLERR)))
-		{
-			char drain_buf[512];
-			while (read(ctty_master, drain_buf, sizeof(drain_buf)) > 0);
-			if (pfd_in[1].revents & (POLLHUP | POLLERR))
-			{
-				pfd_in[1].fd = -1;
-				pfd_in[1].events = 0;
-			}
 		}
 
 		if (pret > 0 && (pfd_in[0].revents & (POLLIN | POLLHUP | POLLERR)))
@@ -589,15 +542,10 @@ done_reaped:
 
 	if (DBG) printf("Shell terminated with exit code %d\n", wstatus);
 	close(fd);
-	if (ctty_fd != -1 && ctty_fd != ctty_master)
+	if (ctty_fd != -1)
 	{
 		close(ctty_fd);
 		ctty_fd = -1;
-	}
-	if (ctty_master != -1)
-	{
-		close(ctty_master);
-		ctty_master = -1;
 	}
 
 	reapAll();
@@ -605,18 +553,16 @@ done_reaped:
 err:
 	if (DBG) fprintf(stderr, "Error spawning shell: %s\n", strerror(errno));
 
-	if (ctty_fd != -1 && ctty_fd != ctty_master)
+	if (ctty_fd != -1)
 		close(ctty_fd);
-	if (ctty_master != -1)
-		close(ctty_master);
-	if (ctty_slave != -1)
-		close(ctty_slave);
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 2; i++)
 	{
-		if (shellfd[i] != -1)
-			close(shellfd[i]);
+		if (pipefd[i] != -1)
+			close(pipefd[i]);
 	}
+
+	shellspawn_close_streams(shellfd, 0);
 
 	if (shell_pid != -1)
 		kill(shell_pid, SIGKILL);

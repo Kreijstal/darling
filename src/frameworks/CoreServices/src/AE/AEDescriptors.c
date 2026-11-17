@@ -8,23 +8,19 @@
 */
 
 // In-process Apple Event Descriptor Manager: descriptors, lists, records and Apple Events
-// (parameters and attributes). Darling has no Apple Event transport, so sending reports that
-// the target process could not be found.
+// (parameters and attributes). Sending and handler dispatch are in AEEvents.c.
 
 #include <AE/AE.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <float.h>
 #include <math.h>
+#include <stdatomic.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
 #define AE_STORAGE_MAGIC 0x41454453 // 'AEDS'
-
-// Built-in descriptor types that AEDataModel.h does not declare.
-#define kAETypeUInt16 'ushr'
-#define kAETypeUInt64 'ucom'
-#define kAETypeKeyword 'keyw'
 
 // How a descriptor's contents are stored. This is tracked separately from the descriptor type,
 // because a record keeps its structure when it is coerced to another type (e.g. 'obj ').
@@ -61,14 +57,11 @@ static AEStorage* storageOf(const AEDesc* desc)
 	return storage->magic == AE_STORAGE_MAGIC ? storage : NULL;
 }
 
-// Object specifiers are AE records with their own descriptor type, so the record calls
-// (AEGetParamPtr and friends) work on them as well.
 static AEKind kindForType(DescType type)
 {
 	switch (type) {
 		case typeAEList: return kAEKindList;
-		case typeAERecord:
-		case typeObjectSpecifier: return kAEKindRecord;
+		case typeAERecord: return kAEKindRecord;
 		case typeAppleEvent: return kAEKindEvent;
 		default: return kAEKindData;
 	}
@@ -171,11 +164,11 @@ static Boolean readNumber(DescType type, const void* data, Size size, AENumber* 
 {
 	switch (type) {
 		case typeSInt16: READ_NUMBER(SInt16, s, kAENumberSigned);
-		case kAETypeUInt16: READ_NUMBER(UInt16, s, kAENumberSigned);
+		case typeUInt16: READ_NUMBER(UInt16, s, kAENumberSigned);
 		case typeSInt32: READ_NUMBER(SInt32, s, kAENumberSigned);
 		case typeUInt32: READ_NUMBER(UInt32, s, kAENumberSigned);
 		case typeSInt64: READ_NUMBER(SInt64, s, kAENumberSigned);
-		case kAETypeUInt64: READ_NUMBER(UInt64, u, kAENumberUnsigned);
+		case typeUInt64: READ_NUMBER(UInt64, u, kAENumberUnsigned);
 		case typeIEEE32BitFloatingPoint: READ_NUMBER(Float32, d, kAENumberFloat);
 		case typeIEEE64BitFloatingPoint: READ_NUMBER(Float64, d, kAENumberFloat);
 		case typeBoolean: READ_NUMBER(Boolean, s, kAENumberSigned);
@@ -194,7 +187,11 @@ static Boolean readNumber(DescType type, const void* data, Size size, AENumber* 
 
 #undef READ_NUMBER
 
-// Converts a number to a signed integer in [min, max]; fails for fractions and out-of-range values.
+// Converts a number to a signed integer in [min, max]; fails for out-of-range values.
+// QUIRK: a floating-point value with a fractional part is rounded to the nearest integer, with
+// ties to even (2.5 becomes 2, 3.5 becomes 4), instead of failing the coercion.
+// Evidence: black-box observation on macOS 27.0.1 (tier 2), vd-upstream/mac-probes/v121-ae-probe.c.
+// Test: test_coercions in tests/src/ae_descriptors.c
 static Boolean numberToInteger(const AENumber* number, int64_t min, int64_t max, int64_t* out)
 {
 	int64_t value;
@@ -208,10 +205,10 @@ static Boolean numberToInteger(const AENumber* number, int64_t min, int64_t max,
 			value = (int64_t) number->u;
 			break;
 		default:
-			if (!isfinite(number->d) || number->d != trunc(number->d) ||
-				number->d < -9223372036854775808.0 || number->d >= 9223372036854775808.0)
+			double rounded = nearbyint(number->d);
+			if (!isfinite(rounded) || rounded < -9223372036854775808.0 || rounded >= 9223372036854775808.0)
 				return false;
-			value = (int64_t) number->d;
+			value = (int64_t) rounded;
 			break;
 	}
 	if (value < min || value > max)
@@ -232,9 +229,10 @@ static Boolean numberToUInt64(const AENumber* number, uint64_t* out)
 			*out = number->u;
 			return true;
 		default:
-			if (!isfinite(number->d) || number->d != trunc(number->d) || number->d < 0 || number->d >= 18446744073709551616.0)
+			double rounded = nearbyint(number->d);
+			if (!isfinite(rounded) || rounded < 0 || rounded >= 18446744073709551616.0)
 				return false;
-			*out = (uint64_t) number->d;
+			*out = (uint64_t) rounded;
 			return true;
 	}
 }
@@ -258,7 +256,7 @@ static OSErr writeNumber(const AENumber* number, DescType toType, AEDesc* result
 			SInt16 value = (SInt16) integer;
 			return AECreateDesc(toType, &value, sizeof(value), result);
 		}
-		case kAETypeUInt16: {
+		case typeUInt16: {
 			if (!numberToInteger(number, 0, UINT16_MAX, &integer))
 				return errAECoercionFail;
 			UInt16 value = (UInt16) integer;
@@ -282,7 +280,7 @@ static OSErr writeNumber(const AENumber* number, DescType toType, AEDesc* result
 			SInt64 value = integer;
 			return AECreateDesc(toType, &value, sizeof(value), result);
 		}
-		case kAETypeUInt64: {
+		case typeUInt64: {
 			UInt64 value;
 			if (!numberToUInt64(number, &value))
 				return errAECoercionFail;
@@ -300,6 +298,10 @@ static OSErr writeNumber(const AENumber* number, DescType toType, AEDesc* result
 			return AECreateDesc(toType, &value, sizeof(value), result);
 		}
 		case typeBoolean: {
+			// A floating-point value with a fractional part does not coerce to Boolean, even
+			// when it would round to 0 or 1 (see numberToInteger).
+			if (number->kind == kAENumberFloat && number->d != nearbyint(number->d))
+				return errAECoercionFail;
 			if (!numberToInteger(number, 0, 1, &integer))
 				return errAECoercionFail;
 			Boolean value = (Boolean) integer;
@@ -359,7 +361,7 @@ static OSErr coerceText(CFStringEncoding fromEncoding, const void* data, Size si
 
 static Boolean isTypeCode(DescType type)
 {
-	return type == typeType || type == typeEnumerated || type == kAETypeKeyword;
+	return type == typeType || type == typeEnumerated || type == typeKeyword;
 }
 
 static OSErr coerceData(DescType fromType, const void* data, Size size, DescType toType, AEDesc* result)
@@ -572,7 +574,10 @@ OSErr AEPutDesc(AEDescList* list, long index, const AEDesc* desc)
 	if (list == NULL || desc == NULL)
 		return paramErr;
 	AEStorage* storage = storageOf(list);
-	if (!isList(storage))
+	// QUIRK: putting by index into a record (rather than a list) fails with errAEWrongDataType.
+	// Evidence: black-box observation on macOS 27.0.1 (tier 2), vd-upstream/mac-probes/v121-ae-probe.c.
+	// Test: test_record_and_event in tests/src/ae_descriptors.c
+	if (storage == NULL || storage->kind != kAEKindList)
 		return errAEWrongDataType;
 	// 0 or count + 1 appends; 1...count replaces; anything else is out of range.
 	if (index == 0 || index == storage->itemCount + 1)
@@ -606,7 +611,7 @@ static OSErr nthItem(const AEDescList* list, long index, AEItem** item)
 	if (!isList(storage))
 		return errAEWrongDataType;
 	if (index < 1 || index > storage->itemCount)
-		return errAEBadListItem;
+		return errAEDescNotFound;
 	*item = &storage->items[index - 1];
 	return noErr;
 }
@@ -662,7 +667,7 @@ OSErr AEDeleteItem(AEDescList* list, long index)
 	if (!isList(storage))
 		return errAEWrongDataType;
 	if (index < 1 || index > storage->itemCount)
-		return errAEBadListItem;
+		return errAEDescNotFound;
 	AEDisposeDesc(&storage->items[index - 1].desc);
 	memmove(&storage->items[index - 1], &storage->items[index], (storage->itemCount - index) * sizeof(AEItem));
 	storage->itemCount--;
@@ -692,7 +697,7 @@ OSErr AEPutParamDesc(AERecord* record, AEKeyword keyword, const AEDesc* desc)
 		return paramErr;
 	AEStorage* storage = storageOf(record);
 	if (!isRecordLike(storage))
-		return errAEWrongDataType;
+		return errAENotAEDesc;
 	return putKeyed(&storage->items, &storage->itemCount, &storage->itemCapacity, keyword, desc);
 }
 
@@ -711,7 +716,7 @@ static OSErr findParam(const AERecord* record, AEKeyword keyword, AEItem** item)
 {
 	AEStorage* storage = storageOf(record);
 	if (!isRecordLike(storage))
-		return errAEWrongDataType;
+		return errAENotAEDesc;
 	*item = findItem(storage->items, storage->itemCount, keyword);
 	return *item ? noErr : errAEDescNotFound;
 }
@@ -785,6 +790,11 @@ OSErr AECreateAppleEvent(AEEventClass theAEEventClass, AEEventID theAEEventID, c
 
 	SInt32 transaction = transactionID;
 	SInt16 returnValue = returnID;
+	if (returnID == kAutoGenerateReturnID) {
+		// A positive value that differs from the previous event's.
+		static _Atomic uint32_t nextReturnID;
+		returnValue = (SInt16) (atomic_fetch_add(&nextReturnID, 1) % INT16_MAX + 1);
+	}
 	if ((err = AEPutAttributePtr(result, keyEventClassAttr, typeType, &theAEEventClass, sizeof(theAEEventClass))) == noErr &&
 		(err = AEPutAttributePtr(result, keyEventIDAttr, typeType, &theAEEventID, sizeof(theAEEventID))) == noErr &&
 		(err = AEPutAttributePtr(result, keyReturnIDAttr, typeSInt16, &returnValue, sizeof(returnValue))) == noErr &&
@@ -867,17 +877,203 @@ OSErr AESizeOfAttribute(const AppleEvent* theAppleEvent, AEKeyword keyword, Desc
 	return noErr;
 }
 
-OSStatus AESendMessage(const AppleEvent* event, AppleEvent* reply, AESendMode sendMode, long timeOutInTicks)
+// --- Flattening ---
+
+// A flattened descriptor is a private, self-describing byte stream (host byte order), used to carry
+// descriptors between processes. It starts with a magic value, a format version and the total length,
+// followed by the descriptor tree.
+#define AE_FLAT_MAGIC 0x41454C46 // 'AELF'
+#define AE_FLAT_VERSION 1
+#define AE_FLAT_MAX_DEPTH 64
+
+typedef struct AEFlatBuffer {
+	uint8_t* bytes;
+	size_t length;
+	size_t capacity;
+	Boolean failed;
+} AEFlatBuffer;
+
+static void flatPut(AEFlatBuffer* buffer, const void* data, size_t size)
 {
-	if (reply)
-		AEInitializeDesc(reply);
-	return procNotFound; // no Apple Event transport to other processes
+	if (buffer->failed)
+		return;
+	if (buffer->length + size > buffer->capacity) {
+		size_t newCapacity = (buffer->length + size) * 2 + 64;
+		uint8_t* grown = realloc(buffer->bytes, newCapacity);
+		if (grown == NULL) {
+			buffer->failed = true;
+			return;
+		}
+		buffer->bytes = grown;
+		buffer->capacity = newCapacity;
+	}
+	if (size)
+		memcpy(buffer->bytes + buffer->length, data, size);
+	buffer->length += size;
 }
 
-OSErr AESend(const AppleEvent* theAppleEvent, AppleEvent* reply, AESendMode sendMode, AESendPriority sendPriority,
-	SInt32 timeOutInTicks, AEIdleUPP idleProc, AEFilterUPP filterProc)
+static void flatPut32(AEFlatBuffer* buffer, uint32_t value)
 {
-	return (OSErr) AESendMessage(theAppleEvent, reply, sendMode, timeOutInTicks);
+	flatPut(buffer, &value, sizeof(value));
+}
+
+static OSErr flattenNode(const AEDesc* desc, AEFlatBuffer* buffer, int depth);
+
+static OSErr flattenItems(const AEItem* items, long count, AEFlatBuffer* buffer, int depth)
+{
+	for (long i = 0; i < count; i++) {
+		flatPut32(buffer, items[i].key);
+		OSErr err = flattenNode(&items[i].desc, buffer, depth + 1);
+		if (err != noErr)
+			return err;
+	}
+	return noErr;
+}
+
+static OSErr flattenNode(const AEDesc* desc, AEFlatBuffer* buffer, int depth)
+{
+	if (depth > AE_FLAT_MAX_DEPTH)
+		return errAECorruptData;
+	AEStorage* storage = storageOf(desc);
+	flatPut32(buffer, desc->descriptorType);
+	if (storage == NULL) {
+		flatPut32(buffer, kAEKindData);
+		uint64_t zero = 0;
+		flatPut(buffer, &zero, sizeof(zero));
+		return buffer->failed ? memFullErr : noErr;
+	}
+	flatPut32(buffer, storage->kind);
+	if (storage->kind == kAEKindData) {
+		uint64_t size = (uint64_t) storage->size;
+		flatPut(buffer, &size, sizeof(size));
+		flatPut(buffer, storage->bytes, storage->size);
+	} else {
+		flatPut32(buffer, (uint32_t) storage->itemCount);
+		flatPut32(buffer, (uint32_t) storage->attributeCount);
+		OSErr err = flattenItems(storage->items, storage->itemCount, buffer, depth);
+		if (err == noErr)
+			err = flattenItems(storage->attributes, storage->attributeCount, buffer, depth);
+		if (err != noErr)
+			return err;
+	}
+	return buffer->failed ? memFullErr : noErr;
+}
+
+OSStatus AEFlattenDesc(const AEDesc* theAEDesc, Ptr buffer, Size bufferSize, Size* actualSize)
+{
+	if (theAEDesc == NULL)
+		return paramErr;
+	AEFlatBuffer flat = { 0 };
+	flatPut32(&flat, AE_FLAT_MAGIC);
+	flatPut32(&flat, AE_FLAT_VERSION);
+	flatPut32(&flat, 0); // total length, patched below
+	OSErr err = flattenNode(theAEDesc, &flat, 0);
+	if (err != noErr) {
+		free(flat.bytes);
+		return err;
+	}
+	uint32_t total = (uint32_t) flat.length;
+	memcpy(flat.bytes + 8, &total, sizeof(total));
+	if (actualSize)
+		*actualSize = (Size) flat.length;
+	if (buffer == NULL || bufferSize < (Size) flat.length) {
+		free(flat.bytes);
+		return errAEBufferTooSmall;
+	}
+	memcpy(buffer, flat.bytes, flat.length);
+	free(flat.bytes);
+	return noErr;
+}
+
+typedef struct AEFlatReader {
+	const uint8_t* bytes;
+	size_t length;
+	size_t position;
+} AEFlatReader;
+
+static Boolean flatGet(AEFlatReader* reader, void* out, size_t size)
+{
+	if (size > reader->length - reader->position)
+		return false;
+	memcpy(out, reader->bytes + reader->position, size);
+	reader->position += size;
+	return true;
+}
+
+static OSErr unflattenNode(AEFlatReader* reader, AEDesc* result, int depth);
+
+static OSErr unflattenItems(AEFlatReader* reader, AEItem** items, long* count, long* capacity, uint32_t number, int depth)
+{
+	for (uint32_t i = 0; i < number; i++) {
+		uint32_t key;
+		AEDesc child;
+		if (!flatGet(reader, &key, sizeof(key)))
+			return errAECorruptData;
+		OSErr err = unflattenNode(reader, &child, depth + 1);
+		if (err != noErr)
+			return err;
+		err = appendItem(items, count, capacity, key, &child);
+		AEDisposeDesc(&child);
+		if (err != noErr)
+			return err;
+	}
+	return noErr;
+}
+
+static OSErr unflattenNode(AEFlatReader* reader, AEDesc* result, int depth)
+{
+	uint32_t type, kind;
+	AEInitializeDesc(result);
+	if (depth > AE_FLAT_MAX_DEPTH || !flatGet(reader, &type, sizeof(type)) || !flatGet(reader, &kind, sizeof(kind)))
+		return errAECorruptData;
+
+	if (kind == kAEKindData) {
+		uint64_t size;
+		if (!flatGet(reader, &size, sizeof(size)) || size > reader->length - reader->position)
+			return errAECorruptData;
+		const uint8_t* data = reader->bytes + reader->position;
+		reader->position += (size_t) size;
+		if (type == typeNull && size == 0)
+			return noErr;
+		return newStorage(type, kAEKindData, data, (Size) size, result);
+	}
+
+	uint32_t itemCount, attributeCount;
+	if ((kind != kAEKindList && kind != kAEKindRecord && kind != kAEKindEvent) ||
+		!flatGet(reader, &itemCount, sizeof(itemCount)) || !flatGet(reader, &attributeCount, sizeof(attributeCount)))
+		return errAECorruptData;
+	// Every element takes at least 12 bytes, which bounds the counts by the remaining input.
+	size_t remaining = reader->length - reader->position;
+	if ((uint64_t) itemCount * 12 > remaining || (uint64_t) attributeCount * 12 > remaining)
+		return errAECorruptData;
+
+	OSErr err = newStorage(type, (AEKind) kind, NULL, 0, result);
+	if (err != noErr)
+		return err;
+	AEStorage* storage = storageOf(result);
+	err = unflattenItems(reader, &storage->items, &storage->itemCount, &storage->itemCapacity, itemCount, depth);
+	if (err == noErr)
+		err = unflattenItems(reader, &storage->attributes, &storage->attributeCount, &storage->attributeCapacity, attributeCount, depth);
+	if (err != noErr)
+		AEDisposeDesc(result);
+	return err;
+}
+
+OSStatus AEUnflattenDesc(const void* buffer, AEDesc* result)
+{
+	if (buffer == NULL || result == NULL)
+		return paramErr;
+	AEInitializeDesc(result);
+	uint32_t header[3];
+	memcpy(header, buffer, sizeof(header));
+	if (header[0] != AE_FLAT_MAGIC)
+		return errAECorruptData;
+	if (header[1] != AE_FLAT_VERSION)
+		return errAENewerVersion;
+	if (header[2] < sizeof(header))
+		return errAECorruptData;
+	AEFlatReader reader = { buffer, header[2], sizeof(header) };
+	return unflattenNode(&reader, result, 0);
 }
 
 // --- Object specifiers ---

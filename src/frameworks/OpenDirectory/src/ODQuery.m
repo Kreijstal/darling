@@ -17,44 +17,90 @@
  along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#import <OpenDirectory/ODQuery.h>
-#import <OpenDirectory/ODNode.h>
-#import <OpenDirectory/ODRecord.h>
-#import <Foundation/Foundation.h>
+#import "ODInternal.h"
+#import <darling-stub-forwarding.h>
 
 @implementation ODQuery
 
-+ (ODQuery *)queryWithNode:(ODNode *)inNode
-            forRecordTypes:(id)inRecordTypeOrList
-                 attribute:(ODAttributeType)inAttribute
-                 matchType:(ODMatchType)inMatchType
-               queryValues:(id)inQueryValueOrList
-          returnAttributes:(id)inReturnAttributeOrList
-            maximumResults:(NSInteger)inMaximumResults
-                     error:(NSError **)outError {
-    if (outError) *outError = nil;
-    return [[[self alloc] init] autorelease];
++ (ODQuery *)queryWithNode:(ODNode *)inNode forRecordTypes:(id)inRecordTypeOrList attribute:(ODAttributeType)inAttribute
+	matchType:(ODMatchType)inMatchType queryValues:(id)inQueryValueOrList returnAttributes:(id)inReturnAttributeOrList
+	maximumResults:(NSInteger)inMaximumResults error:(NSError **)outError
+{
+	return [[[self alloc] initWithNode: inNode forRecordTypes: inRecordTypeOrList attribute: inAttribute
+		matchType: inMatchType queryValues: inQueryValueOrList returnAttributes: inReturnAttributeOrList
+		maximumResults: inMaximumResults error: outError] autorelease];
 }
 
-- (NSArray *)resultsAllowingPartial:(BOOL)inAllowPartialResults error:(NSError **)outError {
-    if (outError) *outError = nil;
-    NSString *currUser = NSUserName() ?: @"root";
-    ODNode *node = [ODNode nodeWithSession:nil type:0 error:nil];
-    ODRecord *rec = [node recordWithRecordType:nil name:currUser attributes:nil error:nil];
-    if (rec) {
-        return @[ rec ];
-    }
-    return @[];
+- (instancetype)initWithNode:(ODNode *)inNode forRecordTypes:(id)inRecordTypeOrList attribute:(ODAttributeType)inAttribute
+	matchType:(ODMatchType)inMatchType queryValues:(id)inQueryValueOrList returnAttributes:(id)inReturnAttributeOrList
+	maximumResults:(NSInteger)inMaximumResults error:(NSError **)outError
+{
+	CFErrorRef error = NULL;
+	ODQueryRef query = ODQueryCreateWithNode(kCFAllocatorDefault, [inNode _nodeRef], (CFTypeRef) inRecordTypeOrList,
+		(ODAttributeType) inAttribute, inMatchType, (CFTypeRef) inQueryValueOrList, (CFTypeRef) inReturnAttributeOrList,
+		inMaximumResults, &error);
+
+	ODSetError(outError, error);
+	if (query == NULL)
+	{
+		[self release];
+		return nil;
+	}
+
+	if ((self = [super init]) != nil)
+		_internal = (void *) query;
+	else
+		CFRelease(query);
+	return self;
+}
+
+- (void)dealloc
+{
+	if (_internal != NULL)
+		CFRelease((ODQueryRef) _internal);
+	[super dealloc];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+	// A query has no mutable state, so a copy can share the CF query.
+	ODQuery *copy = [[ODQuery allocWithZone: zone] init];
+
+	if (copy != nil && _internal != NULL)
+		copy->_internal = (void *) CFRetain((ODQueryRef) _internal);
+	return copy;
+}
+
+- (NSArray *)resultsAllowingPartial:(BOOL)inAllowPartialResults error:(NSError **)outError
+{
+	CFErrorRef error = NULL;
+	CFArrayRef records = ODQueryCopyResults((ODQueryRef) _internal, inAllowPartialResults, &error);
+	NSArray *result = records ? [ODRecord _recordsWithRecordRefs: records] : nil;
+
+	if (records != NULL)
+		CFRelease(records);
+	ODSetError(outError, error);
+	return result;
 }
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return [NSMethodSignature signatureWithObjCTypes: "v@:"];
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    NSLog(@"Stub called: %@ in %@", NSStringFromSelector([anInvocation selector]), [self class]);
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
 @end

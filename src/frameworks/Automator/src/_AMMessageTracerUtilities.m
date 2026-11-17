@@ -18,15 +18,28 @@
 */
 
 #import <Automator/_AMMessageTracerUtilities.h>
-#import "AMStubSignature.h"
+#import <darling-stub-forwarding.h>
 
 @implementation _AMMessageTracerUtilities
 
-// Launch timing goes to Apple's MessageTracer, which Darling doesn't have.
-+ (void)logTimeIntervalSinceAutomatorLaunch:(const char *)event
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
-AM_STUB_FORWARDING
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
 
 @end

@@ -1,22 +1,16 @@
 #import <Foundation/Foundation.h>
 
-// Console's filter bar asks for the names of types 4 and 5 when it builds its Errors and Faults
-// filter, so these are taken to be those two types.
+// Message type numbers whose names the framework reports. Types 0, 1 and anything above 5 are
+// all named "default".
 typedef NS_ENUM(NSInteger, CSKMessageType) {
+	CSKMessageTypeInfo = 2,
+	CSKMessageTypeDebug = 3,
 	CSKMessageTypeError = 4,
 	CSKMessageTypeFault = 5,
 };
 
 // One log entry, whatever store it came from.
-@interface CSKMessage : NSObject {
-	NSDate *_date;
-	NSString *_sender;
-	pid_t _processID;
-	NSString *_subsystem;
-	NSString *_category;
-	int _level;
-	NSString *_composedMessage;
-}
+@interface CSKMessage : NSObject
 @property (readonly, copy) NSDate *date;
 @property (readonly, copy) NSString *sender;
 @property (readonly) pid_t processID;

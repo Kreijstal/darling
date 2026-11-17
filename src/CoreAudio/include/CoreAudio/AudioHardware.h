@@ -26,32 +26,11 @@ typedef void (^AudioObjectPropertyListenerBlock)(UInt32 inNumberAddresses,
 #endif
 
 typedef AudioObjectID AudioDeviceID;
-typedef AudioObjectID AudioStreamID;
 
 enum
 {
 	kAudioDeviceUnknown = kAudioObjectUnknown,
 };
-
-enum
-{
-    kAudioStreamPropertyIsActive                 = 'sact',
-    kAudioStreamPropertyDirection                = 'sdir',
-    kAudioStreamPropertyTerminalType             = 'term',
-    kAudioStreamPropertyStartingChannel          = 'schn',
-    kAudioStreamPropertyLatency                  = 'ltnc',
-    kAudioStreamPropertyVirtualFormat            = 'sfmt',
-    kAudioStreamPropertyAvailableVirtualFormats  = 'sfma',
-    kAudioStreamPropertyPhysicalFormat           = 'pft ',
-    kAudioStreamPropertyAvailablePhysicalFormats = 'pfta'
-};
-
-struct AudioStreamRangedDescription
-{
-    AudioStreamBasicDescription mFormat;
-    AudioValueRange             mSampleRateRange;
-};
-typedef struct AudioStreamRangedDescription AudioStreamRangedDescription;
 
 enum
 {
@@ -257,6 +236,11 @@ OSStatus AudioDeviceGetNearestStartTime(AudioObjectID inDevice,
 
 OSStatus AudioHardwareGetProperty(AudioHardwarePropertyID inPropId, UInt32* ioPropertyDataSize, void* outPropertyData);
 OSStatus AudioHardwareGetPropertyInfo(AudioHardwarePropertyID inPropertyID, UInt32* outSize, Boolean* outWritable);
+
+enum
+{
+    kAudioDeviceTransportTypeVirtual = 'virt'
+};
 
 #ifdef __cplusplus
 }

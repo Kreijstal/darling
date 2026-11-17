@@ -1,7 +1,8 @@
 /*
  This file is part of Darling.
 
- Copyright (C) 2026 Darling Developers
+ Copyright (C) 2021 Lubos Dolezel
+ Copyright (C) 2026 Darling developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,13 +24,10 @@
 #import <Foundation/Foundation.h>
 
 @interface UNNotificationTrigger : NSObject <NSCopying, NSSecureCoding> {
-@protected
     BOOL _repeats;
 }
 
-@property (readonly) BOOL repeats;
-
-- (instancetype) init NS_UNAVAILABLE;
+@property(readonly) BOOL repeats;
 
 @end
 

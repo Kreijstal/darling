@@ -50,7 +50,33 @@
 	})
 
 void elfcalls_make(struct elf_calls* calls);
+
+#if defined(__aarch64__)
+// Private applep key naming the thread-pointer-relative offset of the ELF TLS
+// slot that holds the Darwin TSD base (see elfcalls/threads.c). Only ARM64
+// reads the base through a register that Linux owns, so only ARM64 advertises
+// the slot and the other architectures' apple vectors are unchanged.
+#define MLDR_TSD_SLOT_KEY "darling_tsd_slot_offset="
+// Size in bytes of the elf_calls table, so that a consumer built against a
+// longer table does not use members this loader does not have.
+#define MLDR_ELFCALLS_SIZE_KEY "elf_calls_size="
+// Thread-pointer-relative offset (64-bit two's complement, in hex) of the
+// native rseq cpu_id_start field, which holds the CPU number; absent when the
+// C library has no registered rseq area. dyld uses it for the CPU number reads
+// of a macOS shared cache.
+#define MLDR_RSEQ_CPU_KEY "darling_rseq_cpu_offset="
+#define MLDR_APPLEP_COUNT 7
+#define MLDR_TSD_SLOT_SIZE (sizeof(MLDR_TSD_SLOT_KEY) + 2 * sizeof(unsigned long))
+#define MLDR_ELFCALLS_SIZE_SIZE (sizeof(MLDR_ELFCALLS_SIZE_KEY) + 2 * sizeof(size_t))
+#define MLDR_RSEQ_CPU_SIZE (sizeof(MLDR_RSEQ_CPU_KEY) + 2 * sizeof(unsigned long))
 uintptr_t __darling_arm64_tsd_slot_offset(void);
+bool __darling_arm64_rseq_cpu_offset(intptr_t* offset);
+#else
+#define MLDR_APPLEP_COUNT 4
+#define MLDR_TSD_SLOT_SIZE 0
+#define MLDR_ELFCALLS_SIZE_SIZE 0
+#define MLDR_RSEQ_CPU_SIZE 0
+#endif
 
 static struct elf_calls _elfcalls;
 
@@ -70,11 +96,16 @@ void FUNCTION_NAME(const char* filepath, struct load_results* lr)
 	char kernfd[12];
 	char __user* elfcalls_user;
 	char elfcalls[27];
-	char __user* elfcalls_size_user;
-	char elfcalls_size[sizeof("elf_calls_size=") + 2 * sizeof(size_t)];
+#if defined(__aarch64__)
 	char __user* tsd_slot_user;
-	char tsd_slot[48] = {0};
-	char __user* applep_contents[6];
+	char tsd_slot[MLDR_TSD_SLOT_SIZE] = {0};
+	char __user* elfcalls_size_user;
+	char elfcalls_size[MLDR_ELFCALLS_SIZE_SIZE] = {0};
+	char __user* rseq_cpu_user = NULL;
+	char rseq_cpu[MLDR_RSEQ_CPU_SIZE] = {0};
+	intptr_t rseq_cpu_offset = 0;
+#endif
+	char __user* applep_contents[MLDR_APPLEP_COUNT];
 
 #define user_long_count(_val) (((_val) + (sizeof(user_long_t) - 1)) / sizeof(user_long_t))
 
@@ -99,20 +130,8 @@ void FUNCTION_NAME(const char* filepath, struct load_results* lr)
 		{
 			memmove(executable_buf, executable_path + lr->root_path_length, exepath_len - lr->root_path_length + 1);
 		}
-		else if (strncmp(executable_path, SYSTEM_ROOT, sizeof(SYSTEM_ROOT) - 1) == 0 ||
-		         strncmp(executable_path, "/Volumes/", 9) == 0 ||
-		         strncmp(executable_path, "/proc/", 6) == 0 ||
-		         strncmp(executable_path, "/sys/", 5) == 0 ||
-		         strncmp(executable_path, "/dev/", 5) == 0)
+		else
 		{
-			// already a host or special path
-		}
-		else if (lr->executable_path_is_host_path)
-		{
-			// A host path outside the prefix (e.g. an app on another mounted volume): Darwin
-			// processes see the host's root under SYSTEM_ROOT. Without this, dyld and
-			// CFBundle get a path that doesn't exist inside the container, so e.g.
-			// CFBundleGetMainBundle() fails and apps can't find their Info.plist or nibs.
 			if (exepath_len + sizeof(SYSTEM_ROOT) > sizeof(executable_buf))
 			{
 				fprintf(stderr, "File path was too big\n");
@@ -120,12 +139,6 @@ void FUNCTION_NAME(const char* filepath, struct load_results* lr)
 			}
 			memmove(executable_buf + sizeof(SYSTEM_ROOT) - 1, executable_path, exepath_len + 1);
 			memcpy(executable_buf, SYSTEM_ROOT, sizeof(SYSTEM_ROOT) - 1);
-		}
-		else
-		{
-			// Container paths (e.g. #!/usr/bin/perl) matching root_path are already
-			// unexpanded by the first branch above; if path was not under root_path
-			// and not under host paths, preserve container path as-is.
 		}
 		executable_path = executable_buf;
 	}
@@ -140,7 +153,7 @@ void FUNCTION_NAME(const char* filepath, struct load_results* lr)
 	// `envc`-count pointers for env vars (+1 for NULL)
 	// `sizeof(applep_contents) / sizeof(*applep_contents)`-count pointers for applep arguments (already includes NULL)
 	// space for exepath, kernfd, and elfcalls
-	sp -= 1 + 1 + (lr->argc + 1) + (lr->envc + 1) + (sizeof(applep_contents) / sizeof(*applep_contents)) + user_long_count(exepath_len + sizeof(EXECUTABLE_PATH) + sizeof(kernfd) + sizeof(elfcalls) + sizeof(elfcalls_size) + sizeof(tsd_slot));
+	sp -= 1 + 1 + (lr->argc + 1) + (lr->envc + 1) + (sizeof(applep_contents) / sizeof(*applep_contents)) + user_long_count(exepath_len + sizeof(EXECUTABLE_PATH) + sizeof(kernfd) + sizeof(elfcalls) + MLDR_TSD_SLOT_SIZE + MLDR_ELFCALLS_SIZE_SIZE + MLDR_RSEQ_CPU_SIZE);
 
 	exepath_user = (char __user*) lr->stack_top - exepath_len - sizeof(EXECUTABLE_PATH);
 	memcpy(exepath_user, EXECUTABLE_PATH, sizeof(EXECUTABLE_PATH)-1);
@@ -160,23 +173,35 @@ void FUNCTION_NAME(const char* filepath, struct load_results* lr)
 	elfcalls_user = kernfd_user - sizeof(elfcalls);
 	memcpy(elfcalls_user, elfcalls, sizeof(elfcalls));
 
-	// Optional metadata outside the historical callback table layout. Consumers
-	// can check its hexadecimal byte size before accessing appended callbacks.
-	snprintf(elfcalls_size, sizeof(elfcalls_size), "elf_calls_size=%zx", sizeof(_elfcalls));
-	elfcalls_size_user = elfcalls_user - sizeof(elfcalls_size);
-	memcpy(elfcalls_size_user, elfcalls_size, sizeof(elfcalls_size));
-
-	snprintf(tsd_slot, sizeof(tsd_slot), "darling_tsd_slot_offset=%lx",
+#if defined(__aarch64__)
+	snprintf(tsd_slot, sizeof(tsd_slot), MLDR_TSD_SLOT_KEY "%lx",
 	         (unsigned long)__darling_arm64_tsd_slot_offset());
-	tsd_slot_user = elfcalls_size_user - sizeof(tsd_slot);
-	memcpy(tsd_slot_user, tsd_slot, sizeof(tsd_slot));
+	tsd_slot_user = elfcalls_user - MLDR_TSD_SLOT_SIZE;
+	memcpy(tsd_slot_user, tsd_slot, MLDR_TSD_SLOT_SIZE);
+
+	snprintf(elfcalls_size, sizeof(elfcalls_size), MLDR_ELFCALLS_SIZE_KEY "%zx", sizeof(_elfcalls));
+	elfcalls_size_user = tsd_slot_user - MLDR_ELFCALLS_SIZE_SIZE;
+	memcpy(elfcalls_size_user, elfcalls_size, MLDR_ELFCALLS_SIZE_SIZE);
+
+	if (__darling_arm64_rseq_cpu_offset(&rseq_cpu_offset))
+	{
+		snprintf(rseq_cpu, sizeof(rseq_cpu), MLDR_RSEQ_CPU_KEY "%lx", (unsigned long)rseq_cpu_offset);
+		rseq_cpu_user = elfcalls_size_user - MLDR_RSEQ_CPU_SIZE;
+		memcpy(rseq_cpu_user, rseq_cpu, MLDR_RSEQ_CPU_SIZE);
+	}
+#endif
 
 	applep_contents[0] = exepath_user;
 	applep_contents[1] = kernfd_user;
 	applep_contents[2] = elfcalls_user;
-	applep_contents[3] = elfcalls_size_user;
-	applep_contents[4] = tsd_slot_user;
-	applep_contents[5] = NULL;
+#if defined(__aarch64__)
+	applep_contents[3] = tsd_slot_user;
+	applep_contents[4] = elfcalls_size_user;
+	applep_contents[5] = rseq_cpu_user;
+	applep_contents[6] = NULL;
+#else
+	applep_contents[3] = NULL;
+#endif
 
 	lr->stack_top = (unsigned long) sp;
 

@@ -18,27 +18,28 @@
 */
 
 #import <Automator/AMApplicationWorkflowPersonality.h>
-#import <Automator/Automator.h>
-#import "AMStubSignature.h"
+#import <darling-stub-forwarding.h>
 
 @implementation AMApplicationWorkflowPersonality
 
-// Automator.app's "Application" document type (Info.plist CFBundleTypeName).
-- (NSString *)documentType
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return AMDocumentTypeApplication;
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
-- (NSString *)displayLabel
+- (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    return AMDocumentTypeApplication;
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
-- (BOOL)isPluginType
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return NO;
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
-AM_STUB_FORWARDING
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
 
 @end

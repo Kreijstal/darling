@@ -1,7 +1,8 @@
 /*
  This file is part of Darling.
 
- Copyright (C) 2026 Darling Developers
+ Copyright (C) 2021 Lubos Dolezel
+ Copyright (C) 2026 Darling developers
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,22 +25,22 @@
 
 typedef NSString *UNNotificationSoundName;
 
-@interface UNNotificationSound : NSObject <NSCopying, NSSecureCoding>
+@interface UNNotificationSound : NSObject <NSCopying, NSSecureCoding> {
+    NSString *_soundName;
+    float _audioVolume;
+    BOOL _critical;
+}
 
-@property (class, readonly, copy) UNNotificationSound *defaultSound;
-@property (class, readonly, copy) UNNotificationSound *defaultCriticalSound;
++ (instancetype)defaultSound;
++ (instancetype)defaultCriticalSound;
++ (instancetype)defaultCriticalSoundWithAudioVolume:(float)volume;
++ (instancetype)soundNamed:(UNNotificationSoundName)name;
++ (instancetype)criticalSoundNamed:(UNNotificationSoundName)name;
++ (instancetype)criticalSoundNamed:(UNNotificationSoundName)name withAudioVolume:(float)volume;
 
-+ (instancetype) soundNamed: (UNNotificationSoundName) name;
-+ (instancetype) criticalSoundNamed: (UNNotificationSoundName) name;
-+ (instancetype) criticalSoundNamed: (UNNotificationSoundName) name withAudioVolume: (float) volume;
-+ (instancetype) defaultCriticalSoundWithAudioVolume: (float) volume;
-
-- (instancetype) init NS_UNAVAILABLE;
-
-/* nil for the default sound. */
-@property (readonly, copy) UNNotificationSoundName name;
-@property (readonly, getter=isCritical) BOOL critical;
-@property (readonly) float audioVolume;
+@property(readonly, copy) NSString *soundName;
+@property(readonly) float audioVolume;
+@property(readonly, getter=isCritical) BOOL critical;
 
 @end
 

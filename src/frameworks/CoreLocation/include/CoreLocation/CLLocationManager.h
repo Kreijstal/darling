@@ -19,6 +19,8 @@
 
 #include <Foundation/Foundation.h>
 
+@protocol CLLocationManagerDelegate;
+
 typedef NS_ENUM(int, CLAuthorizationStatus) {
 	kCLAuthorizationStatusNotDetermined = 0,
 	kCLAuthorizationStatusRestricted = 1,
@@ -30,18 +32,17 @@ typedef NS_ENUM(int, CLAuthorizationStatus) {
 
 @interface CLLocationManager : NSObject
 {
-	id _delegate;
+	id<CLLocationManagerDelegate> _delegate;
 }
 
-/* There is no location service and no consent store here: report Denied and
- * services disabled so callers take their no-access path. */
+// Not retained, like other Cocoa delegates.
+@property (nonatomic, assign) id<CLLocationManagerDelegate> delegate;
+
+/* There is no location service here: location services are reported as disabled
+ * and the authorization status as Restricted (as AVCaptureDevice does for
+ * capture that cannot work), so callers take their no-access path. */
 + (CLAuthorizationStatus)authorizationStatus;
 + (BOOL)locationServicesEnabled;
 - (CLAuthorizationStatus)authorizationStatus;
-
-/* A real property, so callers get a proper accessor instead of falling
- * through to the stub forwardInvocation, whose 0-arg signature raises
- * `NSForwardSignatureError: invoked with 3 args, but 2 expected`. */
-@property (nonatomic, assign) id delegate;
 
 @end

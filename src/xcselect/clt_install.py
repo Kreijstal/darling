@@ -1,169 +1,153 @@
-#!/usr/bin/env python
-# This file is part of Darling / VibeDarling.
-#
-# DarlingCLT Open-Source Command Line Tools Installer
-# Configures a clean, 100% open-source toolchain (LLVM Clang, GNU Make, ld64, SDK)
-# without proprietary Apple EULA or multi-gigabyte downloads.
+#!/usr/bin/python2.7
+# This file is part of Darling.
+# 
+# Copyright (C) 2020 Lubos Dolezel
+# 
+# Darling is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# Darling is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 
+import urllib2
+import json
+import tempfile
 import os
-import sys
 import subprocess
+import sys
 
-DARLING_CLT_DIR = "/Library/Developer/DarlingCLT"
-DARLING_CLT_BIN = os.path.join(DARLING_CLT_DIR, "usr", "bin")
-SDK_DIR = "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-CLANG_CFG_DIR = "/opt/nanobrew/prefix/etc/clang"
+# CLT 13.4 packages from Apple CDN (compatible with Darwin 20.x / macOS 11 Big Sur)
+# These are the official Apple Command Line Tools for Xcode 13.4
+CLT_13_4_BASE = "https://swcdn.apple.com/content/downloads/24/42/002-83793-A_74JRE8GVAT/rlnkct919wgc5c0pjq986z5bb9h62uvni2"
+CLT_13_4_PACKAGES = [
+	CLT_13_4_BASE + "/CLTools_Executables.pkg",
+	CLT_13_4_BASE + "/CLTools_macOS_SDK.pkg",
+	CLT_13_4_BASE + "/CLTools_macOSNMOS_SDK.pkg",
+	CLT_13_4_BASE + "/CLTools_SwiftBackDeploy.pkg",
+]
 
-def log(msg):
-    print("DarlingCLT: " + msg)
+# Fallback: darlinghq distribution cache (older CLT 12.x)
+DARLINGHQ_API = "https://swdistcache.darlinghq.org/api/v1/products/by-tag?tag=DTCommandLineTools"
 
-def install_darling_clt_oss():
-    log("Setting up open-source Command Line Developer Tools...")
+def download_file(url, dest):
+	"""Download a file with progress indication."""
+	f = urllib2.urlopen(url)
+	info = f.info()
+	total = int(info.get("Content-Length", 0))
+	downloaded = 0
+	block_size = 64 * 1024
 
-    os.system("mkdir -p " + DARLING_CLT_BIN)
+	with open(dest, "wb") as localfile:
+		while True:
+			chunk = f.read(block_size)
+			if not chunk:
+				break
+			localfile.write(chunk)
+			downloaded += len(chunk)
+			if total > 0:
+				pct = downloaded * 100 / total
+				sys.stdout.write("\r  %d%% (%d / %d bytes)" % (pct, downloaded, total))
+				sys.stdout.flush()
+	sys.stdout.write("\n")
 
-    # 1. Setup SDK links if needed
-    if not os.path.exists(SDK_DIR):
-        log("Setting up open-source macOS SDK...")
-        os.system("mkdir -p /Library/Developer/CommandLineTools/SDKs")
-        # Check standard SDK source paths
-        sdk_candidates = [
-            "/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
-            "/System/Library/Frameworks",
-        ]
-        for cand in sdk_candidates:
-            if os.path.exists(cand):
-                os.system("ln -sfn " + cand + " " + SDK_DIR)
-                break
-        os.system("ln -sfn MacOSX.sdk /Library/Developer/CommandLineTools/SDKs/MacOSX14.5.sdk")
-        os.system("ln -sfn MacOSX.sdk /Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk")
+def get_cache_dir():
+	home = os.environ.get("HOME", "")
+	if not home or not os.path.exists(home):
+		user = os.environ.get("USER", "darling")
+		if os.path.exists("/Volumes/SystemRoot/home/" + user):
+			home = "/Volumes/SystemRoot/home/" + user
+		else:
+			home = "/Users/" + user
+	return os.path.join(home, ".cache", "darling")
 
-    # Link SDKs into DarlingCLT
-    os.system("ln -sfn /Library/Developer/CommandLineTools/SDKs /Library/Developer/DarlingCLT/SDKs")
+def install_from_urls(package_urls):
+	"""Download and install a list of .pkg URLs."""
+	tempdir = tempfile.mkdtemp()
+	cache_dir = get_cache_dir()
 
-    # Setup SDK system library and framework binary links for linker (ld64)
-    sdk_usr_lib = os.path.join(SDK_DIR, "usr", "lib")
-    os.system("mkdir -p " + sdk_usr_lib)
-    if os.path.exists("/usr/lib"):
-        for f in os.listdir("/usr/lib"):
-            if f.endswith(".dylib"):
-                dst = os.path.join(sdk_usr_lib, f)
-                if not os.path.exists(dst):
-                    os.system("ln -sfn /usr/lib/" + f + " " + dst)
+	if not os.path.exists(cache_dir):
+		try:
+			os.makedirs(cache_dir)
+		except Exception as e:
+			print("Could not create cache directory " + cache_dir + ": " + str(e))
 
-    sdk_fw_dir = os.path.join(SDK_DIR, "System", "Library", "Frameworks")
-    os.system("mkdir -p " + sdk_fw_dir)
-    if os.path.exists("/System/Library/Frameworks"):
-        for item in os.listdir("/System/Library/Frameworks"):
-            if item.endswith(".framework"):
-                fw_name = item[:-10]
-                src_bin = os.path.join("/System/Library/Frameworks", item, fw_name)
-                dst_fw = os.path.join(sdk_fw_dir, item)
-                dst_bin = os.path.join(dst_fw, fw_name)
-                if os.path.exists(src_bin) and not os.path.exists(dst_bin):
-                    os.system("mkdir -p " + dst_fw)
-                    os.system("ln -sfn " + src_bin + " " + dst_bin)
+	for url in package_urls:
+		fname = os.path.basename(url)
+		fullpath = tempdir + "/" + fname
+		cachepath = cache_dir + "/" + fname
 
-    # 2. Setup GNU make
-    make_bin = None
-    for cand in ["/opt/nanobrew/prefix/opt/make/libexec/gnubin/make", "/opt/nanobrew/prefix/bin/gmake", "/opt/nanobrew/prefix/bin/make"]:
-        if os.path.exists(cand):
-            make_bin = cand
-            break
+		if os.path.exists(cachepath):
+			print("Found " + fname + " in local cache.")
+			import shutil
+			shutil.copy2(cachepath, fullpath)
+		else:
+			print("Downloading " + fname + "...")
+			try:
+				download_file(url, fullpath)
+				if os.path.exists(cache_dir):
+					print("Caching " + fname + "...")
+					import shutil
+					shutil.copy2(fullpath, cachepath)
+			except Exception as e:
+				print("Download failed: " + str(e))
+				return 1
 
-    if not make_bin:
-        log("Installing GNU make via nanobrew...")
-        os.system("/usr/local/bin/nb install make 2>/dev/null || true")
-        if os.path.exists("/opt/nanobrew/prefix/opt/make/libexec/gnubin/make"):
-            make_bin = "/opt/nanobrew/prefix/opt/make/libexec/gnubin/make"
+		print("Installing " + fname + "...")
+		exitCode = subprocess.call(["sudo", "installer", "-pkg", fullpath, "-target", "/"])
 
-    if make_bin and os.path.exists(make_bin):
-        os.system("ln -sfn " + make_bin + " " + os.path.join(DARLING_CLT_BIN, "make"))
-        os.system("ln -sfn " + make_bin + " " + os.path.join(DARLING_CLT_BIN, "gnumake"))
-        log("Configured make -> " + make_bin)
+		if exitCode != 0:
+			print("Installation failed with exit code " + str(exitCode))
+			return 1
 
-    # 3. Setup LLVM Clang / Clang++
-    clang_bin = None
-    clangxx_bin = None
-    for cand in [
-        "/opt/nanobrew/prefix/opt/llvm/bin/clang",
-        "/opt/nanobrew/prefix/Cellar/llvm/18.1.8/bin/clang",
-        "/opt/nanobrew/prefix/bin/clang",
-    ]:
-        if os.path.exists(cand):
-            clang_bin = cand
-            clangxx_bin = cand + "++"
-            break
+		os.remove(fullpath)
 
-    if not clang_bin:
-        log("Installing LLVM/Clang toolchain...")
-        os.system("/usr/local/bin/nb install llvm 2>/dev/null || true")
-        if os.path.exists("/opt/nanobrew/prefix/opt/llvm/bin/clang"):
-            clang_bin = "/opt/nanobrew/prefix/opt/llvm/bin/clang"
-            clangxx_bin = "/opt/nanobrew/prefix/opt/llvm/bin/clang++"
+	os.rmdir(tempdir)
+	return 0
 
-    if clang_bin and os.path.exists(clang_bin):
-        os.system("ln -sfn " + clang_bin + " " + os.path.join(DARLING_CLT_BIN, "clang"))
-        os.system("ln -sfn " + clangxx_bin + " " + os.path.join(DARLING_CLT_BIN, "clang++"))
-        os.system("ln -sfn " + clang_bin + " " + os.path.join(DARLING_CLT_BIN, "cc"))
-        os.system("ln -sfn " + clangxx_bin + " " + os.path.join(DARLING_CLT_BIN, "c++"))
-        log("Configured clang/clang++ -> " + clang_bin)
+def install_from_darlinghq():
+	"""Fallback: fetch package list from darlinghq distribution cache."""
+	try:
+		resp = urllib2.urlopen(DARLINGHQ_API)
+		products = json.loads(resp.read())
+		urls = [pkg['url'] for pkg in products[0]['packages']]
+		return install_from_urls(urls)
+	except Exception as e:
+		print("darlinghq cache fetch failed: " + str(e))
+		return 1
 
-    # 4. Setup default clang configuration for SDK integration
-    os.system("mkdir -p " + CLANG_CFG_DIR)
-    cfg_file = os.path.join(CLANG_CFG_DIR, "clang.cfg")
-    try:
-        with open(cfg_file, "w") as f:
-            f.write("-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk\n")
-    except Exception:
-        pass
+# ---- main ----
 
-    # 5. Setup NASM assembler if available
-    nasm_bin = None
-    for cand in [
-        "/opt/nanobrew/prefix/bin/nasm",
-        "/opt/nanobrew/prefix/opt/nasm/bin/nasm",
-        "/usr/local/bin/nasm",
-    ]:
-        if os.path.exists(cand):
-            nasm_bin = cand
-            break
+print("You are about to download and install Apple Command Line Tools (Xcode 13.4)")
+print("covered by the following license:")
+print("https://www.apple.com/legal/sla/docs/xcode.pdf\n")
 
-    if nasm_bin and os.path.exists(nasm_bin):
-        os.system("ln -sfn " + nasm_bin + " " + os.path.join(DARLING_CLT_BIN, "nasm"))
-        log("Configured nasm -> " + nasm_bin)
+if os.environ.get("AUTO_ACCEPT_LICENSE") == "1":
+	print("License auto-accepted via AUTO_ACCEPT_LICENSE environment variable.")
+else:
+	while True:
+		resp = raw_input("Do you agree with the terms of the license? (y/n) ")
+		if resp == "y":
+			break
+		elif resp == "n":
+			exit(1)
 
-    log("Open-source DarlingCLT configuration complete!")
-    return 0
+print("\nDownloading Command Line Tools for Xcode 13.4 from Apple CDN...")
+rc = install_from_urls(CLT_13_4_PACKAGES)
 
-def install_apple_clt_legacy():
-    # Legacy Apple CLT installation path
-    CLT_13_4_BASE = "https://swcdn.apple.com/content/downloads/24/42/002-83793-A_74JRE8GVAT/rlnkct919wgc5c0pjq986z5bb9h62uvni2"
-    CLT_13_4_PACKAGES = [
-        CLT_13_4_BASE + "/CLTools_Executables.pkg",
-        CLT_13_4_BASE + "/CLTools_macOS_SDK.pkg",
-        CLT_13_4_BASE + "/CLTools_macOSNMOS_SDK.pkg",
-        CLT_13_4_BASE + "/CLTools_SwiftBackDeploy.pkg",
-    ]
-    print("You are about to download Apple Command Line Tools (Xcode 13.4)")
-    print("covered by the following proprietary license:")
-    print("https://www.apple.com/legal/sla/docs/xcode.pdf\n")
-    if os.environ.get("AUTO_ACCEPT_LICENSE") != "1":
-        try:
-            resp = raw_input("Do you agree with the terms of the license? (y/n) ")
-        except NameError:
-            resp = input("Do you agree with the terms of the license? (y/n) ")
-        if resp.strip().lower() != "y":
-            sys.exit(1)
-    print("Downloading legacy Apple Command Line Tools...")
-    # fallback to external installer if requested
-    return 0
+if rc != 0:
+	print("\nApple CDN download failed. Falling back to darlinghq distribution cache...")
+	rc = install_from_darlinghq()
 
-def main():
-    if os.environ.get("DARLING_USE_APPLE_CLT") == "1":
-        return install_apple_clt_legacy()
-    else:
-        return install_darling_clt_oss()
+if rc == 0:
+	print("\nInstallation complete!")
+else:
+	print("\nInstallation failed.")
+	exit(1)
 
-if __name__ == "__main__":
-    sys.exit(main())

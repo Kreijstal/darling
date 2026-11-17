@@ -19,9 +19,11 @@
 
 #import <OSAKit/OSALanguage.h>
 #include <dispatch/dispatch.h>
+#import <darling-stub-forwarding.h>
 
 // Darling has no OSA components. OSAKit reports a single AppleScript language so script editors can
-// describe documents; its component calls stay stubs.
+// describe documents; its component calls stay stubs. The features mask is
+// empty because nothing can compile, run or record scripts here.
 static const OSType kOSAScriptingComponentType = 'osa ';
 static const OSType kAppleScriptSubtype = 'ascr';
 
@@ -61,7 +63,7 @@ static const OSType kAppleScriptSubtype = 'ascr';
     return subType == kAppleScriptSubtype ? [self appleScriptLanguage] : nil;
 }
 
-+ (OSALanguage *)languageForScriptDataDescriptor:(id)descriptor
++ (OSALanguage *)languageForScriptDataDescriptor:(NSAppleEventDescriptor *)descriptor
 {
     return [self appleScriptLanguage];
 }
@@ -78,7 +80,7 @@ static const OSType kAppleScriptSubtype = 'ascr';
 
 - (NSString *)info
 {
-    return @"AppleScript";
+    return @"AppleScript.";
 }
 
 - (NSString *)version
@@ -98,7 +100,7 @@ static const OSType kAppleScriptSubtype = 'ascr';
 
 - (OSType)manufacturer
 {
-    return 'aapl';
+    return 'appl';
 }
 
 - (NSUInteger)features
@@ -108,17 +110,27 @@ static const OSType kAppleScriptSubtype = 'ascr';
 
 - (BOOL)isThreadSafe
 {
-    return NO;
+    return YES;
 }
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return [NSMethodSignature signatureWithObjCTypes: "v@:"];
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    NSLog(@"Stub called: %@ in %@", NSStringFromSelector([anInvocation selector]), [self class]);
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
 @end

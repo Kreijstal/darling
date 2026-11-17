@@ -23,6 +23,10 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/MacTypes.h>
 #include <CarbonCore/MacErrors.h>
+#include <CoreServices/FileManager.h>
+
+// Also declared by LaunchServices/IconsCore.h; the headers include each other, so repeat it here.
+typedef struct OpaqueIconRef *IconRef;
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,18 +42,6 @@ extern "C" {
 
 typedef struct CF_BRIDGED_MUTABLE_TYPE(id) OpaqueLSSharedFileListRef *LSSharedFileListRef;
 typedef struct CF_BRIDGED_MUTABLE_TYPE(id) OpaqueLSSharedFileListItemRef *LSSharedFileListItemRef;
-
-#ifndef __FSREF__
-#define __FSREF__
-typedef struct FSRef {
-	uint8_t hidden[80];
-} FSRef;
-#endif
-
-#ifndef __ICONREF__
-#define __ICONREF__
-typedef struct OpaqueIconRef* IconRef;
-#endif
 
 extern LSSharedFileListItemRef kLSSharedFileListItemLast;
 extern LSSharedFileListItemRef kLSSharedFileListItemBeforeFirst;
@@ -77,6 +69,13 @@ enum {
     kLSSharedFileListDoNotMountVolumes = 1 << 1
 };
 
+/*
+ * Lists and their items are Core Foundation objects. A list is kept in a property list of
+ * its own, ~/Library/Application Support/com.apple.sharedfilelist/<list type>.plist, so its
+ * items, their properties and the list's properties survive the process and are seen by other
+ * processes; the seed value changes with every change to the list made by any process.
+ * Property values that are not property-list types are not stored.
+ */
 CFTypeID LSSharedFileListGetTypeID(void);
 CFTypeID LSSharedFileListItemGetTypeID(void);
 

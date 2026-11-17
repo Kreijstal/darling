@@ -18,21 +18,28 @@
 */
 
 #import <Automator/AMMediaPanel.h>
-#import "AMStubSignature.h"
+#import <darling-stub-forwarding.h>
 
 @implementation AMMediaPanel
 
-AM_STUB_SHARED_INSTANCE(sharedMediaPanel)
-
-// The panel is never shown, so there is nothing to notify observers about.
-- (void)addObserver:(id)observer
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
-- (void)removeObserver:(id)observer
+- (void)forwardInvocation:(NSInvocation *)anInvocation
 {
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
-AM_STUB_FORWARDING
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
 
 @end

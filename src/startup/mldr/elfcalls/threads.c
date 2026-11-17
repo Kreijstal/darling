@@ -39,6 +39,11 @@ along with Darling.  If not, see <http://www.gnu.org/licenses/>.
 #include <limits.h>
 
 #include "dthreads.h"
+#include "thread_stack.h"
+#if defined(__aarch64__)
+#include <stddef.h>
+#include <linux/rseq.h>
+#endif
 
 #include <darlingserver/rpc.h>
 
@@ -72,6 +77,7 @@ struct arg_struct
 	uintptr_t stack_bottom;
 	uintptr_t stack_addr;
 	bool is_workqueue;
+	sigset_t sigmask; // the mask the new thread takes once it can handle signals
 };
 
 static void* darling_thread_entry(void* p);
@@ -80,80 +86,9 @@ static void* darling_thread_entry(void* p);
 #	define PTHREAD_STACK_MIN 16384
 #endif
 
-// The guard must be a whole page: mprotect rounds its length up to one, so a
-// smaller reserve protects into the stack instead of sitting below it.
-#define DEFAULT_DTHREAD_GUARD_SIZE ((size_t) sysconf(_SC_PAGESIZE))
-
 static inline void *align_16(uintptr_t ptr) {
 	return (void *) ((uintptr_t) ptr & ~(uintptr_t) 15);
 }
-
-static dthread_t dthread_structure_init(dthread_t dthread, size_t guard_size, void* stack_addr, size_t stack_size, void* base_addr, size_t total_size) {
-	// the pthread signature is the address of the pthread XORed with the "pointer munge" token passed in by the kernel
-	// since the LKM doesn't pass in a token, it's always zero, so the signature is equal to just the address
-	dthread->sig = (uintptr_t)dthread;
-
-	dthread->tsd[DTHREAD_TSD_SLOT_PTHREAD_SELF] = dthread;
-	dthread->tsd[DTHREAD_TSD_SLOT_ERRNO] = &dthread->err_no;
-	dthread->tsd[DTHREAD_TSD_SLOT_PTHREAD_QOS_CLASS] = (void*)(uintptr_t)(DTHREAD_DEFAULT_PRIORITY);
-	dthread->tsd[DTHREAD_TSD_SLOT_PTR_MUNGE] = 0;
-	dthread->tl_has_custom_stack = 0;
-	dthread->lock = (darwin_os_unfair_lock){0};
-
-	dthread->stackaddr = stack_addr;
-	dthread->stackbottom = (char*)stack_addr - stack_size;
-	dthread->freeaddr = base_addr;
-	dthread->freesize = total_size;
-	dthread->guardsize = guard_size;
-
-	dthread->cancel_state = DTHREAD_CANCEL_ENABLE | DTHREAD_CANCEL_DEFERRED;
-
-	// technically, these next values are defaults; we don't have a way to get more info from the user
-	//
-	// it's not too important since the only cases where we initialize the dthread structure ourselves is when we're working with workqueues,
-	// and those initialize their own dthread structures when they get them
-
-	dthread->tl_joinable = 1;
-	dthread->inherit = DTHREAD_INHERIT_SCHED;
-	dthread->tl_policy = DARWIN_POLICY_TIMESHARE;
-
-	return dthread;
-};
-
-static dthread_t dthread_structure_allocate(size_t stack_size, size_t guard_size, void** stack_addr) {
-	size_t total_size = guard_size + stack_size + sizeof(struct _dthread);
-
-	// allocate our stack, guard page, and dthread structure
-	void* base_addr = mmap(NULL, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-
-	if (base_addr == MAP_FAILED) {
-		fprintf(stderr, "Failed to allocate a thread stack: %s\n", strerror(errno));
-		return NULL;
-	}
-
-	// protect our guard page
-	if (mprotect(base_addr, guard_size, PROT_NONE) != 0)
-		fprintf(stderr, "Failed to protect the thread stack guard page: %s\n", strerror(errno));
-
-	/**
-	 * memory layout of newly allocated block:
-	 *
-	 * [base_addr]         [base_addr + total_size]
-	 * --------------------------------------------
-	 * | guard page |       stack       | dthread |
-	 */
-
-	// stack_addr points to the top of the stack (i.e. the highest address)
-	*stack_addr = ((char*)base_addr) + stack_size + guard_size;
-
-	// the dthread sits above the stack
-	// (and by "above", i mean the lowest address of the dthread is the highest address of the stack)
-	dthread_t dthread = (dthread_t)*stack_addr;
-	// zero-out the entrire dthread structure
-	memset(dthread, 0, sizeof(struct _dthread));
-
-	return dthread_structure_init(dthread, guard_size, *stack_addr, stack_size, base_addr, total_size);
-};
 
 void* __darling_thread_create(unsigned long stack_size, unsigned long pth_obj_size,
 				void* entry_point, uintptr_t real_entry_point,
@@ -176,16 +111,33 @@ void* __darling_thread_create(unsigned long stack_size, unsigned long pth_obj_si
 	pthread_attr_t attr;
 	pthread_t nativeLibcThread;
 
-	pthread_attr_init(&attr);
-	//pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	int attr_error = pthread_attr_init(&attr);
+	if (attr_error != 0) {
+		errno = attr_error;
+		return NULL;
+	}
+	// Guest threads are joined by the guest; the native bootstrap thread is
+	// never joined, so it must release its own resources when it exits.
+	attr_error = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	if (attr_error != 0) {
+		pthread_attr_destroy(&attr);
+		errno = attr_error;
+		return NULL;
+	}
 	// pthread_attr_setstacksize(&attr, stack_size);
 
 	// in some cases, we're already given a pthread object, stack, and guard page;
 	// in those cases, just use what we're given (it also contains more information)
 	//
 	// otherwise, allocate them ourselves
-	if (pth == NULL || args.is_workqueue) {
-		pth = dthread_structure_allocate(stack_size, DEFAULT_DTHREAD_GUARD_SIZE, (void**)&args.stack_addr);
+	bool allocated_stack = pth == NULL || args.is_workqueue;
+	if (allocated_stack) {
+		pth = dthread_structure_allocate(stack_size, dthread_guard_size(), (void**)&args.stack_addr);
+		if (pth == NULL) {
+			// no stack to run the thread on (errno is set by the allocation)
+			pthread_attr_destroy(&attr);
+			return NULL;
+		}
 	} else if (!args.is_workqueue) {
 		// `arg2` is `stack_addr` for normal threads
 		args.stack_addr = arg2;
@@ -201,17 +153,27 @@ void* __darling_thread_create(unsigned long stack_size, unsigned long pth_obj_si
 
 	// std::cout << "Allocated stack at " << pth << ", size " << stack_size << std::endl;
 
-	// requesting less than PTHREAD_STACK_MIN fails and leaves the attribute at the libc
-	// default (8 MB on glibc), so ask for exactly the minimum the host libc accepts
-	size_t host_stack_size = PTHREAD_STACK_MIN;
+	// Requesting less than PTHREAD_STACK_MIN fails and leaves the attribute at the libc
+	// default (8 MB on glibc). This stack bootstraps the thread and handles its exit,
+	// and glibc also runs the host libraries' TLS destructors on it at that point
+	// (graphics drivers, for one), so keep headroom beyond the minimum. It only
+	// reserves address space until it is touched.
+	size_t host_stack_size = PTHREAD_STACK_MIN > 512 * 1024 ? PTHREAD_STACK_MIN : 512 * 1024;
 	int stacksize_err = pthread_attr_setstacksize(&attr, host_stack_size);
 	if (stacksize_err != 0)
 		fprintf(stderr, "mldr: pthread_attr_setstacksize(%zu) failed: %s\n", host_stack_size, strerror(stacksize_err));
 
-	//pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
 	args.pth = pth;
-	int create_err = pthread_create(&nativeLibcThread, &attr, darling_thread_entry, &args);
+
+	// A signal sent to the process can be delivered to any thread that does not
+	// block it, but a thread can only handle signals once it has checked in with
+	// darlingserver. Start the thread with all signals blocked, so that until then
+	// they go to other threads (or stay pending); it takes our mask afterwards.
+	sigset_t all;
+	sigfillset(&all);
+	pthread_sigmask(SIG_SETMASK, &all, &args.sigmask);
+	int create_error = pthread_create(&nativeLibcThread, &attr, darling_thread_entry, &args);
+	pthread_sigmask(SIG_SETMASK, &args.sigmask, NULL);
 	pthread_attr_destroy(&attr);
 	if (create_err != 0) {
 		// the new thread never runs, so nothing would ever clear `args.pth` below
@@ -219,7 +181,19 @@ void* __darling_thread_create(unsigned long stack_size, unsigned long pth_obj_si
 		return NULL;
 	}
 
-	while (args.pth != NULL)
+	if (create_error != 0) {
+		// The thread never started: release what was allocated for it, and
+		// do not wait for a check-in that will not happen.
+		if (allocated_stack) {
+			dthread_t dthread = pth;
+			munmap(dthread->freeaddr, dthread->freesize);
+		}
+		errno = create_error;
+		return NULL;
+	}
+
+	// the new thread clears args.pth (release) once it has copied the arguments
+	while (__atomic_load_n(&args.pth, __ATOMIC_ACQUIRE) != NULL)
 		sched_yield();
 
 	return pth;
@@ -267,13 +241,15 @@ static void* darling_thread_entry(void* p)
 	dthread->tsd[DTHREAD_TSD_SLOT_MACH_THREAD_SELF] = (void*)(intptr_t)thread_self_port;
 	args.port = thread_self_port;
 
-	in_args->pth = NULL;
+	pthread_sigmask(SIG_SETMASK, &args.sigmask, NULL);
+
+	__atomic_store_n(&in_args->pth, NULL, __ATOMIC_RELEASE);
 
 	if (setjmp(t_jmpbuf))
 	{
 		// Terminate the Linux thread
 		munmap(t_freeaddr, t_freesize);
-		pthread_detach(pthread_self());
+		// the native thread was created detached
 		return NULL;
 	}
 
@@ -374,11 +350,11 @@ int __darling_thread_terminate(void* stackaddr,
 {
 	int checkout_result = 0;
 
-	// Block all signals on this thread so no signal handlers or async interrupts
-	// attempt to execute Mach traps or RPC calls while the thread is tearing down.
-	sigset_t all_signals;
-	sigfillset(&all_signals);
-	pthread_sigmask(SIG_BLOCK, &all_signals, NULL);
+	// Once checked out, this thread cannot handle signals any more. Block them
+	// all, so that signals sent to the process go to the remaining threads.
+	sigset_t all;
+	sigfillset(&all);
+	pthread_sigmask(SIG_SETMASK, &all, NULL);
 
 	if (t_server_socket != -1) {
 		checkout_result = dserver_rpc_explicit_checkout(t_server_socket, -1, false);
@@ -409,12 +385,10 @@ int __darling_thread_terminate(void* stackaddr,
 	{
 		// dispatch_main() calls pthread_exit(NULL) on the main thread,
 		// which turns our process into a zombie on Linux.
-		// Let's just hang around forever.
-		// Keep every signal blocked while waiting: this thread has already checked out
-		// and closed its RPC socket, so a signal handler running here would fail its
-		// server RPCs and abort. Process-directed signals go to the remaining threads.
+		// Let's just hang around forever, with all signals still blocked:
+		// they are for the threads that remain.
 		while (1)
-			sigsuspend(&all_signals);
+			sigsuspend(&all);
 	}
 
 	t_freeaddr = stackaddr;
@@ -440,28 +414,13 @@ int __darling_thread_rpc_socket(void) {
 			// this is the main thread
 			t_server_socket = __dserver_main_thread_socket_fd;
 		} else {
-			// thread created by a native ELF library (e.g. PulseAudio threaded mainloop, driver threads)
-			// dynamically allocate a per-thread socket for dserver RPC instead of aborting!
-			t_server_socket = __mldr_create_rpc_socket();
-			if (t_server_socket == -1) {
-				abort();
-			}
+			// threads created by native libraries have no darlingserver connection;
+			// RPC wrappers report a negative socket as a broken pipe
+			return -1;
 		}
 	}
 	return t_server_socket;
 };
-
-/* Compatibility callbacks retain native TLS and record guest TSD separately. */
-static __thread void* compatibility_darling_tsd;
-void* __darling_native_tsd_base(void) {
-#if defined(__aarch64__)
-	return __builtin_thread_pointer();
-#else
-	return NULL;
-#endif
-}
-void __darling_arm64_record_tsd_base(void* base) { compatibility_darling_tsd = base; }
-void* __darling_arm64_tsd_base(void) { return compatibility_darling_tsd; }
 
 void __mldr_thread_postfork_child(void) {
 	t_server_socket = -1;
@@ -484,20 +443,31 @@ void __darling_thread_rpc_socket_refresh(void) {
 	}
 };
 
-/* Dedicated to cached Darwin TSD reads; native bridge compatibility state must
- * use separate storage. Main-executable ELF TLS offsets are per-thread stable. */
-static __thread void* shared_cache_darling_tsd;
+#if defined(__aarch64__)
+/* Holds the Darwin TSD base of the calling thread for guest code that reads it
+ * from the native thread pointer (ARM64 only). Nothing else may use this
+ * storage. The variable lives in the main executable's static TLS, so its
+ * offset from the thread pointer is the same on every native thread. */
+static __thread void* darwin_tsd_slot;
 
 uintptr_t __darling_arm64_tsd_slot_offset(void) {
-#if defined(__aarch64__) && defined(__ANDROID__)
-    // The NDK emulates __thread, so the variable above isn't near the thread
-    // pointer. Bionic gives apps TLS_SLOT_APP (slot 2) from API level 29 on.
-    if (android_get_device_api_level() >= 29)
-        return 2 * sizeof(void*);
-#endif
-#if defined(__aarch64__)
-    return (uintptr_t)&shared_cache_darling_tsd - (uintptr_t)__builtin_thread_pointer();
-#else
-    return UINTPTR_MAX;
-#endif
+    return (uintptr_t)&darwin_tsd_slot - (uintptr_t)__builtin_thread_pointer();
 }
+
+/* The C library's restartable sequences area (glibc 2.35 and later, see
+ * <sys/rseq.h>): __rseq_offset is its offset from the thread pointer, the same
+ * on every thread, and __rseq_size is 0 when it was not registered with the
+ * kernel. Weak, so that a C library without them leaves both undefined. */
+extern const ptrdiff_t __rseq_offset __attribute__((weak));
+extern const unsigned int __rseq_size __attribute__((weak));
+
+/* Stores the thread-pointer-relative offset of the rseq cpu_id_start field,
+ * which the kernel keeps equal to the CPU the thread runs on, and returns
+ * true; false when the C library has no registered rseq area. */
+bool __darling_arm64_rseq_cpu_offset(intptr_t* offset) {
+    if (&__rseq_offset == NULL || &__rseq_size == NULL || __rseq_size == 0)
+        return false;
+    *offset = (intptr_t)__rseq_offset + (intptr_t)offsetof(struct rseq, cpu_id_start);
+    return true;
+}
+#endif

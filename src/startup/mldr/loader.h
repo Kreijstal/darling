@@ -22,9 +22,14 @@ struct load_results {
 	// The executable path mldr was given is a vchroot-expanded host path (from sys_execve).
 	bool executable_path_is_host_path;
 	unsigned long stack_top;
+	// size of the initial mapping below stack_top
+	unsigned long stack_map_size;
 	char* socket_path;
 	int kernfd;
 	int lifetime_pipe;
+
+	// seal the read-only segments of the images mldr maps (code_signing_gate())
+	bool seal_images;
 
 	size_t argc;
 	size_t envc;

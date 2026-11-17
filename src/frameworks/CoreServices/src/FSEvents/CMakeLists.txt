@@ -28,4 +28,4 @@ target_link_libraries(fseventsd system Foundation CarbonCore)
 
 install(TARGETS fseventsd DESTINATION libexec/darling/usr/sbin)
 include(setcap)
-setcap(libexec/darling/usr/sbin/fseventsd cap_sys_admin+ep)
+setcap(libexec/darling/usr/sbin/fseventsd "cap_sys_admin+ep")

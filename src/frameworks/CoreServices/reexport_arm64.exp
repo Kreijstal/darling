@@ -18,5 +18,3 @@ _nan
 _nanf
 _nextafterf
 _remquo
-__CSGetProcessorArchitecture
-

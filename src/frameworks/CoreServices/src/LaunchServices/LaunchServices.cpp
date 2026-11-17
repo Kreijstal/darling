@@ -2,6 +2,7 @@
 #include <LaunchServices/LaunchServicesPriv.h>
 #include <CarbonCore/MacErrors.h>
 #include <unistd.h>
+#include <cstring>
 #include <string>
 #include <memory>
 #include <vector>
@@ -290,16 +291,6 @@ OSStatus LSOpenApplication(const LSApplicationParameters *appParams, ProcessSeri
 	return rv;
 }
 
-OSStatus LSSetExtensionHiddenForRef(const FSRef *inRef, Boolean hide)
-{
-	return noErr; // dummy operation
-}
-
-OSStatus LSSetExtensionHiddenForURL(CFURLRef inURL, Boolean hide)
-{
-	return noErr; // dummy operation
-}
-
 /*OSStatus LSOpenCFURLRef(CFURLRef inURL, CFURLRef *outLaunchedURL)
 {
 	// TODO: use 'xdg-mime query' and 'xdg-mime default' to determine the app?
@@ -330,16 +321,6 @@ OSStatus LSGetExtensionInfo(UniCharCount inNameLen, const UniChar* inNameBuffer,
 
 // TODO: See https://gist.github.com/zorgiepoo/d751cba19a0167a589a2
 
-CFTypeRef _LSCopyApplicationInformationItem(int /* hopefully */, CFTypeRef asn, CFStringRef what)
-{
-	return NULL;
-}
-
-CFDictionaryRef _LSCopyApplicationInformation(int, CFTypeRef asn, int)
-{
-	return NULL;
-}
-
 /*
 OSStatus _LSOpenURLsWithRole(CFArrayRef inURLs, LSRolesMask inRole, void *unknown)
 {
@@ -354,4 +335,3 @@ CFStringRef LSSystemApplicationType = CFSTR("System");
 CFStringRef LSInternalApplicationType = CFSTR("Internal");
 CFStringRef LSPlugInKitType = CFSTR("PluginKitPlugin");
 CFStringRef LSVPNPluginType = CFSTR("VPNPlugin");
-

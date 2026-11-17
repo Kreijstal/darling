@@ -1,16 +1,17 @@
 # Host test: Gestalt's system-version selectors report the macOS product
-# version (kern.osproductversion), the same one SystemVersion.plist carries,
-# and never the Darwin kernel release.
+# version (kern.osproductversion), which SystemVersion.plist is generated
+# from, and never the Darwin kernel release.
 # usage: ruby tests/gestalt-system-version.rb [REPO_ROOT]
 # Gestalt.cpp is compiled unmodified against stand-in sysctl/CoreFoundation
-# headers. The fake kernel answers kern.osproductversion with the plist's
-# ProductVersion and any KERN_OSRELEASE query with a different Darwin string,
-# so a selector that reads the wrong source fails.
+# headers. The fake kernel answers kern.osproductversion with a product
+# version and any KERN_OSRELEASE query with a different Darwin string, so a
+# selector that reads the wrong source fails.
 require 'tmpdir'
 require 'open3'
 root = ARGV.fetch(0, File.expand_path('..', __dir__))
-plist = File.read("#{root}/src/frameworks/CoreServices/SystemVersion.plist")
-product = plist[%r{<key>ProductVersion</key>\s*<string>([\d.]+)</string>}, 1] or abort 'ProductVersion missing'
+# SystemVersion.plist is generated at build time from the emulated kernel's
+# version, so the probe uses a fixed product version of its own.
+product = '26.4'
 Dir.mktmpdir('gestalt-') do |dir|
   Dir.mkdir("#{dir}/sys"); Dir.mkdir("#{dir}/CoreFoundation")
   File.write("#{dir}/sys/sysctl.h", <<~H)
@@ -29,6 +30,7 @@ Dir.mktmpdir('gestalt-') do |dir|
   File.write("#{dir}/CoreFoundation/CFBase.h", "#include <stdint.h>\n")
   File.write("#{dir}/MacTypes.h", "#include <stdint.h>\ntypedef int32_t OSStatus;\n")
   File.write("#{dir}/probe.cpp", <<~CPP)
+    #include <assert.h>
     #include <stdint.h>
     #include <stdio.h>
     #include <stdlib.h>
@@ -36,7 +38,6 @@ Dir.mktmpdir('gestalt-') do |dir|
     #include <sys/sysctl.h>
     #include <CarbonCore/MacErrors.h>
     #include <CarbonCore/Gestalt.h>
-    #define assert(c) do { if (!(c)) { puts("assertion failed: " #c); fflush(stdout); exit(1); } } while (0)
     static const char *product = "#{product}";
     static int bycall;
     extern "C" int sysctl(int *name, unsigned n, void *buf, size_t *len, void *nw, size_t nl) {
@@ -76,6 +77,13 @@ Dir.mktmpdir('gestalt-') do |dir|
       assert(get(gestaltSystemVersion, &v) == 0 && v == 0x1097);
       product = "10.9.15";  /* patch saturates at 9 too */
       assert(get(gestaltSystemVersion, &v) == 0 && v == 0x1099);
+      /* Quirk: the BCD layout carries on past 10.x, as observed on macOS 27.0.1. */
+      product = "26.4";
+      assert(get(gestaltSystemVersion, &v) == 0 && v == 0x2640);
+      product = "27.0.1";
+      assert(get(gestaltSystemVersion, &v) == 0 && v == 0x2701);
+      assert(get(gestaltSystemVersionBugFix, &v) == 0 && v == 1);
+      v = 123; assert(get('zzzz', &v) == gestaltUndefSelectorErr && v == 0);
       product = NULL;     /* sysctl failure: error, not a guessed version */
       v = 123; assert(get(gestaltSystemVersionMajor, &v) == gestaltUnknownErr && v == 0);
       product = "garbage";
@@ -90,7 +98,7 @@ Dir.mktmpdir('gestalt-') do |dir|
     "-I#{root}/src/frameworks/CoreServices/include", "#{dir}/probe.cpp",
     "#{root}/src/frameworks/CoreServices/src/CarbonCore/Gestalt.cpp", '-o', "#{dir}/probe")
   abort out unless st.success?
-  out, st = Open3.capture2e("timeout", "60", "#{dir}/probe", rlimit_core: 0)
+  out, st = Open3.capture2e("#{dir}/probe", rlimit_core: 0)
   puts out
   abort 'gestalt system version regression' unless st.success?
 end

@@ -18,6 +18,8 @@
 */
 
 #import <OSAKit/OSAScript.h>
+#import "OSAKitPrivate.h"
+#import <darling-stub-forwarding.h>
 
 // Darling has no AppleScript component: scripts hold their source text, and anything that would need
 // the engine (compiling, running, loading or producing compiled data) fails with an error dictionary.
@@ -44,20 +46,10 @@ static void setEngineUnavailable(NSDictionary **errorInfo)
     setErrorInfo(errorInfo, kEngineUnavailableMessage, errOSACantOpenComponent);
 }
 
-// NSDocument passes the CFBundleTypeName ("text") when the app's Info.plist declares no content types.
 static BOOL isTextStorageType(NSString *type)
 {
-    return [type isEqualToString:OSAStorageTextType] || [type isEqualToString:@"text"];
+    return [type isEqualToString:OSAStorageTextType];
 }
-
-@implementation NSDate (OSAKit)
-
-- (BOOL)_osa_isLaterDate:(NSDate *)date
-{
-    return [self compare:date] == NSOrderedDescending;
-}
-
-@end
 
 @implementation OSAScript
 
@@ -278,6 +270,26 @@ static BOOL isTextStorageType(NSString *type)
         return NO;
     }
     return YES;
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
+}
+
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
+}
+
++ (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
 @end

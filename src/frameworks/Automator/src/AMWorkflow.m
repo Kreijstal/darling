@@ -18,84 +18,28 @@
 */
 
 #import <Automator/AMWorkflow.h>
-#import <Automator/AMWorkflowMetaData.h>
-#import "AMStubSignature.h"
+#import <darling-stub-forwarding.h>
 
 @implementation AMWorkflow
 
-@synthesize hasUnsavedChanges = _hasUnsavedChanges;
-@synthesize fileURL = _fileURL;
-
-- (instancetype)init
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    self = [super init];
-    if (self != nil) {
-        _metaData = [[AMWorkflowMetaData alloc] init];
-    }
-    return self;
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
-- (void)dealloc
+- (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    [_metaData release];
-    [_fileURL release];
-    [super dealloc];
+    DarlingStubForwardInvocation(self, anInvocation);
 }
 
-- (instancetype)initWithContentsOfURL:(NSURL *)fileURL error:(NSError **)outError
++ (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    if (outError != NULL)
-        *outError = AMWorkflowFormatUnsupportedError();
-    [self release];
-    return nil;
+    return [super methodSignatureForSelector: aSelector] ?: DarlingStubMethodSignature(aSelector);
 }
 
-- (instancetype)initWithFileWrapper:(NSFileWrapper *)fileWrapper error:(NSError **)outError
++ (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    if (outError != NULL)
-        *outError = AMWorkflowFormatUnsupportedError();
-    [self release];
-    return nil;
+    DarlingStubForwardInvocation(self, anInvocation);
 }
-
-- (BOOL)writeToURL:(NSURL *)fileURL error:(NSError **)outError
-{
-    if (outError != NULL)
-        *outError = AMWorkflowFormatUnsupportedError();
-    return NO;
-}
-
-- (NSFileWrapper *)fileWrapperForWritingReturningSavedPropertyList:(id *)propertyList documentType:(NSString *)documentType originalContentsFileWrapper:(NSFileWrapper *)original error:(NSError **)outError
-{
-    if (outError != NULL)
-        *outError = AMWorkflowFormatUnsupportedError();
-    return nil;
-}
-
-- (AMWorkflowMetaData *)_workflowMetaData
-{
-    return _metaData;
-}
-
-- (void)_setWorkflowMetaData:(AMWorkflowMetaData *)metaData
-{
-    [metaData retain];
-    [_metaData release];
-    _metaData = metaData;
-}
-
-// Automator.app reads the personality back through the metadata after setting it on the workflow,
-// and restores both at once from a metadata backup, so the metadata owns it.
-- (id)_workflowPersonality
-{
-    return [_metaData personality];
-}
-
-- (void)_setWorkflowPersonality:(id)personality
-{
-    [_metaData setPersonality: personality];
-}
-
-AM_STUB_FORWARDING
 
 @end

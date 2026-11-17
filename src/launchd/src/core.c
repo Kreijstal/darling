@@ -457,6 +457,10 @@ static jobmgr_t jobmgr_parent(jobmgr_t jm);
 static jobmgr_t jobmgr_do_garbage_collection(jobmgr_t jm);
 static bool jobmgr_label_test(jobmgr_t jm, const char *str);
 static void jobmgr_reap_bulk(jobmgr_t jm, struct kevent *kev);
+#ifdef DARLING
+static void jobmgr_reap_orphans(void);
+static int orphan_reap_timer;
+#endif
 static void jobmgr_log_stray_children(jobmgr_t jm, bool kill_strays);
 static void jobmgr_kill_stray_children(jobmgr_t jm, pid_t *p, size_t np);
 #ifdef DARLING
@@ -3697,6 +3701,9 @@ job_reap(job_t j)
 		} else {
 			job_log(j, LOG_INFO, "Job was implicitly reaped by the kernel.");
 		}
+#ifdef DARLING
+		jobmgr_reap_orphans();
+#endif
 	}
 
 	if (j->exit_timeout) {
@@ -4274,6 +4281,25 @@ jobmgr_reap_bulk(jobmgr_t jm, struct kevent *kev)
 	}
 }
 
+#ifdef DARLING
+void
+jobmgr_reap_orphans(void)
+{
+	siginfo_t si;
+
+	for (;;) {
+		si.si_pid = 0;
+		if (waitid(P_ALL, 0, &si, WEXITED | WNOHANG | WNOWAIT) == -1 || si.si_pid == 0) {
+			break;
+		}
+		if (jobmgr_find_by_pid_deep(root_jobmgr, si.si_pid, false)) {
+			break;
+		}
+		(void)waitpid(si.si_pid, NULL, WNOHANG);
+	}
+}
+#endif
+
 void
 jobmgr_callback(void *obj, struct kevent *kev)
 {
@@ -4342,6 +4368,10 @@ jobmgr_callback(void *obj, struct kevent *kev)
 			if (jobmgr_assumes_zero(jm, runtime_busy_cnt) == 0) {
 				return launchd_shutdown();
 			}
+#ifdef DARLING
+		} else if (kev->ident == (uintptr_t)&orphan_reap_timer) {
+			jobmgr_reap_orphans();
+#endif
 #if HAVE_SYSTEMSTATS
 		} else if (kev->ident == (uintptr_t)systemstats_timer_callback) {
 			systemstats_timer_callback();
@@ -6991,6 +7021,9 @@ jobmgr_new(jobmgr_t jm, mach_port_t requestorport, mach_port_t transfer_port, bo
 		(void)jobmgr_assumes_zero_p(jmr, kevent_mod(SIGUSR1, EVFILT_SIGNAL, EV_ADD, 0, 0, jmr));
 		(void)jobmgr_assumes_zero_p(jmr, kevent_mod(SIGUSR2, EVFILT_SIGNAL, EV_ADD, 0, 0, jmr));
 		(void)jobmgr_assumes_zero_p(jmr, kevent_mod(SIGINFO, EVFILT_SIGNAL, EV_ADD, 0, 0, jmr));
+#ifdef DARLING
+		(void)jobmgr_assumes_zero_p(jmr, kevent_mod((uintptr_t)&orphan_reap_timer, EVFILT_TIMER, EV_ADD, NOTE_SECONDS, 5, jmr));
+#endif
 		(void)jobmgr_assumes_zero_p(jmr, kevent_mod(0, EVFILT_FS, EV_ADD, VQ_MOUNT|VQ_UNMOUNT|VQ_UPDATE, 0, jmr));
 	}
 
@@ -9662,6 +9695,9 @@ jobmgr_t
 jobmgr_find_by_name(jobmgr_t jm, const char *where)
 {
 	jobmgr_t jmi, jmi2;
+#ifdef DARLING
+	bool for_launchservices = where == NULL;
+#endif
 
 	// NULL is only passed for our custom API for LaunchServices. If that is the case, we do magic.
 	if (where == NULL) {
@@ -9697,6 +9733,17 @@ jobmgr_find_by_name(jobmgr_t jm, const char *where)
 			}
 		}
 	}
+
+#ifdef DARLING
+	/* Darling has no loginwindow, so no Aqua (or LoginWindow) session is ever
+	 * created: the user's processes all run in the system session, which
+	 * stands in for the login session. Applications that LaunchServices
+	 * spawns through spawn_via_launchd() go there instead of failing.
+	 */
+	if (for_launchservices) {
+		jmi = root_jobmgr;
+	}
+#endif
 
 jm_found:
 	return jmi;
@@ -11017,10 +11064,14 @@ xpc_event_provider_set_state(job_t j, xpc_object_t request, xpc_object_t *reply)
 bool
 xpc_event_demux(mach_port_t p, xpc_object_t request, xpc_object_t *reply)
 {
-	uint64_t op = xpc_dictionary_get_uint64(request, XPC_EVENT_ROUTINE_KEY_OP);
-	if (!op) {
+	/* XPC_EVENT_GET_NAME is 0, so an event routine is recognized by the
+	 * presence of the opcode key, not by a nonzero opcode.
+	 */
+	xpc_object_t xop = xpc_dictionary_get_value(request, XPC_EVENT_ROUTINE_KEY_OP);
+	if (!xop || xpc_get_type(xop) != XPC_TYPE_UINT64) {
 		return false;
 	}
+	uint64_t op = xpc_uint64_get_value(xop);
 
 	audit_token_t token;
 	xpc_dictionary_get_audit_token(request, &token);
@@ -11472,10 +11523,14 @@ xpc_process_service_kill(job_t j, xpc_object_t request, xpc_object_t *reply)
 bool
 xpc_process_demux(mach_port_t p, xpc_object_t request, xpc_object_t *reply)
 {
-	uint64_t op = xpc_dictionary_get_uint64(request, XPC_PROCESS_ROUTINE_KEY_OP);
-	if (!op) {
+	/* XPC_PROCESS_JETSAM_SET_BAND is 0, so a process routine is recognized
+	 * by the presence of the opcode key, not by a nonzero opcode.
+	 */
+	xpc_object_t xop = xpc_dictionary_get_value(request, XPC_PROCESS_ROUTINE_KEY_OP);
+	if (!xop || xpc_get_type(xop) != XPC_TYPE_UINT64) {
 		return false;
 	}
+	uint64_t op = xpc_uint64_get_value(xop);
 
 	audit_token_t token;
 	xpc_dictionary_get_audit_token(request, &token);

@@ -2,9 +2,7 @@
 #include <asl.h>
 #include <stdlib.h>
 
-@interface CSKStreamASLSource : NSObject <CSKStreamSource> {
-	NSURL *_fileURL;
-}
+@interface CSKStreamASLSource : NSObject <CSKStreamSource>
 @property (readonly, copy) NSURL *fileURL;
 - (instancetype)initWithFileURL:(NSURL *)fileURL;
 @end
@@ -16,8 +14,6 @@ static NSString *CSKASLString(asl_object_t msg, const char *key)
 }
 
 @implementation CSKStreamASLSource
-
-@synthesize fileURL = _fileURL;
 
 - (instancetype)initWithFileURL:(NSURL *)fileURL
 {

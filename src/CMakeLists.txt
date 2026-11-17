@@ -79,7 +79,7 @@ find_package(FLEX)
 set(DARLING_SDK_RELATIVE_PATH "Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
 set(DARLING_ROOT_RELATIVE_TO_SDK "../../../../../..")
 
-if (NOT CMAKE_CROSSCOMPILING)
+if (NOT DARLING_CROSS_BUILD)
 	add_subdirectory(external/cctools-port/cctools/ld64/src)
 	add_subdirectory(external/cctools-port/cctools/ar)
 	#add_subdirectory(external/cctools-port/cctools/as)
@@ -106,41 +106,33 @@ add_subdirectory(\"${CMAKE_CURRENT_SOURCE_DIR}/external/cctools-port/cctools/ar\
 add_subdirectory(\"${CMAKE_CURRENT_SOURCE_DIR}/external/cctools-port/cctools/misc\" misc)
 add_subdirectory(\"${CMAKE_CURRENT_SOURCE_DIR}/buildtools\" buildtools)
 add_subdirectory(\"${CMAKE_CURRENT_SOURCE_DIR}/libelfloader/wrapgen\" wrapgen)
+add_executable(rtsig \"${CMAKE_CURRENT_SOURCE_DIR}/startup/rtsig.c\")
 ")
 
+	# Tools that run during the build are built for the build machine with
+	# CC_FOR_BUILD/CXX_FOR_BUILD or -DHOST_CC/-DHOST_CXX if given, otherwise
+	# with the Clang that builds Darling, which targets the build machine
+	# when no target is passed to it.
 	if (DEFINED ENV{CC_FOR_BUILD} AND NOT "$ENV{CC_FOR_BUILD}" STREQUAL "")
 		set(HOST_CC "$ENV{CC_FOR_BUILD}")
 	elseif (NOT DEFINED HOST_CC)
-		find_program(HOST_CC NAMES
-			clang-23 clang-22 clang-21 clang-20 clang-19 clang-18 clang-17 clang-16 clang-15 clang-14
-			clang gcc cc PATHS /usr/bin NO_DEFAULT_PATH)
-		if (NOT HOST_CC)
-			find_program(HOST_CC NAMES
-				clang-23 clang-22 clang-21 clang-20 clang-19 clang-18 clang-17 clang-16 clang-15 clang-14
-				clang gcc cc)
-		endif()
+		set(HOST_CC "${CMAKE_C_COMPILER}")
 	endif()
 
 	if (DEFINED ENV{CXX_FOR_BUILD} AND NOT "$ENV{CXX_FOR_BUILD}" STREQUAL "")
 		set(HOST_CXX "$ENV{CXX_FOR_BUILD}")
 	elseif (NOT DEFINED HOST_CXX)
-		find_program(HOST_CXX NAMES
-			clang++-23 clang++-22 clang++-21 clang++-20 clang++-19 clang++-18 clang++-17 clang++-16 clang++-15 clang++-14
-			clang++ PATHS /usr/bin NO_DEFAULT_PATH)
-		if (NOT HOST_CXX)
-			find_program(HOST_CXX NAMES
-				clang++-23 clang++-22 clang++-21 clang++-20 clang++-19 clang++-18 clang++-17 clang++-16 clang++-15 clang++-14
-				clang++)
-		endif()
-	endif()
-
-	if (NOT HOST_CXX)
-		message(FATAL_ERROR "Host Clang++ is required to build host tools for Darling")
+		set(HOST_CXX "${CMAKE_CXX_COMPILER}")
 	endif()
 
 	execute_process(
 		COMMAND ${CMAKE_COMMAND} -E env
 			--unset=CFLAGS --unset=CXXFLAGS --unset=LDFLAGS --unset=CPPFLAGS
+			# The host tools link against build-machine libraries. A cross build
+			# normally points pkg-config at the target's .pc files, so hide that
+			# setting from this build or it picks target libraries for host tools.
+			--unset=PKG_CONFIG_LIBDIR --unset=PKG_CONFIG_PATH
+			--unset=PKG_CONFIG_SYSROOT_DIR
 			CC=${HOST_CC} CXX=${HOST_CXX}
 			${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}"
 			-S "${HOST_TOOLS_SRC_DIR}"
@@ -151,6 +143,8 @@ add_subdirectory(\"${CMAKE_CURRENT_SOURCE_DIR}/libelfloader/wrapgen\" wrapgen)
 			-DAPPLE_TARGET_TRIPLET_PRIMARY=${APPLE_TARGET_TRIPLET_PRIMARY}
 			-DTARGET_ARM64=${TARGET_ARM64}
 			-DTARGET_x86_64=${TARGET_x86_64}
+			-DTARGET_i386=${TARGET_i386}
+			-DADHOC_CODESIGN=${ADHOC_CODESIGN}
 			-DDARLING_TOP_DIRECTORY=${CMAKE_SOURCE_DIR}
 		RESULT_VARIABLE host_tools_cfg_res
 	)
@@ -206,13 +200,31 @@ add_subdirectory(\"${CMAKE_CURRENT_SOURCE_DIR}/libelfloader/wrapgen\" wrapgen)
 		"${HOST_TOOLS_BUILD_DIR}/buildtools/getuuid"
 		"${CMAKE_BINARY_DIR}/src/buildtools/getuuid")
 
-	# wrap_elf() outputs depend on this file: copy only when it changed, so a
-	# reconfigure doesn't regenerate every wrapper, and reconfigure on wrapgen edits.
-	execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
+	execute_process(COMMAND ${CMAKE_COMMAND} -E copy
 		"${HOST_TOOLS_BUILD_DIR}/wrapgen/wrapgen"
 		"${CMAKE_BINARY_DIR}/src/libelfloader/wrapgen/wrapgen")
-	set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-		"${CMAKE_CURRENT_SOURCE_DIR}/libelfloader/wrapgen/wrapgen.cpp")
+
+	# use_ld64 runs adhoc-sign through $<TARGET_FILE:adhoc-sign>
+	if (ADHOC_CODESIGN)
+		add_executable(adhoc-sign IMPORTED GLOBAL)
+		set_target_properties(adhoc-sign PROPERTIES
+			IMPORTED_LOCATION "${HOST_TOOLS_BUILD_DIR}/buildtools/adhoc-sign")
+	endif()
+
+	add_executable(iconset2icns IMPORTED GLOBAL)
+	set_target_properties(iconset2icns PROPERTIES
+		IMPORTED_LOCATION "${HOST_TOOLS_BUILD_DIR}/buildtools/iconset2icns")
+
+	# swift/prebuilt_install.cmake runs the build-machine copy of
+	# install_name_tool on the prebuilt dylibs. In a non-cross build the
+	# in-tree cctools misc directory provides this target.
+	add_executable(install_name_tool_host IMPORTED GLOBAL)
+	set_target_properties(install_name_tool_host PROPERTIES
+		IMPORTED_LOCATION "${HOST_TOOLS_BUILD_DIR}/misc/${APPLE_TARGET_TRIPLET_PRIMARY}-install_name_tool")
+
+	# startup/rtsig.h is generated from the build machine's C library; see
+	# src/startup/CMakeLists.txt
+	set(DARLING_HOST_RTSIG "${HOST_TOOLS_BUILD_DIR}/rtsig")
 
 	add_custom_target(${APPLE_TARGET_TRIPLET_PRIMARY}-ld)
 	add_custom_target(${APPLE_TARGET_TRIPLET_PRIMARY}-ar)
@@ -226,6 +238,12 @@ endif()
 # add the Linux build of libsimple now
 add_subdirectory(libsimple "${CMAKE_CURRENT_BINARY_DIR}/libsimple-linux")
 add_subdirectory(external/darlingserver)
+
+# host tests of the build-time ad-hoc signing (buildtools/adhoc-sign)
+if (ADHOC_CODESIGN AND TARGET darlingserver_dc_codesign)
+	add_subdirectory(${CMAKE_SOURCE_DIR}/tests/adhoc-sign ${CMAKE_CURRENT_BINARY_DIR}/adhoc-sign-tests)
+endif()
+
 add_subdirectory(startup)
 
 include_directories(SYSTEM ${COMPILER_INC_PATH})
@@ -344,6 +362,7 @@ add_subdirectory(external/libunwind)
 add_subdirectory(external/libmalloc)
 add_subdirectory(external/coretls)
 add_subdirectory(libsystem_coreservices)
+add_subdirectory(libsystem_featureflags)
 add_subdirectory(external/removefile)
 add_subdirectory(quarantine)
 add_subdirectory(sandbox)
@@ -364,6 +383,13 @@ add_subdirectory(external/zlib)
 # shellspawn can actually spawn any executable we want within the prefix,
 # so we include it in core to allow executables to be executed with the `darling` command.
 add_subdirectory(shellspawn)
+# hands the system preferences to darlingserver before shellspawn accepts commands
+add_subdirectory(prefsd)
+# imports the host's CA certificates into the guest's System keychain
+# Security and build-security-certificates are available with the system component.
+if (COMPONENT_system)
+	add_subdirectory(hostcerts)
+endif()
 
 # typically considered CLI components, but required by launchctl (which is necessary for launchd to bootstrap)
 add_subdirectory(external/libedit)
@@ -408,6 +434,7 @@ if (COMPONENT_cli)
 	add_subdirectory(external/curl)
 	add_subdirectory(external/OpenLDAP)
 	add_subdirectory(external/pcre)
+	add_subdirectory(external/libpcap)
 	add_subdirectory(external/libtelnet)
 	add_subdirectory(external/remote_cmds)
 	add_subdirectory(external/IOKitTools)
@@ -448,6 +475,9 @@ if (COMPONENT_cli)
 	add_subdirectory(PlistBuddy)
 	add_subdirectory(libquit)
 	add_subdirectory(libScreenReader)
+	# lzfse's round-trip tests run its command-line tool, which is built for
+	# the prefix and cannot run on the host
+	set(LZFSE_DISABLE_TESTS TRUE)
 	add_subdirectory(external/lzfse)
 	add_subdirectory(clt)
 	add_subdirectory(diskutil)
@@ -474,6 +504,9 @@ if (COMPONENT_cli OR COMPONENT_dev_gui_common)
 	set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "cli_gui_common")
 
 	add_subdirectory(external/libxml2)
+	# Foundation links and re-exports CoreAutoLayout (the Auto Layout classes, a cocotron framework), so it is built with
+	# Foundation even when the GUI components are not
+	add_subdirectory(external/cocotron/CoreAutoLayout)
 	add_subdirectory(external/foundation)
 	add_subdirectory(external/cfnetwork/src)
 	add_subdirectory(external/sqlite)
@@ -490,11 +523,10 @@ if (COMPONENT_cli OR COMPONENT_dev_gui_common)
 	add_subdirectory(external/Heimdal)
 	add_subdirectory(libDiagnosticMessagesClient)
 	add_subdirectory(libsandbox)
-	add_subdirectory(libpcap)
-	add_subdirectory(libmd)
 	add_subdirectory(libIOReport)
 	add_subdirectory(libLaunchServicesSupport)
 	add_subdirectory(libsystemstats)
+	add_subdirectory(runningboardd)
 	add_subdirectory(opendirectory_internal)
 	add_subdirectory(external/fmdb)
 	add_subdirectory(external/libnetwork)
@@ -502,6 +534,9 @@ if (COMPONENT_cli OR COMPONENT_dev_gui_common)
 	add_subdirectory(libgnsdk_submit)
 	add_subdirectory(external/MITKerberosShim)
 	add_subdirectory(MobileKeyBag)
+	# launchd's event monitor; needs CoreServices (FSEvents)
+	add_subdirectory(eventmonitor)
+	add_subdirectory(usernoted)
 endif()
 
 if (COMPONENT_iokitd)
@@ -538,6 +573,10 @@ if (COMPONENT_gui)
 	add_subdirectory(Settings)
 	add_subdirectory(MobileTimer)
 	add_subdirectory(CydiaSubstrate)
+
+	# /Applications
+	add_subdirectory(external/TextEdit)
+	add_subdirectory(external/Console)
 
 	# not currently used by anything we build
 	add_subdirectory(external/dbuskit)
@@ -598,15 +637,6 @@ add_subdirectory(tools)
 # these have their own component checks on a per-framework basis
 add_subdirectory(frameworks)
 add_subdirectory(private-frameworks)
-
-# A SwiftUI app; after frameworks/, since it uses SwiftUI's module directory.
-if (COMPONENT_gui AND TARGET_ARM64)
-	set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "gui")
-	add_subdirectory(HelloSwiftUI)
-endif()
-
-# /Applications
-#add_subdirectory(external/TextEdit)
 
 # Subprojects after this line need C++ headers
 

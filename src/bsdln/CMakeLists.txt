@@ -3,6 +3,7 @@ project(bsdln)
 add_executable(bsdln
 	ln.c
 )
-if (NOT (ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Android"))
+# Bionic has strlcpy() in libc and no libbsd
+if (NOT DARLING_ANDROID_HOST)
 	target_link_libraries(bsdln bsd)
 endif()

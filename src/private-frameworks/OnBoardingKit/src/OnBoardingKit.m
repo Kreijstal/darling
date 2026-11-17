@@ -3,20 +3,17 @@
 
 	Apple's private framework behind the onboarding and privacy-consent flow: the
 	welcome screens an app shows on first run, and the privacy presenter that links
-	to the App Store and other services. Fifteen of the local apps link it, the
-	widest-reaching gap in the private-framework tier.
+	to the App Store and other services. Fifteen of the local apps link it, which
+	makes it the widest-reaching gap in the private-framework tier, binding fourteen
+	classes and five identifier constants.
 
-	The controllers are real NSViewControllers with no view content, which is a
-	state every caller already handles: a flow with nothing to show completes. The
-	privacy presenter reports no services, because there is no App Store here to
-	link to.
-
-	Every class is declared over NSObject rather than over its real AppKit base,
-	because AppKit does not exist on this system.
+	The controllers are real NSViewControllers with no view content. That is a state
+	every caller already handles: a flow with nothing to show completes instead of
+	spinning. The privacy presenter reports no services, because there is no App
+	Store here to link to.
 */
 
-#import <Foundation/Foundation.h>
-#import "../include/OnBoardingKit/OnBoardingKit.h"
+#import <OnBoardingKit/OnBoardingKit.h>
 
 /* ---- Privacy service identifiers --------------------------------------------- */
 
@@ -28,6 +25,8 @@ NSString* const OBPrivacyiTunesStoreIdentifier     = @"com.apple.iTunesStore";
 
 /* ---- OBBundle ---------------------------------------------------------------- */
 
+/* Which services this build was configured to offer. Empty, because none of them
+   exist on this system. */
 @implementation OBBundle
 + (NSArray*)privacyServiceIdentifiers
 {
@@ -37,23 +36,24 @@ NSString* const OBPrivacyiTunesStoreIdentifier     = @"com.apple.iTunesStore";
 
 /* ---- Template views ---------------------------------------------------------- */
 
+/* The parts an onboarding screen is built from. Present and empty: a template with
+   no items renders as nothing, which is the same as not adding it. */
+
 @implementation OBTemplateView
 @synthesize templateIdentifier;
 @end
 
 @implementation OBTemplatePartBulletList
+{
+	NSMutableArray* _bullets;
+}
 - (instancetype)init
 {
 	if ((self = [super init]))
 	{
-		_bullets = [[NSMutableArray alloc] init];
+		_bullets = [NSMutableArray array];
 	}
 	return self;
-}
-- (void)dealloc
-{
-	[_bullets release];
-	[super dealloc];
 }
 - (void)addBullet:(NSString*)text
 {
@@ -75,31 +75,18 @@ NSString* const OBPrivacyiTunesStoreIdentifier     = @"com.apple.iTunesStore";
 /* ---- Buttons ----------------------------------------------------------------- */
 
 @implementation OBBoldTrayButton
-- (void)setTitle:(NSString*)title
-{
-	[_title release];
-	_title = [title copy];
-}
-- (void)dealloc
-{
-	[_title release];
-	[super dealloc];
-}
 @end
 
 @implementation OBLinkTrayButton
 @end
 
 @implementation OBBulletedListItemLinkButton
+{
+	NSURL* _url;
+}
 - (void)setDestinationURL:(NSURL*)url
 {
-	[_url release];
 	_url = [url copy];
-}
-- (void)dealloc
-{
-	[_url release];
-	[super dealloc];
 }
 @end
 
@@ -113,11 +100,12 @@ NSString* const OBPrivacyiTunesStoreIdentifier     = @"com.apple.iTunesStore";
 @end
 
 @implementation OBTableWelcomeController
-@synthesize title;
 @synthesize body;
 @end
 
 @implementation OBWelcomeController
+/* With nothing to advance through, advancing completes the flow. A caller that
+   drives this loop gets to the end rather than spinning. */
 - (void)advance
 {
 }
@@ -127,18 +115,16 @@ NSString* const OBPrivacyiTunesStoreIdentifier     = @"com.apple.iTunesStore";
 @end
 
 @implementation OBNavigationController
+{
+	NSMutableArray* _stack;
+}
 - (instancetype)init
 {
 	if ((self = [super init]))
 	{
-		_stack = [[NSMutableArray alloc] init];
+		_stack = [NSMutableArray array];
 	}
 	return self;
-}
-- (void)dealloc
-{
-	[_stack release];
-	[super dealloc];
 }
 - (void)pushViewController:(id)controller
 {
@@ -163,12 +149,17 @@ NSString* const OBPrivacyiTunesStoreIdentifier     = @"com.apple.iTunesStore";
 /* ---- Privacy flow ------------------------------------------------------------- */
 
 @implementation OBPrivacySplashController
+/* Nothing to show and nothing to defer: the services list is empty, so there is no
+   splash to wait on. Showing it is a no-op rather than a deferral, so a caller that
+   waits for the splash to clear is not left waiting. */
 - (void)showPrivacySplash
 {
 }
 @end
 
 @implementation OBPrivacyLinkController
+/* No service store to open. The call is accepted and does nothing, so a caller
+   that treats it as a navigation still finishes its flow. */
 - (void)openServiceWithIdentifier:(NSString*)identifier
 {
 	(void)identifier;
@@ -176,16 +167,14 @@ NSString* const OBPrivacyiTunesStoreIdentifier     = @"com.apple.iTunesStore";
 @end
 
 @implementation OBPrivacyPresenter
+{
+	NSString* _bundleIdentifier;
+}
 + (instancetype)presenterForBundleIdentifier:(NSString*)bundleIdentifier
 {
-	OBPrivacyPresenter* presenter = [[[self alloc] init] autorelease];
+	OBPrivacyPresenter* presenter = [[self alloc] init];
 	presenter->_bundleIdentifier = [bundleIdentifier copy];
 	return presenter;
-}
-- (void)dealloc
-{
-	[_bundleIdentifier release];
-	[super dealloc];
 }
 - (NSArray*)servicesRequiringConsent
 {
@@ -198,6 +187,9 @@ NSString* const OBPrivacyiTunesStoreIdentifier     = @"com.apple.iTunesStore";
 	{
 		*error = nil;
 	}
+	/* No services exist, so there is no consent to collect. That is a success:
+	   the caller proceeds as though consent had been given, which is what it
+	   would do for a service the user has already answered. */
 	return YES;
 }
 @end
@@ -205,7 +197,7 @@ NSString* const OBPrivacyiTunesStoreIdentifier     = @"com.apple.iTunesStore";
 @implementation OBPrivacyFlow
 + (instancetype)flowWithBundleIdentifier:(NSString*)bundleIdentifier
 {
-	OBPrivacyFlow* flow = [[[self alloc] init] autorelease];
+	OBPrivacyFlow* flow = [[self alloc] init];
 	(void)bundleIdentifier;
 	return flow;
 }

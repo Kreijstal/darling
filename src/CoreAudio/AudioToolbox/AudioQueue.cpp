@@ -1,15 +1,6 @@
 #include "AudioQueue.h"
-#include "AudioQueueBase.h"
 #include "AudioQueueOutput.h"
 #include <CarbonCore/MacErrors.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <new>
-
-static bool isStubVerbose() {
-	static const bool verbose = (getenv("STUB_VERBOSE") != nullptr);
-	return verbose;
-}
 
 OSStatus AudioQueueStart(AudioQueueRef inAQ, const AudioTimeStamp *inStartTime)
 {
@@ -114,71 +105,24 @@ OSStatus AudioQueueOfflineRender(AudioQueueRef inAQ, const AudioTimeStamp *inTim
 
 OSStatus AudioQueueAllocateBuffer(AudioQueueRef inAQ, UInt32 inBufferByteSize, AudioQueueBufferRef *outBuffer)
 {
-	if (!outBuffer || inBufferByteSize == 0)
-		return paramErr;
-
-	void* mem = malloc(sizeof(AudioQueueBuffer));
-	if (!mem)
-		return memFullErr;
-
-	void* data = malloc(inBufferByteSize);
-	if (!data) {
-		free(mem);
-		return memFullErr;
-	}
-
-	AudioQueueBuffer* buf = new (mem) AudioQueueBuffer{
-		inBufferByteSize,
-		data,
-		0,
-		nullptr,
-		0,
-		nullptr,
-		0
-	};
-
-	*outBuffer = buf;
-	return noErr;
+	return inAQ->allocateBuffer(inBufferByteSize, 0, outBuffer);
 }
 
 OSStatus AudioQueueAllocateBufferWithPacketDescriptions(AudioQueueRef inAQ,
 		UInt32 inBufferByteSize, UInt32 inNumberPacketDescriptions,
 		AudioQueueBufferRef *outBuffer)
 {
-	OSStatus err = AudioQueueAllocateBuffer(inAQ, inBufferByteSize, outBuffer);
-	if (err != noErr)
-		return err;
-
-	if (inNumberPacketDescriptions > 0) {
-		AudioQueueBuffer* buf = *outBuffer;
-		buf->mPacketDescriptions = (AudioStreamPacketDescription*) malloc(sizeof(AudioStreamPacketDescription) * inNumberPacketDescriptions);
-		if (!buf->mPacketDescriptions) {
-			AudioQueueFreeBuffer(inAQ, buf);
-			*outBuffer = nullptr;
-			return memFullErr;
-		}
-		buf->mPacketDescriptionCapacity = inNumberPacketDescriptions;
-	}
-	return noErr;
+	return inAQ->allocateBuffer(inBufferByteSize, inNumberPacketDescriptions, outBuffer);
 }
 
 OSStatus AudioQueueFreeBuffer(AudioQueueRef inAQ, AudioQueueBufferRef inBuffer)
 {
-	if (!inBuffer)
-		return paramErr;
-	if (inBuffer->mAudioData)
-		free(inBuffer->mAudioData);
-	if (inBuffer->mPacketDescriptions)
-		free(inBuffer->mPacketDescriptions);
-	free(inBuffer);
-	return noErr;
+	return inAQ->freeBuffer(inBuffer);
 }
 
 OSStatus AudioQueueEnqueueBuffer(AudioQueueRef inAQ, AudioQueueBufferRef inBuffer,
 		UInt32 inNumPacketDescs, const AudioStreamPacketDescription *inPacketDescs)
 {
-	if (!inAQ || !inBuffer)
-		return paramErr;
 	return inAQ->enqueueBuffer(inBuffer, inNumPacketDescs, inPacketDescs);
 }
 
@@ -189,7 +133,14 @@ OSStatus AudioQueueEnqueueBufferWithParameters(AudioQueueRef inAQ,
 		UInt32 inNumParamValues, const AudioQueueParameterEvent *inParamValues,
 		const AudioTimeStamp *inStartTime, AudioTimeStamp *outActualStartTime)
 {
-	if (!inAQ || !inBuffer)
-		return paramErr;
+	// Trimming, scheduled start times and per-buffer parameters are not supported:
+	// accept the plain case only, rather than play something else than asked.
+	if (inTrimFramesAtStart || inTrimFramesAtEnd || inNumParamValues || inStartTime || outActualStartTime)
+		return unimpErr;
 	return inAQ->enqueueBuffer(inBuffer, inNumPacketDescs, inPacketDescs);
+}
+
+OSStatus AudioQueueGetCurrentTime(AudioQueueRef inAQ, AudioQueueTimelineRef inTimeline, AudioTimeStamp *outTimeStamp, Boolean *outTimelineDiscontinuity)
+{
+	return inAQ->getCurrentTime(outTimeStamp, outTimelineDiscontinuity);
 }

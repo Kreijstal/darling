@@ -9,6 +9,26 @@
 
 typedef SInt32 AESendMode;
 
+enum {
+	kAENoReply = 0x00000001,
+	kAEQueueReply = 0x00000002,
+	kAEWaitReply = 0x00000003,
+	kAEDontReconnect = 0x00000080,
+	kAEWantReceipt = 0x00000200,
+	kAENeverInteract = 0x00000010,
+	kAECanInteract = 0x00000020,
+	kAEAlwaysInteract = 0x00000030,
+	kAECanSwitchLayer = 0x00000040,
+	kAEDontRecord = 0x00001000,
+	kAEDontExecute = 0x00002000,
+	kAEProcessNonReplyEvents = 0x00008000,
+};
+
+enum {
+	kAEDefaultTimeout = -1,
+	kNoTimeOut = -2,
+};
+
 typedef ResType DescType;
 typedef FourCharCode                    AEKeyword;
 
@@ -54,12 +74,15 @@ enum : DescType {
 	typeSInt32 = 'long',
 	typeUInt32 = 'magn',
 	typeSInt64 = 'comp',
+	typeUInt16 = 'ushr',
+	typeUInt64 = 'ucom',
 	typeIEEE32BitFloatingPoint = 'sing',
 	typeIEEE64BitFloatingPoint = 'doub',
 	typeUTF8Text = 'utf8',
 	typeUnicodeText = 'utxt',
 	typeType = 'type',
 	typeEnumerated = 'enum',
+	typeKeyword = 'keyw',
 	typeFileURL = 'furl',
 	typeApplicationBundleID = 'bund',
 	typeKernelProcessID = 'kpid',
@@ -87,6 +110,11 @@ enum : AEKeyword {
 	keyDirectObject = '----',
 	keyErrorNumber = 'errn',
 	keyErrorString = 'errs',
+};
+
+enum {
+	kAutoGenerateReturnID = -1,
+	kAnyTransactionID = 0,
 };
 
 typedef OSErr (*AEEventHandlerProcPtr)(

@@ -11,7 +11,6 @@ enum darling_prefix_error {
 	DARLING_PREFIX_OK = 0,
 	DARLING_PREFIX_CONFLICT,
 	DARLING_PREFIX_EMPTY,
-	DARLING_PREFIX_RELATIVE,
 	DARLING_PREFIX_INVALID_PROFILE,
 	DARLING_PREFIX_NO_HOME,
 	DARLING_PREFIX_TOO_LONG,
@@ -25,8 +24,6 @@ static inline const char* darlingPrefixError(enum darling_prefix_error error)
 			return "DPREFIX and DARLING_PROFILE cannot be used together";
 		case DARLING_PREFIX_EMPTY:
 			return "DPREFIX cannot be empty";
-		case DARLING_PREFIX_RELATIVE:
-			return "DPREFIX must be an absolute path";
 		case DARLING_PREFIX_INVALID_PROFILE:
 			return "DARLING_PROFILE must contain 1-64 ASCII letters, digits, dots, underscores, or hyphens, and cannot be '.' or '..'";
 		case DARLING_PREFIX_NO_HOME:
@@ -71,10 +68,6 @@ static inline char* darlingSelectPrefix(const char* explicitPrefix, const char* 
 		}
 		if (strlen(explicitPrefix) > 255) {
 			*error = DARLING_PREFIX_TOO_LONG;
-			return NULL;
-		}
-		if (explicitPrefix[0] != '/') {
-			*error = DARLING_PREFIX_RELATIVE;
 			return NULL;
 		}
 		char* result = strdup(explicitPrefix);

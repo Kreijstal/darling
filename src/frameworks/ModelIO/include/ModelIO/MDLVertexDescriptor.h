@@ -19,12 +19,12 @@
 
 #include <Foundation/Foundation.h>
 
-// Attribute name values as shipped by Apple's ModelIO.
-extern NSString *const MDLVertexAttributePosition;
-extern NSString *const MDLVertexAttributeNormal;
-extern NSString *const MDLVertexAttributeTangent;
-extern NSString *const MDLVertexAttributeBitangent;
-extern NSString *const MDLVertexAttributeTextureCoordinate;
+// Names of the default vertex attributes.
+FOUNDATION_EXPORT NSString * const MDLVertexAttributePosition;
+FOUNDATION_EXPORT NSString * const MDLVertexAttributeNormal;
+FOUNDATION_EXPORT NSString * const MDLVertexAttributeTangent;
+FOUNDATION_EXPORT NSString * const MDLVertexAttributeBitangent;
+FOUNDATION_EXPORT NSString * const MDLVertexAttributeTextureCoordinate;
 
 @interface MDLVertexDescriptor : NSObject
 
