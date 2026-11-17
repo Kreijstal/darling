@@ -1,1 +1,0 @@
-void AuthoredTemporaryStage(int stage);
