@@ -1,12 +1,7 @@
 /*
  This file is part of Darling.
 
-<<<<<<<< HEAD:src/frameworks/CoreMedia/include/CoreMedia/CMBase.h
- Copyright (C) 2026 Darling Developers
-========
- Copyright (C) 2021 Lubos Dolezel
- Copyright (C) 2026 Darling developers
->>>>>>>> darlinghq/master:src/frameworks/UserNotifications/src/UNMutableNotificationContent.m
+ Copyright (C) 2026 Lubos Dolezel
 
  Darling is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -30,7 +25,13 @@
 #include <stdint.h>
 #include <stddef.h>
 
-<<<<<<<< HEAD:src/frameworks/CoreMedia/include/CoreMedia/CMBase.h
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define CM_SWIFT_NAME(_name) CF_SWIFT_NAME(_name)
+
+// Macros the fork's CoreMedia headers use.
 #ifdef __cplusplus
 #define CM_EXPORT extern "C"
 #else
@@ -41,145 +42,13 @@
 #define CM_NONNULL __nonnull
 #endif
 #define CM_RETURNS_RETAINED_PARAMETER CF_RETURNS_RETAINED
-========
-@dynamic attachments;
-@dynamic badge;
-@dynamic body;
-@dynamic categoryIdentifier;
-@dynamic launchImageName;
-@dynamic sound;
-@dynamic subtitle;
-@dynamic threadIdentifier;
-@dynamic title;
-@dynamic userInfo;
-@dynamic interruptionLevel;
-@dynamic summaryArgument;
-@dynamic summaryArgumentCount;
-@dynamic targetContentIdentifier;
-@dynamic relevanceScore;
-@dynamic filterCriteria;
 
-- (void)setAttachments:(NSArray<UNNotificationAttachment *> *)attachments
-{
-    if (_attachments != attachments) {
-        [_attachments release];
-        _attachments = [attachments copy];
-    }
+// Counts of, and indexes into, the items of a CoreMedia container.
+typedef CFIndex CMItemCount;
+typedef CFIndex CMItemIndex;
+
+#ifdef __cplusplus
 }
-
-- (void)setBadge:(NSNumber *)badge
-{
-    if (_badge != badge) {
-        [_badge release];
-        _badge = [badge copy];
-    }
-}
-
-- (void)setBody:(NSString *)body
-{
-    if (_body != body) {
-        [_body release];
-        _body = [body copy];
-    }
-}
-
-- (void)setCategoryIdentifier:(NSString *)categoryIdentifier
-{
-    if (_categoryIdentifier != categoryIdentifier) {
-        [_categoryIdentifier release];
-        _categoryIdentifier = [categoryIdentifier copy];
-    }
-}
-
-- (void)setLaunchImageName:(NSString *)launchImageName
-{
-    if (_launchImageName != launchImageName) {
-        [_launchImageName release];
-        _launchImageName = [launchImageName copy];
-    }
-}
-
-- (void)setSound:(UNNotificationSound *)sound
-{
-    if (_sound != sound) {
-        [_sound release];
-        _sound = [sound copy];
-    }
-}
-
-- (void)setSubtitle:(NSString *)subtitle
-{
-    if (_subtitle != subtitle) {
-        [_subtitle release];
-        _subtitle = [subtitle copy];
-    }
-}
-
-- (void)setThreadIdentifier:(NSString *)threadIdentifier
-{
-    if (_threadIdentifier != threadIdentifier) {
-        [_threadIdentifier release];
-        _threadIdentifier = [threadIdentifier copy];
-    }
-}
-
-- (void)setTitle:(NSString *)title
-{
-    if (_title != title) {
-        [_title release];
-        _title = [title copy];
-    }
-}
-
-- (void)setUserInfo:(NSDictionary *)userInfo
-{
-    if (_userInfo != userInfo) {
-        [_userInfo release];
-        _userInfo = [userInfo copy];
-    }
-}
-
-- (void)setInterruptionLevel:(UNNotificationInterruptionLevel)interruptionLevel
-{
-    _interruptionLevel = interruptionLevel;
-}
-
-- (void)setSummaryArgument:(NSString *)summaryArgument
-{
-    if (_summaryArgument != summaryArgument) {
-        [_summaryArgument release];
-        _summaryArgument = [summaryArgument copy];
-    }
-}
-
-- (void)setSummaryArgumentCount:(NSUInteger)summaryArgumentCount
-{
-    _summaryArgumentCount = summaryArgumentCount;
-}
-
-- (void)setTargetContentIdentifier:(NSString *)targetContentIdentifier
-{
-    if (_targetContentIdentifier != targetContentIdentifier) {
-        [_targetContentIdentifier release];
-        _targetContentIdentifier = [targetContentIdentifier copy];
-    }
-}
-
-- (void)setRelevanceScore:(double)relevanceScore
-{
-    _relevanceScore = relevanceScore;
-}
-
-- (void)setFilterCriteria:(NSString *)filterCriteria
-{
-    if (_filterCriteria != filterCriteria) {
-        [_filterCriteria release];
-        _filterCriteria = [filterCriteria copy];
-    }
-}
->>>>>>>> darlinghq/master:src/frameworks/UserNotifications/src/UNMutableNotificationContent.m
-
-typedef signed long CMItemCount;
-typedef signed long CMItemIndex;
+#endif
 
 #endif
