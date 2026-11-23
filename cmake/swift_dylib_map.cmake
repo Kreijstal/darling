@@ -1,73 +1,159 @@
-# Redirects the guest paths of the Swift overlay to the dylibs built under
+# Redirects the guest paths of the Swift overlay to the dylibs shipped in
 # src/external/swift, so ld64 never looks for them on the host.
 #
-# The list covers:
-# 1. Source dylibs pre-staged in src/external/swift/
-# 2. Generated dylibs built under ${CMAKE_BINARY_DIR}/src/external/swift/
-#    (Source of truth: src/external/swift/CMakeLists.txt)
-# 3. Framework bundles (Combine.framework, CryptoKit.framework)
+# The SDK's .tbd files and the overlays name their dependencies either by the
+# absolute install name (/usr/lib/swift/libswiftX.dylib) or, for the older
+# overlays, by @rpath/libswiftX.dylib. Both forms are mapped to the same file.
+#
+# The map covers:
+# 1. Dylibs shipped in the swift submodule's source directory. They are found
+#    with a glob, so the list follows the submodule instead of being kept here.
+#    A symlink such as libswiftCompatibilitySpan.dylib -> libswiftCore.dylib is
+#    mapped like any other entry.
+# 2. Dylibs the submodule's CMakeLists.txt builds into the binary directory
+#    (the overlays compiled from source, the re-export dylibs for the split
+#    Darwin overlay and the WebKit stub). Their output names are fixed by that
+#    CMakeLists.txt, so they are listed. The overlays exist only when the build
+#    found a Swift toolchain; an entry for a dylib that is not built is harmless,
+#    since ld64 only opens the file when a link refers to it.
+# 3. Framework bundles (Combine.framework, CryptoKit.framework).
+#
+# The Foundation, CoreGraphics and CoreText overlays are mapped to the placeholders that
+# Foundation, CoreGraphics and CoreText re-export, because the overlays link those
+# frameworks and cannot be their dependencies (see below).
 
-FUNCTION(add_swift_dylib_map target)
-	if (NOT TARGET ${target})
-		return()
+set(DARLING_SWIFT_SOURCE_DIR "${CMAKE_SOURCE_DIR}/src/external/swift")
+
+# Dylibs generated in ${CMAKE_BINARY_DIR}/src/external/swift (see the swift
+# submodule's CMakeLists.txt).
+set(DARLING_SWIFT_GENERATED_DYLIBS
+	libswiftDarwin.dylib
+	libswiftObjectiveC.dylib
+	libswiftCoreFoundation.dylib
+	libswiftDispatch.dylib
+	libswiftos.dylib
+	libswiftXPC.dylib
+	libswiftAppKit.dylib
+	libswiftUniformTypeIdentifiers.dylib
+	libswiftIOKit.dylib
+	libswiftCoreAudio.dylib
+	libswiftCompression.dylib
+	libswiftNetwork.dylib
+	libswift_errno.dylib
+	libswift_DarwinFoundation1.dylib
+	libswift_DarwinFoundation2.dylib
+	libswift_DarwinFoundation3.dylib
+	libswift_math.dylib
+	libswift_signal.dylib
+	libswift_stdio.dylib
+	libswift_time.dylib
+	libswiftsys_time.dylib
+	libswiftunistd.dylib
+	libswiftWebKit.dylib
+	libswiftCoreCompat.dylib
+)
+
+set(DARLING_SWIFT_FRAMEWORKS
+	Combine
+	CryptoKit
+)
+
+# Builds the whole flag string once; it is identical for every target.
+function(_darling_swift_dylib_map_compute out)
+	set(map "")
+
+	# CONFIGURE_DEPENDS makes the generator re-run the glob at build time, so a
+	# dylib added to the submodule is picked up without a manual re-configure.
+	file(GLOB src_dylibs CONFIGURE_DEPENDS "${DARLING_SWIFT_SOURCE_DIR}/libswift*.dylib")
+	if (NOT src_dylibs AND EXISTS "${DARLING_SWIFT_SOURCE_DIR}/CMakeLists.txt")
+		# An empty list here means every Swift dylib would be unmappable and
+		# ld64 would fail much later with "file not found" on each target.
+		message(FATAL_ERROR "src/external/swift is present but contains no libswift*.dylib files")
 	endif()
 
-	set(SWIFT_DYLIB_MAP "")
-
-	# Generated dylibs built in binary directory (defined in src/external/swift/CMakeLists.txt).
-	# Defined explicitly so ld64 mappings are unconditionally present even on clean builds.
-	set(SWIFT_GENERATED_DYLIBS
-		libswiftCoreCompat.dylib
-		libswiftWebKit.dylib
-		libswift_errno.dylib
-		libswiftUniformTypeIdentifiers.dylib
-	)
-	foreach(gen_name ${SWIFT_GENERATED_DYLIBS})
-		set(gen_path "${CMAKE_BINARY_DIR}/src/external/swift/${gen_name}")
-		set(SWIFT_DYLIB_MAP "${SWIFT_DYLIB_MAP} -Wl,-dylib_file,/usr/lib/swift/${gen_name}:${gen_path} -Wl,-dylib_file,@rpath/${gen_name}:${gen_path}")
+	foreach(swift_dylib ${src_dylibs})
+		get_filename_component(swift_name "${swift_dylib}" NAME)
+		list(FIND DARLING_SWIFT_GENERATED_DYLIBS "${swift_name}" _is_gen)
+		if (_is_gen EQUAL -1)
+			string(APPEND map " -Wl,-dylib_file,/usr/lib/swift/${swift_name}:${swift_dylib} -Wl,-dylib_file,@rpath/${swift_name}:${swift_dylib}")
+		endif()
 	endforeach()
+
+	foreach(gen_name ${DARLING_SWIFT_GENERATED_DYLIBS})
+		set(gen_path "${CMAKE_BINARY_DIR}/src/external/swift/${gen_name}")
+		string(APPEND map " -Wl,-dylib_file,/usr/lib/swift/${gen_name}:${gen_path} -Wl,-dylib_file,@rpath/${gen_name}:${gen_path}")
+	endforeach()
+
+	# Foundation re-exports the Foundation overlay, which itself links Foundation. Foundation therefore re-exports
+	# an empty placeholder dylib that carries the overlay's install name (see the Foundation CMakeLists.txt), and
+	# links inside the build, which reach the overlay through that re-export, resolve the install name to the
+	# placeholder: the overlay cannot be a dependency of the targets it is built from.
+	set(placeholder "${CMAKE_BINARY_DIR}/src/external/foundation/libswiftFoundation_placeholder.dylib")
+	string(APPEND map " -Wl,-dylib_file,/usr/lib/swift/libswiftFoundation.dylib:${placeholder} -Wl,-dylib_file,@rpath/libswiftFoundation.dylib:${placeholder}")
+
+	# CoreGraphics re-exports the CoreGraphics overlay in the same way (see the CoreGraphics CMakeLists.txt), so the
+	# overlay's install name resolves to CoreGraphics' placeholder inside the build. The overlay links CoreGraphics
+	# and cannot be a dependency of it.
+	set(cg_placeholder "${CMAKE_BINARY_DIR}/src/external/cocotron/CoreGraphics/libswiftCoreGraphics_placeholder.dylib")
+	string(APPEND map " -Wl,-dylib_file,/usr/lib/swift/libswiftCoreGraphics.dylib:${cg_placeholder} -Wl,-dylib_file,@rpath/libswiftCoreGraphics.dylib:${cg_placeholder}")
+
+	# CoreText re-exports the CoreText overlay in the same way (see the CoreText CMakeLists.txt), so the overlay's
+	# install name resolves to CoreText's placeholder inside the build. The overlay links CoreText and cannot be a
+	# dependency of it.
+	set(ct_placeholder "${CMAKE_BINARY_DIR}/src/external/cocotron/CoreText/libswiftCoreText_placeholder.dylib")
+	string(APPEND map " -Wl,-dylib_file,/usr/lib/swift/libswiftCoreText.dylib:${ct_placeholder} -Wl,-dylib_file,@rpath/libswiftCoreText.dylib:${ct_placeholder}")
+
+	foreach(fw_name ${DARLING_SWIFT_FRAMEWORKS})
+		set(fw_binary "${DARLING_SWIFT_SOURCE_DIR}/${fw_name}.framework/Versions/A/${fw_name}")
+		if (NOT EXISTS "${fw_binary}")
+			set(fw_binary "${CMAKE_BINARY_DIR}/src/external/swift/${fw_name}.framework/Versions/A/${fw_name}")
+		endif()
+		string(APPEND map " -Wl,-dylib_file,/System/Library/Frameworks/${fw_name}.framework/Versions/A/${fw_name}:${fw_binary} -Wl,-dylib_file,@rpath/${fw_name}.framework/Versions/A/${fw_name}:${fw_binary} -Wl,-dylib_file,@rpath/${fw_name}.framework/${fw_name}:${fw_binary}")
+	endforeach()
+
+	set(${out} "${map}" PARENT_SCOPE)
+endfunction()
+
+# The optional source-built supplements. Their options are defined in the Foundation and
+# CoreData CMakeLists, so unlike the map above this is evaluated for every target and not
+# cached: a target configured before the option exists would otherwise keep the old answer.
+function(_darling_swift_supplement_map out)
+	set(map "")
 
 	# Foundation reexports this optional source-built library. Its consumers
 	# must resolve the guest install name to the build output too.
 	if (DARLING_FOUNDATION_SWIFT_SUPPLEMENT)
 		set(supplement_path "${CMAKE_BINARY_DIR}/src/external/foundation/swift/libDarlingFoundationSupplement.dylib")
-		set(SWIFT_DYLIB_MAP "${SWIFT_DYLIB_MAP} -Wl,-dylib_file,/usr/lib/swift/libDarlingFoundationSupplement.dylib:${supplement_path} -Wl,-dylib_file,@rpath/libDarlingFoundationSupplement.dylib:${supplement_path}")
+		string(APPEND map " -Wl,-dylib_file,/usr/lib/swift/libDarlingFoundationSupplement.dylib:${supplement_path} -Wl,-dylib_file,@rpath/libDarlingFoundationSupplement.dylib:${supplement_path}")
 		# It was linked against the SDK, under the unversioned framework
 		# paths: targets linked without the SDK (Ruby's bundles) need them too.
-		set(SWIFT_DYLIB_MAP "${SWIFT_DYLIB_MAP} -Wl,-dylib_file,/System/Library/Frameworks/Foundation.framework/Foundation:${CMAKE_BINARY_DIR}/src/external/foundation/Foundation -Wl,-dylib_file,/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation:${CMAKE_BINARY_DIR}/src/external/corefoundation/CoreFoundation")
+		string(APPEND map " -Wl,-dylib_file,/System/Library/Frameworks/Foundation.framework/Foundation:${CMAKE_BINARY_DIR}/src/external/foundation/Foundation -Wl,-dylib_file,/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation:${CMAKE_BINARY_DIR}/src/external/corefoundation/CoreFoundation")
 	endif()
 
 	# CoreData's source-built generic Swift API is reexported to SDK clients.
 	if (DARLING_COREDATA_SWIFT_SUPPLEMENT)
 		set(supplement_path "${CMAKE_BINARY_DIR}/src/external/cocotron/CoreData/swift/libDarlingCoreDataSupplement.dylib")
-		set(SWIFT_DYLIB_MAP "${SWIFT_DYLIB_MAP} -Wl,-dylib_file,/usr/lib/swift/libDarlingCoreDataSupplement.dylib:${supplement_path} -Wl,-dylib_file,@rpath/libDarlingCoreDataSupplement.dylib:${supplement_path}")
+		string(APPEND map " -Wl,-dylib_file,/usr/lib/swift/libDarlingCoreDataSupplement.dylib:${supplement_path} -Wl,-dylib_file,@rpath/libDarlingCoreDataSupplement.dylib:${supplement_path}")
 	endif()
 
-	# Pre-staged dylibs in source tree (skipping any generated dylibs to prevent duplicate mappings)
-	file(GLOB DARLING_SWIFT_SRC_DYLIBS "${CMAKE_SOURCE_DIR}/src/external/swift/libswift*.dylib")
-	foreach(swift_dylib ${DARLING_SWIFT_SRC_DYLIBS})
-		get_filename_component(swift_name "${swift_dylib}" NAME)
-		list(FIND SWIFT_GENERATED_DYLIBS "${swift_name}" _is_gen)
-		if (_is_gen EQUAL -1)
-			set(SWIFT_DYLIB_MAP "${SWIFT_DYLIB_MAP} -Wl,-dylib_file,/usr/lib/swift/${swift_name}:${swift_dylib} -Wl,-dylib_file,@rpath/${swift_name}:${swift_dylib}")
-		endif()
-	endforeach()
+	set(${out} "${map}" PARENT_SCOPE)
+endfunction()
 
-	# Framework bundles (Combine.framework, CryptoKit.framework).
-	# Emitted unconditionally for ld64 so clean builds before framework compile succeed.
-	set(SWIFT_FRAMEWORKS
-		Combine
-		CryptoKit
-	)
-	foreach(fw_name ${SWIFT_FRAMEWORKS})
-		set(fw_binary "${CMAKE_SOURCE_DIR}/src/external/swift/${fw_name}.framework/Versions/A/${fw_name}")
-		if (NOT EXISTS "${fw_binary}")
-			set(fw_binary "${CMAKE_BINARY_DIR}/src/external/swift/${fw_name}.framework/Versions/A/${fw_name}")
-		endif()
-		set(SWIFT_DYLIB_MAP "${SWIFT_DYLIB_MAP} -Wl,-dylib_file,/System/Library/Frameworks/${fw_name}.framework/Versions/A/${fw_name}:${fw_binary} -Wl,-dylib_file,@rpath/${fw_name}.framework/Versions/A/${fw_name}:${fw_binary} -Wl,-dylib_file,@rpath/${fw_name}.framework/${fw_name}:${fw_binary}")
-	endforeach()
-
-	if (SWIFT_DYLIB_MAP)
-		set_property(TARGET ${target} APPEND_STRING PROPERTY LINK_FLAGS " ${SWIFT_DYLIB_MAP}")
+function(add_swift_dylib_map target)
+	if (NOT TARGET ${target})
+		return()
 	endif()
-ENDFUNCTION()
+
+	get_property(map GLOBAL PROPERTY DARLING_SWIFT_DYLIB_MAP)
+	if (NOT map)
+		_darling_swift_dylib_map_compute(map)
+		set_property(GLOBAL PROPERTY DARLING_SWIFT_DYLIB_MAP "${map}")
+	endif()
+
+	_darling_swift_supplement_map(supplement_map)
+	string(APPEND map "${supplement_map}")
+
+	if (map)
+		set_property(TARGET ${target} APPEND_STRING PROPERTY LINK_FLAGS " ${map}")
+	endif()
+endfunction()
