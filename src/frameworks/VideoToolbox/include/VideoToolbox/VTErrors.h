@@ -38,6 +38,7 @@ enum {
 	kVTVideoEncoderMalfunctionErr = -12912,
 	kVTVideoDecoderNotAvailableNowErr = -12913,
 	kVTImageRotationNotSupportedErr = -12914,
+	kVTPixelRotationNotSupportedErr = -12914,
 	kVTVideoEncoderNotAvailableNowErr = -12915,
 	kVTFormatDescriptionChangeNotSupportedErr = -12916,
 	kVTInsufficientSourceColorDataErr = -12917,
@@ -65,6 +66,8 @@ enum {
 	kVTCouldNotOutputTaggedBufferGroupErr = -17699,
 	kVTCouldNotFindExtensionErr = -19510,
 	kVTExtensionConflictErr = -19511,
+	kVTVideoEncoderAutoWhiteBalanceNotLockedErr = -19512,
+	kVTLogTransferFunctionMismatchErr = -19513,
 };
 
 typedef CF_OPTIONS(uint32_t, VTDecodeFrameFlags) {

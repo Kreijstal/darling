@@ -31,6 +31,9 @@
 #include <VideoToolbox/VTCompressionSession.h>
 #include <VideoToolbox/VTPixelTransferSession.h>
 #include <VideoToolbox/VTPixelRotationSession.h>
+#include <VideoToolbox/VTPixelRotationProperties.h>
+#include <VideoToolbox/VTPixelTransferProperties.h>
+#include <VideoToolbox/VTVideoEncoderList.h>
 
 #ifdef __OBJC__
 #import <VideoToolbox/FigMetalTransferHelper.h>
