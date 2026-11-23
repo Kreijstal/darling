@@ -253,7 +253,6 @@ void* CMTextFormatDescriptionGetDefaultTextBox(void);
 void* CMTextFormatDescriptionGetDisplayFlags(void);
 void* CMTextFormatDescriptionGetFontName(void);
 void* CMTextFormatDescriptionGetJustification(void);
-void* CMTimeClampToRange(void);
 void* CMTimeCodeFormatDescriptionCopyAsBigEndianTimeCodeDescriptionBlockBuffer(void);
 void* CMTimeCodeFormatDescriptionCreate(void);
 void* CMTimeCodeFormatDescriptionCreateFromBigEndianTimeCodeDescriptionBlockBuffer(void);

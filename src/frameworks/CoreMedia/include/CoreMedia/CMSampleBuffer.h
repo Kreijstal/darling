@@ -59,6 +59,13 @@ typedef OSStatus (*CMSampleBufferMakeDataReadyCallback)(CMSampleBufferRef sbuf, 
 
 CM_EXPORT const CFStringRef kCMSampleAttachmentKey_NotSync;
 CM_EXPORT const CFStringRef kCMSampleAttachmentKey_DisplayImmediately;
+CM_EXPORT const CFStringRef kCMSampleAttachmentKey_IsDependedOnByOthers;
+
+// Sample buffer attachment: the decoder is reset before this buffer is decoded.
+CM_EXPORT const CFStringRef kCMSampleBufferAttachmentKey_ResetDecoderBeforeDecoding;
+
+// Every time of the structure is invalid.
+CM_EXPORT const CMSampleTimingInfo kCMTimingInfoInvalid;
 
 CM_EXPORT CFTypeID CMSampleBufferGetTypeID(void);
 CM_EXPORT OSStatus CMSampleBufferCreate(CFAllocatorRef allocator, CMBlockBufferRef dataBuffer, Boolean dataReady,

@@ -47,5 +47,6 @@ CM_EXPORT Boolean CMTimeRangeContainsTime(CMTimeRange range, CMTime time);
 CM_EXPORT Boolean CMTimeRangeContainsTimeRange(CMTimeRange range, CMTimeRange otherRange);
 CM_EXPORT CMTime CMTimeRangeGetEnd(CMTimeRange range);
 CM_EXPORT CMTimeRange CMTimeRangeFromTimeToTime(CMTime start, CMTime end);
+CM_EXPORT CMTime CMTimeClampToRange(CMTime time, CMTimeRange range);
 
 #endif
