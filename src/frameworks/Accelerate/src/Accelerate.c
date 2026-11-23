@@ -27,13 +27,17 @@
 
 #define KVIMAGE_ALL_VALID_FLAGS ( \
     kvImageLeaveAlphaUnchanged | \
-    kvImageCopyRestriction | \
+    kvImageCopyInPlace | \
+    kvImageBackgroundColorFill | \
+    kvImageEdgeExtend | \
     kvImageDoNotTile | \
-    kvImageGetTempBufferSize | \
     kvImageHighQualityResampling | \
     kvImageTruncateKernel | \
-    kvImageEdgeExtend | \
-    kvImageBackgroundColorFill \
+    kvImageGetTempBufferSize | \
+    kvImagePrintDiagnosticsToConsole | \
+    kvImageNoAllocate | \
+    kvImageHDRContent | \
+    kvImageDoNotClamp \
 )
 
 typedef struct {
@@ -67,13 +71,13 @@ vImage_Error vImageBuffer_InitWithCGImage(
         fprintf(stderr, "stub: vImageBuffer_InitWithCGImage called\n");
     }
     if (!buf) {
-        return kvImageNullPointerErr;
+        return kvImageNullPointerArgument;
     }
     buf->data = NULL;
     buf->height = 0;
     buf->width = 0;
     buf->rowBytes = 0;
-    return kvImageInvalidImageFormat;
+    return kvImageUnsupportedConversion;
 }
 
 vImage_Error vImagePermuteChannels_ARGB8888(
@@ -85,7 +89,8 @@ vImage_Error vImagePermuteChannels_ARGB8888(
     if (verbose) {
         fprintf(stderr, "stub: vImagePermuteChannels_ARGB8888 called\n");
     }
-    return kvImageNoError;
+    // Not implemented. Report that instead of claiming the pixels were permuted.
+    return kvImageUnsupportedConversion;
 }
 
 vImage_Error vImageScale_ARGB8888(
@@ -102,7 +107,7 @@ vImage_Error vImageScale_ARGB8888(
     }
 
     if (!src || !dest) {
-        return kvImageNullPointerErr;
+        return kvImageNullPointerArgument;
     }
 
     if (src->width == 0 || src->height == 0 || dest->width == 0 || dest->height == 0 ||
@@ -127,7 +132,7 @@ vImage_Error vImageScale_ARGB8888(
     }
 
     if (!src->data || !dest->data) {
-        return kvImageNullPointerErr;
+        return kvImageNullPointerArgument;
     }
 
     /* Fast path: 1:1 scale */
@@ -353,26 +358,9 @@ vImage_Error vImageUnpremultiplyData_ARGB8888(
     if (verbose) {
         fprintf(stderr, "stub: vImageUnpremultiplyData_ARGB8888 called\n");
     }
-    return kvImageNoError;
+    // Not implemented. Report that instead of claiming the pixels were converted.
+    return kvImageUnsupportedConversion;
 }
-
-/* Flag and error values of the SDK's vImage_Types.h, which callers are compiled with. The enum in
-   this directory's header numbers its flags differently. */
-enum {
-    sdkLeaveAlphaUnchanged = 1,
-    sdkCopyInPlace = 2,
-    sdkBackgroundColorFill = 4,
-    sdkEdgeExtend = 8,
-    sdkTruncateKernel = 64,
-    sdkGetTempBufferSize = 128
-};
-enum {
-    sdkRoiLargerThanInputBuffer = -21766,
-    sdkInvalidKernelSize = -21767,
-    sdkInvalidEdgeStyle = -21768,
-    sdkMemoryAllocationError = -21771,
-    sdkNullPointerArgument = -21772
-};
 
 /* One line of one channel: the mean over a window of `size` around each sample. */
 static void boxLine(const uint8_t *in, size_t inStep, size_t count, uint8_t *out, size_t outStep,
@@ -390,13 +378,13 @@ static void boxLine(const uint8_t *in, size_t inStep, size_t count, uint8_t *out
         low = low < 0 ? 0 : low;
         high = high >= (int64_t)count ? (int64_t)count - 1 : high;
         uint64_t sum = sums[high + 1] - sums[low], divisor = size;
-        if (edge & sdkEdgeExtend)
+        if (edge & kvImageEdgeExtend)
             sum += (uint64_t)left * in[0] + (uint64_t)right * in[(count - 1) * inStep];
-        else if (edge & sdkBackgroundColorFill)
+        else if (edge & kvImageBackgroundColorFill)
             sum += (uint64_t)(left + right) * background;
-        else if (edge & sdkTruncateKernel)
+        else if (edge & kvImageTruncateKernel)
             divisor = (uint64_t)(high - low + 1);
-        else if ((left || right) && (edge & sdkCopyInPlace))
+        else if ((left || right) && (edge & kvImageCopyInPlace))
             sum = (uint64_t)in[center * inStep] * size;
         out[i * outStep] = (uint8_t)((sum + divisor / 2) / divisor);
     }
@@ -408,19 +396,19 @@ vImage_Error vImageBoxConvolve_ARGB8888(const vImage_Buffer *src, const vImage_B
     vImagePixelCount srcOffsetToROI_X, vImagePixelCount srcOffsetToROI_Y, uint32_t kernel_height, uint32_t kernel_width,
     const uint8_t *backgroundColor, vImage_Flags flags)
 {
-    if (flags & sdkGetTempBufferSize)
+    if (flags & kvImageGetTempBufferSize)
         return 0;
     if (src == NULL || dest == NULL || src->data == NULL || dest->data == NULL)
-        return sdkNullPointerArgument;
+        return kvImageNullPointerArgument;
     if (!(kernel_height & 1) || !(kernel_width & 1))
-        return sdkInvalidKernelSize;
-    vImage_Flags edge = flags & (sdkCopyInPlace | sdkBackgroundColorFill | sdkEdgeExtend | sdkTruncateKernel);
+        return kvImageInvalidKernelSize;
+    vImage_Flags edge = flags & (kvImageCopyInPlace | kvImageBackgroundColorFill | kvImageEdgeExtend | kvImageTruncateKernel);
     if (edge == 0 || (edge & (edge - 1)) != 0)
-        return sdkInvalidEdgeStyle;
-    if (edge == sdkBackgroundColorFill && backgroundColor == NULL)
-        return sdkNullPointerArgument;
+        return kvImageInvalidEdgeStyle;
+    if (edge == kvImageBackgroundColorFill && backgroundColor == NULL)
+        return kvImageNullPointerArgument;
     if (srcOffsetToROI_X + dest->width > src->width || srcOffsetToROI_Y + dest->height > src->height)
-        return sdkRoiLargerThanInputBuffer;
+        return kvImageRoiLargerThanInputBuffer;
 
     /* Horizontal into a copy of the ROI's columns over every source row, then vertical into dest, so
        that the source and destination may be the same buffer. */
@@ -430,7 +418,7 @@ vImage_Error vImageBoxConvolve_ARGB8888(const vImage_Buffer *src, const vImage_B
     if (rows == NULL || sums == NULL) {
         free(rows);
         free(sums);
-        return sdkMemoryAllocationError;
+        return kvImageMemoryAllocationError;
     }
     for (size_t channel = 0; channel < 4; channel++) {
         uint8_t background = backgroundColor != NULL ? backgroundColor[channel] : 0;

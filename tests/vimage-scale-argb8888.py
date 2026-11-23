@@ -31,8 +31,8 @@ static void test_parameter_validation(void) {
     dest.data = ddata; dest.width = 4; dest.height = 4; dest.rowBytes = 16;
 
     /* NULL buffers */
-    assert(vImageScale_ARGB8888(NULL, &dest, NULL, kvImageNoFlags) == kvImageNullPointerErr);
-    assert(vImageScale_ARGB8888(&src, NULL, NULL, kvImageNoFlags) == kvImageNullPointerErr);
+    assert(vImageScale_ARGB8888(NULL, &dest, NULL, kvImageNoFlags) == kvImageNullPointerArgument);
+    assert(vImageScale_ARGB8888(&src, NULL, NULL, kvImageNoFlags) == kvImageNullPointerArgument);
 
     /* Zero dimensions */
     src.width = 0;
@@ -66,9 +66,9 @@ static void test_parameter_validation(void) {
     assert(vImageScale_ARGB8888(&src, &dest, NULL, kvImageGetTempBufferSize) == 0);
 
     /* NULL data buffers during actual scale */
-    assert(vImageScale_ARGB8888(&src, &dest, NULL, kvImageNoFlags) == kvImageNullPointerErr);
+    assert(vImageScale_ARGB8888(&src, &dest, NULL, kvImageNoFlags) == kvImageNullPointerArgument);
     src.data = sdata;
-    assert(vImageScale_ARGB8888(&src, &dest, NULL, kvImageNoFlags) == kvImageNullPointerErr);
+    assert(vImageScale_ARGB8888(&src, &dest, NULL, kvImageNoFlags) == kvImageNullPointerArgument);
 }
 
 static void test_scale_1to1_with_padding(void) {
