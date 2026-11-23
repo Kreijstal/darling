@@ -2,7 +2,6 @@
 #define	AUDIOQUEUEBASE_H
 #include "AudioQueue.h"
 
-// Apple's opaque AudioQueueRef target: the queue itself.
 struct OpaqueAudioQueue
 {
 public:
@@ -17,12 +16,7 @@ public:
 	virtual OSStatus pause() = 0;
 	virtual OSStatus reset() = 0;
 
-	virtual OSStatus enqueueBuffer(AudioQueueBufferRef inBuffer,
-			UInt32 inNumPacketDescs, const AudioStreamPacketDescription *inPacketDescs) = 0;
-
 	virtual OSStatus dispose(Boolean inImmediate) = 0;
-
-	virtual OSStatus getCurrentTime(AudioTimeStamp *outTimeStamp, Boolean *outTimelineDiscontinuity);
 
 	virtual OSStatus getParameter(AudioQueueParameterID inParamID, AudioQueueParameterValue *outValue);
 	virtual OSStatus setParameter(AudioQueueParameterID inParamID, AudioQueueParameterValue inValue);
@@ -34,17 +28,19 @@ public:
 	OSStatus addPropertyListener(AudioQueuePropertyID inID, AudioQueuePropertyListenerProc inProc, void *inUserData);
 	OSStatus removePropertyListener(AudioQueuePropertyID inID, AudioQueuePropertyListenerProc inProc, void *inUserData);
 
+	virtual OSStatus allocateBuffer(UInt32 inBufferByteSize, UInt32 inNumberPacketDescriptions, AudioQueueBufferRef *outBuffer);
+	virtual OSStatus freeBuffer(AudioQueueBufferRef inBuffer);
+	virtual OSStatus enqueueBuffer(AudioQueueBufferRef inBuffer, UInt32 inNumPacketDescs, const AudioStreamPacketDescription *inPacketDescs);
+	virtual OSStatus getCurrentTime(AudioTimeStamp *outTimeStamp, Boolean *outTimelineDiscontinuity);
+
 	virtual OSStatus setOfflineRenderFormat(const AudioStreamBasicDescription *inFormat, const AudioChannelLayout *inLayout) = 0;
 	virtual OSStatus offlineRender(const AudioTimeStamp *inTimestamp, AudioQueueBufferRef ioBuffer, UInt32 inNumberFrames) = 0;
 protected:
 	AudioStreamBasicDescription m_format;
 	void* m_userData;
-	CFRunLoopRef m_runloop = nullptr;
-	CFStringRef m_runloopMode = nullptr;
-	CFRunLoopSourceRef m_runloopSource = nullptr;
+	CFRunLoopRef m_runloop;
+	CFStringRef m_runloopMode;
 	UInt32 m_flags;
-	bool m_running = false;
-	bool m_paused = false;
 };
 
 #endif	/* AUDIOQUEUEBASE_H */

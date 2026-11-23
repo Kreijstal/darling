@@ -1,40 +1,18 @@
 #include "AudioQueueBase.h"
 #include "stub.h"
 #include <CarbonCore/MacErrors.h>
-#include <CoreAudio/AudioHardwareBase.h>
-#include <cstring>
 
 OpaqueAudioQueue::OpaqueAudioQueue(const AudioStreamBasicDescription* format, void* userData,
 			CFRunLoopRef runloop, CFStringRef runloopMode, UInt32 flags)
 : m_format(*format), m_userData(userData), m_flags(flags)
 {
-	if (runloop)
-	{
-		m_runloop = (CFRunLoopRef) CFRetain(runloop);
-		m_runloopMode = runloopMode ? (CFStringRef) CFRetain(runloopMode) : (CFStringRef) CFRetain(kCFRunLoopDefaultMode);
-
-		CFRunLoopSourceContext context = {0};
-		m_runloopSource = CFRunLoopSourceCreate(kCFAllocatorDefault, 0, &context);
-		if (m_runloopSource)
-		{
-			CFRunLoopAddSource(m_runloop, m_runloopSource, m_runloopMode);
-		}
-	}
-	else
-	{
-		m_runloop = nullptr;
-		m_runloopMode = nullptr;
-	}
+	// Both are optional: NULL means callbacks on the queue's own thread.
+	m_runloop = runloop ? (CFRunLoopRef) CFRetain(runloop) : nullptr;
+	m_runloopMode = runloopMode ? (CFStringRef) CFRetain(runloopMode) : nullptr;
 }
 
 OpaqueAudioQueue::~OpaqueAudioQueue()
 {
-	if (m_runloop && m_runloopSource)
-	{
-		CFRunLoopRemoveSource(m_runloop, m_runloopSource, m_runloopMode);
-		CFRelease(m_runloopSource);
-		m_runloopSource = nullptr;
-	}
 	if (m_runloop)
 		CFRelease(m_runloop);
 	if (m_runloopMode)
@@ -55,88 +33,20 @@ OSStatus OpaqueAudioQueue::setParameter(AudioQueueParameterID inParamID, AudioQu
 
 OSStatus OpaqueAudioQueue::getProperty(AudioQueuePropertyID inID, void *outData, UInt32 *ioDataSize)
 {
-	if (!ioDataSize)
-		return paramErr;
-
-	switch (inID)
-	{
-		case kAudioQueueProperty_IsRunning:
-		{
-			if (outData && *ioDataSize >= sizeof(UInt32))
-			{
-				*(UInt32*)outData = m_running ? 1 : 0;
-			}
-			*ioDataSize = sizeof(UInt32);
-			return noErr;
-		}
-		case kAudioQueueProperty_StreamDescription:
-		{
-			if (outData && *ioDataSize >= sizeof(AudioStreamBasicDescription))
-			{
-				memcpy(outData, &m_format, sizeof(AudioStreamBasicDescription));
-			}
-			*ioDataSize = sizeof(AudioStreamBasicDescription);
-			return noErr;
-		}
-		case kAudioQueueProperty_MaximumOutputPacketSize:
-		{
-			if (outData && *ioDataSize >= sizeof(UInt32))
-			{
-				*(UInt32*)outData = m_format.mBytesPerPacket ? m_format.mBytesPerPacket : 4;
-			}
-			*ioDataSize = sizeof(UInt32);
-			return noErr;
-		}
-		case kAudioQueueProperty_ChannelLayout:
-		{
-			if (outData && *ioDataSize >= sizeof(AudioChannelLayout))
-			{
-				AudioChannelLayout* layout = (AudioChannelLayout*)outData;
-				memset(layout, 0, sizeof(AudioChannelLayout));
-				layout->mChannelLayoutTag = (m_format.mChannelsPerFrame == 1) ?
-					kAudioChannelLayoutTag_Mono : kAudioChannelLayoutTag_Stereo;
-			}
-			*ioDataSize = sizeof(AudioChannelLayout);
-			return noErr;
-		}
-		default:
-			return kAudioHardwareUnknownPropertyError;
-	}
+	STUB();
+	return unimpErr;
 }
 
 OSStatus OpaqueAudioQueue::setProperty(AudioQueuePropertyID inID, const void *inData, UInt32 inDataSize)
 {
-	switch (inID)
-	{
-		case kAudioQueueProperty_ChannelLayout:
-		case kAudioQueueProperty_CurrentDevice:
-		case kAudioQueueProperty_MagicCookie:
-			return noErr;
-		default:
-			return kAudioHardwareUnknownPropertyError;
-	}
+	STUB();
+	return unimpErr;
 }
 
 OSStatus OpaqueAudioQueue::getPropertySize(AudioQueuePropertyID inID, UInt32 *outDataSize)
 {
-	if (!outDataSize)
-		return paramErr;
-
-	switch (inID)
-	{
-		case kAudioQueueProperty_IsRunning:
-		case kAudioQueueProperty_MaximumOutputPacketSize:
-			*outDataSize = sizeof(UInt32);
-			return noErr;
-		case kAudioQueueProperty_StreamDescription:
-			*outDataSize = sizeof(AudioStreamBasicDescription);
-			return noErr;
-		case kAudioQueueProperty_ChannelLayout:
-			*outDataSize = sizeof(AudioChannelLayout);
-			return noErr;
-		default:
-			return kAudioHardwareUnknownPropertyError;
-	}
+	STUB();
+	return unimpErr;
 }
 
 OSStatus OpaqueAudioQueue::addPropertyListener(AudioQueuePropertyID inID, AudioQueuePropertyListenerProc inProc, void *inUserData)
@@ -146,6 +56,24 @@ OSStatus OpaqueAudioQueue::addPropertyListener(AudioQueuePropertyID inID, AudioQ
 }
 
 OSStatus OpaqueAudioQueue::removePropertyListener(AudioQueuePropertyID inID, AudioQueuePropertyListenerProc inProc, void *inUserData)
+{
+	STUB();
+	return unimpErr;
+}
+
+OSStatus OpaqueAudioQueue::allocateBuffer(UInt32 inBufferByteSize, UInt32 inNumberPacketDescriptions, AudioQueueBufferRef *outBuffer)
+{
+	STUB();
+	return unimpErr;
+}
+
+OSStatus OpaqueAudioQueue::freeBuffer(AudioQueueBufferRef inBuffer)
+{
+	STUB();
+	return unimpErr;
+}
+
+OSStatus OpaqueAudioQueue::enqueueBuffer(AudioQueueBufferRef inBuffer, UInt32 inNumPacketDescs, const AudioStreamPacketDescription *inPacketDescs)
 {
 	STUB();
 	return unimpErr;
