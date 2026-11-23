@@ -56,7 +56,7 @@ vproc_err_t _vproc_post_fork_ping(void);
 #define _audit_session_join(s) 0
 #endif
 
-#define __LAUNCH_MACH_PORT_CONTEXT_T_DEFINED__ 0
+#define __LAUNCH_MACH_PORT_CONTEXT_T_DEFINED__ 1
 
 #define SPAWN_HAS_PATH 0x0001
 #define SPAWN_HAS_WDIR 0x0002

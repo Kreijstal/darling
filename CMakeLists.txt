@@ -8,6 +8,18 @@ execute_process(COMMAND uname -m OUTPUT_VARIABLE _HOST_ARCH OUTPUT_STRIP_TRAILIN
 
 # The target defaults to the host. A toolchain file or -DCMAKE_SYSTEM_PROCESSOR
 # may choose another one, which makes this a cross build.
+# A toolchain file is only read by the first project() call, so peek at the
+# processor it selects.
+if (NOT DEFINED CMAKE_SYSTEM_PROCESSOR AND DEFINED CMAKE_TOOLCHAIN_FILE)
+	function(_darling_toolchain_processor out)
+		include("${CMAKE_TOOLCHAIN_FILE}" OPTIONAL)
+		set(${out} "${CMAKE_SYSTEM_PROCESSOR}" PARENT_SCOPE)
+	endfunction()
+	_darling_toolchain_processor(_TOOLCHAIN_PROCESSOR)
+	if (_TOOLCHAIN_PROCESSOR)
+		set(CMAKE_SYSTEM_PROCESSOR "${_TOOLCHAIN_PROCESSOR}")
+	endif()
+endif()
 if (NOT DEFINED CMAKE_SYSTEM_PROCESSOR)
 	if (_HOST_ARCH MATCHES "aarch64|arm64")
 		SET(CMAKE_SYSTEM_PROCESSOR "aarch64")
