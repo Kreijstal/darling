@@ -5,11 +5,12 @@ const CFStringRef kCVImageBufferGammaLevelKey = CFSTR("CVImageBufferGammaLevel")
 const CFStringRef kCVImageBufferYCbCrMatrixKey = CFSTR("CVImageBufferYCbCrMatrix");
 const CFStringRef kCVImageBufferColorPrimariesKey = CFSTR("CVImageBufferColorPrimaries");
 const CFStringRef kCVImageBufferTransferFunctionKey = CFSTR("CVImageBufferTransferFunction");
+const CFStringRef kCVImageBufferAmbientViewingEnvironmentKey = CFSTR("AmbientViewingEnvironment");
 const CFStringRef kCVImageBufferChromaLocationBottomFieldKey = CFSTR("CVImageBufferChromaLocationBottomField");
 const CFStringRef kCVImageBufferChromaLocationTopFieldKey = CFSTR("CVImageBufferChromaLocationTopField");
 
-const CFStringRef kCVImageBufferPixelAspectRatioHorizontalSpacingKey = CFSTR("CVImageBufferPixelAspectRatioHorizontalSpacing");
-const CFStringRef kCVImageBufferPixelAspectRatioVerticalSpacingKey = CFSTR("CVImageBufferPixelAspectRatioVerticalSpacing");
+const CFStringRef kCVImageBufferPixelAspectRatioHorizontalSpacingKey = CFSTR("HorizontalSpacing");
+const CFStringRef kCVImageBufferPixelAspectRatioVerticalSpacingKey = CFSTR("VerticalSpacing");
 
 const CFStringRef kCVImageBufferYCbCrMatrix_ITU_R_709_2 = CFSTR("ITU_R_709_2");
 const CFStringRef kCVImageBufferYCbCrMatrix_ITU_R_601_4 = CFSTR("ITU_R_601_4");
@@ -34,6 +35,9 @@ const CFStringRef kCVImageBufferChromaLocation_TopLeft = CFSTR("TopLeft");
 const CFStringRef kCVImageBufferCGColorSpaceKey = CFSTR("CGColorSpace");
 
 const CFStringRef kCVImageBufferColorPrimaries_ITU_R_2020 = CFSTR("ITU_R_2020");
+const CFStringRef kCVImageBufferColorPrimaries_P3_D65 = CFSTR("P3_D65");
+const CFStringRef kCVImageBufferColorPrimaries_DCI_P3 = CFSTR("DCI_P3");
+const CFStringRef kCVImageBufferColorPrimaries_P22 = CFSTR("P22");
 const CFStringRef kCVImageBufferYCbCrMatrix_ITU_R_2020 = CFSTR("ITU_R_2020");
 
 const CFStringRef kCVImageBufferTransferFunction_ITU_R_2020 = CFSTR("ITU_R_2020");
@@ -66,8 +70,8 @@ const CFStringRef kCVPixelBufferIOSurfaceOpenGLESFBOCompatibilityKey = CFSTR("IO
 const CFStringRef kCVPixelBufferPoolMaximumBufferAgeKey = CFSTR("MaximumBufferAge");
 const CFStringRef kCVPixelBufferPoolMinimumBufferCountKey = CFSTR("MinimumBufferCount");
 
-const CFStringRef kCVImageBufferCleanApertureKey = CFSTR("CleanAperture");
-const CFStringRef kCVImageBufferCleanApertureWidthKey = CFSTR("CleanApertureWidth");
-const CFStringRef kCVImageBufferCleanApertureHeightKey = CFSTR("CleanApertureHeight");
-const CFStringRef kCVImageBufferCleanApertureHorizontalOffsetKey = CFSTR("CleanApertureHorizontalOffset");
-const CFStringRef kCVImageBufferCleanApertureVerticalOffsetKey = CFSTR("CleanApertureVerticalOffset");
+const CFStringRef kCVImageBufferCleanApertureKey = CFSTR("CVCleanAperture");
+const CFStringRef kCVImageBufferCleanApertureWidthKey = CFSTR("Width");
+const CFStringRef kCVImageBufferCleanApertureHeightKey = CFSTR("Height");
+const CFStringRef kCVImageBufferCleanApertureHorizontalOffsetKey = CFSTR("HorizontalOffset");
+const CFStringRef kCVImageBufferCleanApertureVerticalOffsetKey = CFSTR("VerticalOffset");

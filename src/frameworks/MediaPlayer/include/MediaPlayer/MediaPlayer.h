@@ -109,7 +109,8 @@ MP_EXTERN NSString *const MPNowPlayingInfoPropertyAssetURL;
 
 @interface MPRemoteCommand : NSObject {
     BOOL _enabled;
-    NSMutableArray *_targets;
+    id _target;
+    SEL _action;
 }
 @property(getter=isEnabled) BOOL enabled;
 - (void) addTarget: (id) target action: (SEL) action;
@@ -178,6 +179,7 @@ MP_EXTERN NSString *const MPNowPlayingInfoPropertyAssetURL;
 @end
 
 @interface MPRemoteCommandCenter : NSObject {
+    NSMutableDictionary *_commands;
     MPRemoteCommand *_pauseCommand;
     MPRemoteCommand *_playCommand;
     MPRemoteCommand *_stopCommand;

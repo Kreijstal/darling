@@ -19,6 +19,9 @@ set(coreaudio_sources
     pulse/AudioHardwareImplPAOutput.cpp
     AudioHardwareStream.cpp
     pulse/AudioHardwareStreamPA.cpp
+    pulse/AudioHardwareStreamPAInput.cpp
+    pulse/AudioHardwareStreamPAOutput.cpp
+    pulse/PADispatchMainLoop.cpp
     pulse/PAThreadedMainLoop.cpp
     aaudio/AAudioLibrary.cpp
     aaudio/AudioHardwareImplAAudio.cpp

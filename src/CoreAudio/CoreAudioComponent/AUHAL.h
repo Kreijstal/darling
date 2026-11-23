@@ -76,8 +76,6 @@ private:
 	OSStatus doPlayback(const AudioTimeStamp* inNow, AudioBufferList* outOutputData, const AudioTimeStamp* inOutputTime);
 	OSStatus doRecord(const AudioTimeStamp* inNow, const AudioBufferList* inInputData, const AudioTimeStamp* inInputTime);
 	
-	OSStatus RemoveAudioChannelLayout(AudioUnitScope scope, AudioUnitElement element) override;
-
 protected:
 	AURenderCallbackStruct m_outputAvailableCb = { 0 };
 	bool m_enableOutput = true, m_enableInput = false;
@@ -85,8 +83,6 @@ protected:
 
 	AudioDeviceID m_outputDevice, m_inputDevice;
 	AudioDeviceIOProcID m_outputProcID = 0, m_inputProcID = 0;
-	UInt32 m_renderQuality = 0;
-	AudioChannelLayoutTag m_channelLayoutTag = kAudioChannelLayoutTag_Stereo;
 
 	// Holds interleaved data in the bus 1 output format. Constructed in Start() (while !m_running, before the recording IOProc
 	// is installed) so doRecord() and Render() -- which run on separate

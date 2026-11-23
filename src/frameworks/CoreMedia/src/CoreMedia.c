@@ -1154,11 +1154,6 @@ void* CMTextFormatDescriptionGetJustification(void) {
     return NULL;
 }
 
-void* CMTimeClampToRange(void) {
-    if (verbose) puts("STUB: CMTimeClampToRange called");
-    return NULL;
-}
-
 void* CMTimeCodeFormatDescriptionCopyAsBigEndianTimeCodeDescriptionBlockBuffer(void) {
     if (verbose) puts("STUB: CMTimeCodeFormatDescriptionCopyAsBigEndianTimeCodeDescriptionBlockBuffer called");
     return NULL;

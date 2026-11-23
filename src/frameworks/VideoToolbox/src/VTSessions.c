@@ -100,8 +100,6 @@ Boolean VTIsHardwareDecodeSupported(CMVideoCodecType codecType)
 	return false;
 }
 
-void VTRegisterSupplementalVideoDecoderIfAvailable(CMVideoCodecType codecType) { }
-
 #pragma mark - Compression
 
 OSStatus VTCompressionSessionCreate(CFAllocatorRef allocator, int32_t width, int32_t height, CMVideoCodecType codecType,
@@ -149,23 +147,4 @@ OSStatus VTPixelTransferSessionTransferImage(VTPixelTransferSessionRef session, 
 	CVPixelBufferRef destinationBuffer)
 {
 	return kVTInvalidSessionErr;
-}
-
-#pragma mark - Pixel rotation sessions
-
-/* No rotation session: callers rotate another way (VLC with Core Image), as before iOS 16. */
-OSStatus VTPixelRotationSessionCreate(CFAllocatorRef allocator, VTPixelRotationSessionRef *pixelRotationSessionOut)
-{
-	if (pixelRotationSessionOut != NULL)
-		*pixelRotationSessionOut = NULL;
-	return kVTImageRotationNotSupportedErr;
-}
-
-void VTPixelRotationSessionInvalidate(VTPixelRotationSessionRef session) { }
-CFTypeID VTPixelRotationSessionGetTypeID(void) { return 0; }
-
-OSStatus VTPixelRotationSessionRotateImage(VTPixelRotationSessionRef session, CVPixelBufferRef sourceBuffer,
-	CVPixelBufferRef destinationBuffer)
-{
-	return session == NULL ? kVTInvalidSessionErr : kVTImageRotationNotSupportedErr;
 }
